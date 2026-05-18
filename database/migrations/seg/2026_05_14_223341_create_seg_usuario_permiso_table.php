@@ -6,20 +6,42 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('seg_usuario_permiso', function (Blueprint $table) {
-            $table->id();
+
+            $table->increments('id_usuario_permiso');
+
+            $table->unsignedInteger('id_usuario');
+            $table->unsignedInteger('id_permiso');
+
+            $table->boolean('permitido')->default(true);
+
+            $table->unsignedInteger('usuario_crea')->nullable();
             $table->timestamps();
+
+            $table->unique(
+                ['id_usuario', 'id_permiso'],
+                'uq_seg_usuario_permiso'
+            );
+
+            $table->foreign('id_usuario')
+                ->references('id_usuario')
+                ->on('seg_usuarios')
+                ->cascadeOnDelete();
+
+            $table->foreign('id_permiso')
+                ->references('id_permiso')
+                ->on('seg_permisos')
+                ->cascadeOnDelete();
+
+            $table->foreign('usuario_crea')
+                ->references('id_usuario')
+                ->on('seg_usuarios')
+                ->nullOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('seg_usuario_permiso');

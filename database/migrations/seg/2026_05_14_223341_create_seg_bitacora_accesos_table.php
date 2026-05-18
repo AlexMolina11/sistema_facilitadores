@@ -6,20 +6,29 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('seg_bitacora_accesos', function (Blueprint $table) {
-            $table->id();
+
+            $table->bigIncrements('id_bitacora');
+
+            $table->unsignedInteger('id_usuario')->nullable();
+
+            $table->string('evento', 50);
+            $table->ipAddress('ip')->nullable();
+            $table->text('user_agent')->nullable();
+
+            $table->timestamp('fecha_evento');
+
             $table->timestamps();
+
+            $table->foreign('id_usuario')
+                ->references('id_usuario')
+                ->on('seg_usuarios')
+                ->nullOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('seg_bitacora_accesos');
