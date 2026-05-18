@@ -72,3 +72,60 @@ El sistema carga correctamente:
 
 Mostrando dashboard inicial sin errores.
 ```
+
+# Fase 2 — Migraciones de Base de Datos
+
+## Estado actual
+
+Fecha: 14/05/2026
+
+### Seguridad inicial completada
+
+- seg_roles
+- seg_permisos
+- seg_usuarios
+
+### Catálogos base completados
+
+- tbl_idioma
+- tbl_idioma_nivel
+- tbl_nivel_academico
+- tbl_pais
+- tbl_municipio_mh
+- tbl_tipo_telefono
+- tbl_tipo_referencia
+- tbl_tipo_formacion
+- tbl_tipo_red_social
+- tbl_tipo_habilidad
+- tbl_tipo_disponibilidad
+- tbl_tipo_documento
+- tbl_tipo_consultoria
+
+### Catálogos dependientes completados
+
+- tbl_departamento
+- tbl_municipio
+- tbl_tipo_atestado
+- tbl_habilidad
+
+### Entidad principal completada
+
+- tbl_consultor
+
+### Relación agregada
+
+- FK seg_usuarios.id_consultor → tbl_consultor.id_consultor
+
+### Pendiente siguiente sesión
+
+Bloque de seguridad dependiente:
+
+- seg_usuario_rol
+- seg_rol_permiso
+- seg_usuario_permiso
+- seg_bitacora_accesos
+- seg_invitaciones
+
+Posteriormente:
+
+- Tablas dependientes del consultor
