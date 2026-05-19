@@ -14,13 +14,11 @@ class TipoAtestadoSeeder extends Seeder
             ->value('id_usuario');
 
         $tipos = [
-            ['id_tipo_atestado' => 1, 'id_tipo_formacion' => 1, 'nombre' => 'NIT'],
-            ['id_tipo_atestado' => 2, 'id_tipo_formacion' => 1, 'nombre' => 'NRC'],
-            ['id_tipo_atestado' => 3, 'id_tipo_formacion' => 1, 'nombre' => 'DUI'],
-            ['id_tipo_atestado' => 4, 'id_tipo_formacion' => 1, 'nombre' => 'PASAPORTE'],
-            ['id_tipo_atestado' => 5, 'id_tipo_formacion' => 1, 'nombre' => 'DIPLOMA'],
-            ['id_tipo_atestado' => 6, 'id_tipo_formacion' => 1, 'nombre' => 'ACREDITACION'],
-        ];
+            ['id_tipo_atestado' => 1, 'id_tipo_formacion' => 1, 'nombre' => 'TITULO'],
+            ['id_tipo_atestado' => 2, 'id_tipo_formacion' => 1, 'nombre' => 'CERTIFICADO'],
+            ['id_tipo_atestado' => 3, 'id_tipo_formacion' => 1, 'nombre' => 'DIPLOMA'],
+            ['id_tipo_atestado' => 4, 'id_tipo_formacion' => 1, 'nombre' => 'CONSTANCIA'],
+            ];
 
         foreach ($tipos as $tipo) {
             DB::table('tbl_tipo_atestado')->insertOrIgnore([
