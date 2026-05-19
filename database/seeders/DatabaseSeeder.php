@@ -15,6 +15,10 @@ use Database\Seeders\fac\TipoAtestadoSeeder;
 use Database\Seeders\fac\NivelAcademicoSeeder;
 use Database\Seeders\fac\TipoReferenciaSeeder;
 use Database\Seeders\fac\TipoTelefonoSeeder;
+use Database\Seeders\fac\MunicipioMhSeeder;
+use Database\Seeders\fac\TipoDisponibilidadSeeder;
+use Database\Seeders\fac\TipoDocumentoSeeder;
+use Database\Seeders\fac\TipoRedSocialSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -34,6 +38,10 @@ class DatabaseSeeder extends Seeder
             NivelAcademicoSeeder::class,
             TipoReferenciaSeeder::class,
             TipoTelefonoSeeder::class,
+            MunicipioMhSeeder::class,
+            TipoDisponibilidadSeeder::class,
+            TipoDocumentoSeeder::class,
+            TipoRedSocialSeeder::class,
         ]);
     }
 }
