@@ -9,10 +9,6 @@ class NivelAcademicoSeeder extends Seeder
 {
     public function run(): void
     {
-        $usuarioCrea = DB::table('seg_usuarios')
-            ->where('username', 'clainezr')
-            ->value('id_usuario');
-
         $niveles = [
             ['id_nivel_academico' => 1, 'nombre' => 'Bachiller'],
             ['id_nivel_academico' => 2, 'nombre' => 'Técnico'],
@@ -28,7 +24,7 @@ class NivelAcademicoSeeder extends Seeder
                 'id_nivel_academico' => $nivel['id_nivel_academico'],
                 'nombre'             => $nivel['nombre'],
                 'activo'             => true,
-                'usuario_crea'       => $usuarioCrea,
+                'usuario_crea'       => null,
                 'usuario_mod'        => null,
                 'usuario_elim'       => null,
                 'created_at'         => now(),

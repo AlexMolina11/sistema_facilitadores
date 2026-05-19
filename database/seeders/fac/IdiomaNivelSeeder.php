@@ -5,13 +5,10 @@ namespace Database\Seeders\fac;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class IdiomaLevelSeeder extends Seeder
+class IdiomaNivelSeeder extends Seeder
 {
     public function run(): void
     {
-        $usuarioCrea = DB::table('seg_usuarios')
-            ->where('username', 'clainezr')
-            ->value('id_usuario');
 
         $niveles = [
             ['id_idioma_nivel' => 1,  'nombre' => 'Básico'],
@@ -26,7 +23,7 @@ class IdiomaLevelSeeder extends Seeder
                 'id_idioma_nivel' => $nivel['id_idioma_nivel'],
                 'nombre'          => $nivel['nombre'],
                 'activo'          => true,
-                'usuario_crea'    => $usuarioCrea,
+                'usuario_crea'    => null,
                 'usuario_mod'     => null,
                 'usuario_elim'    => null,
                 'created_at'      => now(),

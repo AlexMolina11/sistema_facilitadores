@@ -9,10 +9,6 @@ class TipoHabilidadSeeder extends Seeder
 {
     public function run(): void
     {
-        $usuarioCrea = DB::table('seg_usuarios')
-            ->where('username', 'clainezr')
-            ->value('id_usuario');
-
         $tipos = [
             ['nombre' => 'Áreas de especialización'],
             ['nombre' => 'Habilidades blandas'],
@@ -26,7 +22,7 @@ class TipoHabilidadSeeder extends Seeder
                 ],
                 [
                     'activo'       => true,
-                    'usuario_crea' => $usuarioCrea,
+                    'usuario_crea' => null,
                     'usuario_mod'  => null,
                     'usuario_elim' => null,
                     'deleted_at'   => null,

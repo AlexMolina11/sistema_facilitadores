@@ -9,10 +9,6 @@ class IdiomaSeeder extends Seeder
 {
     public function run(): void
     {
-        $usuarioCrea = DB::table('seg_usuarios')
-            ->where('username', 'clainezr')
-            ->value('id_usuario');
-
         $idiomas = [
             ['id_idioma' => 1,  'nombre' => 'Español'],
             ['id_idioma' => 2,  'nombre' => 'Inglés'],
@@ -61,7 +57,7 @@ class IdiomaSeeder extends Seeder
                 'id_idioma'    => $idioma['id_idioma'],
                 'nombre'       => $idioma['nombre'],
                 'activo'       => true,
-                'usuario_crea' => $usuarioCrea,
+                'usuario_crea' => null,
                 'usuario_mod'  => null,
                 'usuario_elim' => null,
                 'created_at'   => now(),
