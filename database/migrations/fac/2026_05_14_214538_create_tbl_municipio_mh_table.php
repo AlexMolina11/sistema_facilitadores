@@ -8,17 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('tbl_departamento', function (Blueprint $table) {
+        Schema::create('tbl_municipio_mh', function (Blueprint $table) {
+            $table->increments('id_municipio_mh');
+            $table->string('municipio_mh_nombre', 100);
 
-            $table->increments('id_departamento');
+            $table->string('mh_codigo_municipio', 50)->nullable();
 
-            $table->unsignedInteger('id_pais');
-
-            $table->string('nombre_departamento', 100);
-
-            $table->string('mh_codigo_depto', 50)->nullable();
-
-            $table->string('georeferencia', 100)->nullable();
+            $table->unsignedInteger('id_departamento')->nullable();
 
             $table->boolean('activo')->default(true);
 
@@ -29,9 +25,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('id_pais')
-                ->references('id_pais')
-                ->on('tbl_pais');
+            $table->foreign('id_departamento')
+                ->references('id_departamento')
+                ->on('tbl_departamento');
 
             $table->foreign('usuario_crea')
                 ->references('id_usuario')
@@ -47,11 +43,12 @@ return new class extends Migration
                 ->references('id_usuario')
                 ->on('seg_usuarios')
                 ->nullOnDelete();
+
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('tbl_departamento');
+        Schema::dropIfExists('tbl_municipio_mh');
     }
 };

@@ -10,18 +10,9 @@ class TipoHabilidadSeeder extends Seeder
     public function run(): void
     {
         $tipos = [
-            [
-                'nombre' => 'Áreas de especialización',
-                'activo' => true,
-            ],
-            [
-                'nombre' => 'Habilidades blandas',
-                'activo' => true,
-            ],
-            [
-                'nombre' => 'Habilidades técnicas',
-                'activo' => true,
-            ],
+            ['nombre' => 'Áreas de especialización'],
+            ['nombre' => 'Habilidades blandas'],
+            ['nombre' => 'Habilidades técnicas'],
         ];
 
         foreach ($tipos as $tipo) {
@@ -30,13 +21,13 @@ class TipoHabilidadSeeder extends Seeder
                     'nombre' => $tipo['nombre'],
                 ],
                 [
-                    'activo' => $tipo['activo'],
+                    'activo'       => true,
                     'usuario_crea' => null,
-                    'usuario_mod' => null,
+                    'usuario_mod'  => null,
                     'usuario_elim' => null,
-                    'deleted_at' => null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'deleted_at'   => null,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
                 ]
             );
         }

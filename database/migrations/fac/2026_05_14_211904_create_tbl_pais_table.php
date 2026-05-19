@@ -10,11 +10,18 @@ return new class extends Migration
     {
         Schema::create('tbl_pais', function (Blueprint $table) {
             $table->increments('id_pais');
-            $table->string('nombre', 100);
+            $table->string('codigo_pais', 100);
+            $table->string('nombre_pais', 100);
+
+            $table->string('mh_codigo_pais', 50)->nullable();
+            $table->string('mh_codigo_pais_new', 50)->nullable();
+
             $table->boolean('activo')->default(true);
+
             $table->unsignedInteger('usuario_crea')->nullable();
             $table->unsignedInteger('usuario_mod')->nullable();
             $table->unsignedInteger('usuario_elim')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
 
