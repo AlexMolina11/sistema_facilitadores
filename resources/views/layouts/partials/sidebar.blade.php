@@ -47,7 +47,14 @@
     class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-documento.*') ? 'active' : '' }}">
         Tipo documento
 
-        
+    <a
+    href="{{ route('fac.catalogos.tipo-consultoria.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-consultoria.*') ? 'active' : '' }}">
+        Tipo consultoría
+
+</a>
+
+
 </a>
 
 
