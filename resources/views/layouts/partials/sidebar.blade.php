@@ -39,6 +39,11 @@
         Tipos de formación
     </a>
 
+    <a href="{{ route('fac.catalogos.tipo-atestado.index') }}"
+   class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-atestado.*') ? 'active' : '' }}">
+    Tipos de atestado
+</a>
+
     <a href="#" class="sidebar-link">Países</a>
     <a href="#" class="sidebar-link">Departamentos</a>
     <a href="#" class="sidebar-link">Municipios</a>

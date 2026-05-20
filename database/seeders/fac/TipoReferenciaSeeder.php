@@ -27,7 +27,7 @@ class TipoReferenciaSeeder extends Seeder
                 'activo'             => true,
 
                 // Auditoría
-                'usuario_crea'       => 1,
+                'usuario_crea'       => null,
                 'usuario_mod'        => null,
                 'usuario_elim'       => null,
 

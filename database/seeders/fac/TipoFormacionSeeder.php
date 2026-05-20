@@ -32,7 +32,7 @@ class TipoFormacionSeeder extends Seeder
                 'nombre'            => $tipo['nombre'],
                 'activo'            => true,
 
-                'usuario_crea'      => 1,
+                'usuario_crea'      => null,
                 'usuario_mod'       => null,
                 'usuario_elim'      => null,
 

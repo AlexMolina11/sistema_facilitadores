@@ -5,6 +5,8 @@ use App\Modules\Fac\Controllers\DashboardController;
 use App\Modules\Fac\Controllers\Catalogo\IdiomaController;
 use App\Modules\Fac\Controllers\Catalogo\TipoReferenciaController;
 use App\Modules\Fac\Controllers\Catalogo\TipoFormacionController;
+use App\Modules\Fac\Controllers\Catalogo\TipoAtestadoController;
+ 
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('fac.dashboard');
@@ -20,4 +22,11 @@ Route::prefix('catalogos')->name('fac.catalogos.')->group(function () {
     ->parameters([
         'tipo-formacion' => 'tipoFormacion',
     ]);
+
+    Route::resource('tipo-atestado', TipoAtestadoController::class)
+    ->parameters([
+        'tipo-atestado' => 'tipoAtestado',
+    ]);
+
+   
 });
