@@ -6,7 +6,7 @@ use App\Modules\Fac\Controllers\Catalogo\IdiomaController;
 use App\Modules\Fac\Controllers\Catalogo\TipoReferenciaController;
 use App\Modules\Fac\Controllers\Catalogo\TipoFormacionController;
 use App\Modules\Fac\Controllers\Catalogo\TipoAtestadoController;
- 
+use App\Modules\Fac\Controllers\Catalogo\TipoRedSocialController;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('fac.dashboard');
@@ -28,5 +28,9 @@ Route::prefix('catalogos')->name('fac.catalogos.')->group(function () {
         'tipo-atestado' => 'tipoAtestado',
     ]);
 
+    Route::resource('tipo-red-social', TipoRedSocialController::class)
+    ->parameters([
+        'tipo-red-social' => 'tipoRedSocial',
+    ]);
    
 });
