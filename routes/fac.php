@@ -2,10 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\Fac\Controllers\DashboardController;
+use App\Modules\Fac\Controllers\Catalogo\IdiomaController;
 
-Route::prefix('facilitadores')
-    ->name('fac.')
-    ->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('dashboard');
-    });
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->name('fac.dashboard');
+
+Route::prefix('catalogos')->name('fac.catalogos.')->group(function () {
+    Route::resource('idiomas', IdiomaController::class);
+});
