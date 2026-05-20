@@ -37,9 +37,18 @@
         <a href="{{ route('fac.catalogos.nivel-academico.index') }}"
         class="sidebar-link {{ request()->routeIs('fac.catalogos.nivel-academico.*') ? 'active' : '' }}">      
         Niveles académicos
+
     <a href="{{ route('fac.catalogos.tipo-disponibilidad.index') }}"
     class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-disponibilidad.*') ? 'active' : '' }}">     
         Tipo disponibilidad
+
+    <a
+    href="{{ route('fac.catalogos.tipo-documento.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-documento.*') ? 'active' : '' }}">
+        Tipo documento
+
+        
+</a>
 
 
 </a>
