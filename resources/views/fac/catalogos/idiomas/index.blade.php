@@ -21,7 +21,7 @@
                 name="buscar" 
                 value="{{ $buscar }}" 
                 class="form-control" 
-                placeholder="Buscar por nombre o código"
+                placeholder="Buscar por nombre"
             >
         </div>
 
@@ -45,20 +45,16 @@
             <thead>
                 <tr>
                     <th>Nombre</th>
-                    <th>Código</th>
                     <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
+
             <tbody>
                 @forelse($idiomas as $idioma)
                     <tr>
                         <td class="fw-semibold">
                             {{ $idioma->nombre }}
-                        </td>
-
-                        <td>
-                            {{ $idioma->codigo ?? '—' }}
                         </td>
 
                         <td>
@@ -78,7 +74,7 @@
                                 action="{{ route('fac.catalogos.idiomas.destroy', $idioma) }}" 
                                 method="POST" 
                                 class="d-inline"
-                                onsubmit="return confirm('¿Deseas desactivar este idioma?')"
+                                onsubmit="return confirm('¿Deseas eliminar este idioma?')"
                             >
                                 @csrf
                                 @method('DELETE')
@@ -91,7 +87,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
+                        <td colspan="3" class="text-center text-muted py-4">
                             No hay idiomas registrados.
                         </td>
                     </tr>
@@ -100,10 +96,8 @@
         </table>
     </div>
 
-    <div class="mt-3">
-        <div class="mt-4 pagination-wrapper">
-            {{ $idiomas->links('pagination::bootstrap-5') }}
-        </div>
+    <div class="mt-4 pagination-wrapper">
+        {{ $idiomas->links('pagination::bootstrap-5') }}
     </div>
 </div>
 
