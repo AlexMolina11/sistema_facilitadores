@@ -44,10 +44,13 @@
         Municipios 
     </a>
     <a href="{{ route('fac.catalogos.municipios.index') }}"
-         class="sidebar-link {{ request()->routeIs('fac.catalogos.municipios.*') ? 'active' : '' }}">
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.municipios.*') ? 'active' : '' }}">
         Distritos
     </a>
-
+    <a href="{{ route('fac.catalogos.tipo_telefono.index') }}"
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo_telefono.*') ? 'active' : '' }}">
+        Tipos de teléfono
+    </a>
     <a href="#" class="sidebar-link">Habilidades</a>
     <a href="#" class="sidebar-link">Tipos de consultoría</a>
 </aside>

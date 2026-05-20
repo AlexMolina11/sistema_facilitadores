@@ -7,6 +7,7 @@ use App\Modules\Fac\Controllers\Catalogo\PaisController;
 use App\Modules\Fac\Controllers\Catalogo\DepartamentoController;
 use App\Modules\Fac\Controllers\Catalogo\MunicipioMhController;
 use App\Modules\Fac\Controllers\Catalogo\MunicipioController;
+use App\Modules\Fac\Controllers\Catalogo\TipoTelefonoController;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('fac.dashboard');
@@ -26,4 +27,5 @@ Route::prefix('catalogos')->name('fac.catalogos.')->group(function () {
     Route::resource('departamentos', DepartamentoController::class);
     Route::resource('municipios_mh', MunicipioMhController::class);
     Route::resource('municipios', MunicipioController::class);
+    Route::resource('tipo_telefono', TipoTelefonoController::class);
 });
