@@ -48,6 +48,11 @@
     class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-red-social.*') ? 'active' : '' }}">
         Tipos de red social
     </a>
+
+    <a href="{{ route('fac.catalogos.tipo-habilidad.index') }}"
+   class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-habilidad.*') ? 'active' : '' }}">
+    Tipos de habilidad
+</a>
     <a href="#" class="sidebar-link">Países</a>
     <a href="#" class="sidebar-link">Departamentos</a>
     <a href="#" class="sidebar-link">Municipios</a>

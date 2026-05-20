@@ -7,6 +7,7 @@ use App\Modules\Fac\Controllers\Catalogo\TipoReferenciaController;
 use App\Modules\Fac\Controllers\Catalogo\TipoFormacionController;
 use App\Modules\Fac\Controllers\Catalogo\TipoAtestadoController;
 use App\Modules\Fac\Controllers\Catalogo\TipoRedSocialController;
+use App\Modules\Fac\Controllers\Catalogo\TipoHabilidadController;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('fac.dashboard');
@@ -32,5 +33,9 @@ Route::prefix('catalogos')->name('fac.catalogos.')->group(function () {
     ->parameters([
         'tipo-red-social' => 'tipoRedSocial',
     ]);
-   
+
+    Route::resource('tipo-habilidad', TipoHabilidadController::class)
+    ->parameters([
+        'tipo-habilidad' => 'tipoHabilidad',
+    ]);   
 });
