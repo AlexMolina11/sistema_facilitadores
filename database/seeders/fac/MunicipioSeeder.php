@@ -332,7 +332,9 @@ class MunicipioSeeder extends Seeder
 
         $now = now();
 
+        DB::statement("SET SESSION sql_mode = CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO')");
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('tbl_municipio')->truncate();
 
         foreach ($municipios as $municipio) {
             DB::table('tbl_municipio')->insert([

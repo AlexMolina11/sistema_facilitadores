@@ -7,6 +7,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Database\Seeders\fac\TipoHabilidadSeeder;
 use Database\Seeders\fac\PaisSeeder;
 use Database\Seeders\fac\DepartamentoSeeder;
+use Database\Seeders\fac\MunicipioMhSeeder;
 use Database\Seeders\fac\MunicipioSeeder;
 use Database\Seeders\fac\IdiomaSeeder;
 use Database\Seeders\fac\IdiomaNivelSeeder;
@@ -15,7 +16,6 @@ use Database\Seeders\fac\TipoAtestadoSeeder;
 use Database\Seeders\fac\NivelAcademicoSeeder;
 use Database\Seeders\fac\TipoReferenciaSeeder;
 use Database\Seeders\fac\TipoTelefonoSeeder;
-use Database\Seeders\fac\MunicipioMhSeeder;
 use Database\Seeders\fac\TipoDisponibilidadSeeder;
 use Database\Seeders\fac\TipoDocumentoSeeder;
 use Database\Seeders\fac\TipoRedSocialSeeder;
@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             TipoHabilidadSeeder::class,
             PaisSeeder::class,
             DepartamentoSeeder::class,
+            MunicipioMhSeeder::class,
             MunicipioSeeder::class,
             IdiomaNivelSeeder::class,
             IdiomaSeeder::class,
@@ -38,7 +39,6 @@ class DatabaseSeeder extends Seeder
             NivelAcademicoSeeder::class,
             TipoReferenciaSeeder::class,
             TipoTelefonoSeeder::class,
-            MunicipioMhSeeder::class,
             TipoDisponibilidadSeeder::class,
             TipoDocumentoSeeder::class,
             TipoRedSocialSeeder::class,
