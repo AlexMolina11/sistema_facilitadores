@@ -50,9 +50,14 @@
     </a>
 
     <a href="{{ route('fac.catalogos.tipo-habilidad.index') }}"
-   class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-habilidad.*') ? 'active' : '' }}">
-    Tipos de habilidad
-</a>
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-habilidad.*') ? 'active' : '' }}">
+        Tipos de habilidad
+    </a>
+
+    <a href="{{ route('fac.catalogos.habilidad.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.habilidad.*') ? 'active' : '' }}">
+        Habilidades
+    </a>
     <a href="#" class="sidebar-link">Países</a>
     <a href="#" class="sidebar-link">Departamentos</a>
     <a href="#" class="sidebar-link">Municipios</a>
