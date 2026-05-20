@@ -31,9 +31,14 @@
         Idiomas   
     </a>
     <a href="{{ route('fac.catalogos.tipo-referencia.index') }}"
-   class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-referencia.*') ? 'active' : '' }}">
-    Tipos de referencia
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-referencia.*') ? 'active' : '' }}">
+        Tipos de referencia
     </a>
+    <a href="{{ route('fac.catalogos.tipo-formacion.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-formacion.*') ? 'active' : '' }}">
+        Tipos de formación
+    </a>
+
     <a href="#" class="sidebar-link">Países</a>
     <a href="#" class="sidebar-link">Departamentos</a>
     <a href="#" class="sidebar-link">Municipios</a>
