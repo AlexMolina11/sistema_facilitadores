@@ -28,7 +28,11 @@
     <div class="sidebar-section">Catálogos</div>
     <a href="{{ route('fac.catalogos.idiomas.index') }}" 
         class="sidebar-link {{ request()->routeIs('fac.catalogos.idiomas.*') ? 'active' : '' }}">
-        Idiomas
+        Idiomas   
+    </a>
+    <a href="{{ route('fac.catalogos.tipo-referencia.index') }}"
+   class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-referencia.*') ? 'active' : '' }}">
+    Tipos de referencia
     </a>
     <a href="#" class="sidebar-link">Países</a>
     <a href="#" class="sidebar-link">Departamentos</a>
