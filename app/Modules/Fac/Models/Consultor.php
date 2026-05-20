@@ -51,4 +51,25 @@ class Consultor extends Model
     {
         return trim($this->nombres . ' ' . $this->apellidos);
     }
+
+    public function emails()
+    {
+        return $this->hasMany(ConsultorEmail::class, 'id_consultor', 'id_consultor');
+    }
+
+    public function telefonos()
+    {
+        return $this->hasMany(ConsultorTelefono::class, 'id_consultor', 'id_consultor');
+    }
+
+    public function redesSociales()
+    {
+        return $this->hasMany(ConsultorRedSocial::class, 'id_consultor', 'id_consultor');
+    }
+
+    public function emergencias()
+    {
+        return $this->hasMany(ConsultorEmergencia::class, 'id_consultor', 'id_consultor');
+    }
+
 }

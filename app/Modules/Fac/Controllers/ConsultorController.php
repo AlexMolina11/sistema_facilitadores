@@ -45,7 +45,7 @@ class ConsultorController extends Controller
 
     public function store(StoreConsultorRequest $request)
     {
-        Consultor::create([
+        $consultor = Consultor::create([
             ...$request->validated(),
             'vigente' => $request->boolean('vigente'),
             'activo' => $request->boolean('activo'),
@@ -53,8 +53,8 @@ class ConsultorController extends Controller
         ]);
 
         return redirect()
-            ->route('fac.consultores.index')
-            ->with('success', 'Consultor creado correctamente.');
+            ->route('fac.consultores.contacto.edit', $consultor)
+            ->with('success', 'Datos personales guardados correctamente. Continúa con la información de contacto.');
     }
 
     public function show(Consultor $consultor)
@@ -79,7 +79,7 @@ class ConsultorController extends Controller
         ]);
 
         return redirect()
-            ->route('fac.consultores.index')
+            ->route('fac.consultores.show', $consultor)
             ->with('success', 'Consultor actualizado correctamente.');
     }
 
