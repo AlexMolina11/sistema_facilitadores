@@ -17,7 +17,7 @@
         @method('PUT')
 
         <div class="row g-4">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <label class="form-label">Nombre del idioma <span class="text-danger">*</span></label>
                 <input 
                     type="text" 
@@ -32,22 +32,7 @@
                 @enderror
             </div>
 
-            <div class="col-md-3">
-                <label class="form-label">Código</label>
-                <input 
-                    type="text" 
-                    name="codigo" 
-                    value="{{ old('codigo', $idioma->codigo) }}" 
-                    class="form-control @error('codigo') is-invalid @enderror"
-                    placeholder="Ej: EN"
-                >
-
-                @error('codigo')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label d-block">Estado</label>
 
                 <div class="form-check form-switch mt-2">
