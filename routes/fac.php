@@ -10,5 +10,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 
 Route::prefix('catalogos')->name('fac.catalogos.')->group(function () {
     Route::resource('idiomas', IdiomaController::class);
-    Route::resource('tipo-referencia', TipoReferenciaController::class);
+    Route::resource('tipo-referencia', TipoReferenciaController::class)
+    ->parameters([
+        'tipo-referencia' => 'tipoReferencia',
+    ]);
 });
