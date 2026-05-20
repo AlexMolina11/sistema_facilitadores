@@ -33,6 +33,11 @@
     <a href="{{ route('fac.catalogos.idioma-nivel.index') }}" 
         class="sidebar-link {{ request()->routeIs('fac.catalogos.idioma-nivel.*') ? 'active' : '' }}">
         Niveles de idioma
+
+        <a href="{{ route('fac.catalogos.nivel-academico.index') }}"
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.nivel-academico.*') ? 'active' : '' }}"
+>        Niveles académicos
+</a>
     </a>
     <a href="#" class="sidebar-link">Países</a>
     <a href="#" class="sidebar-link">Departamentos</a>
