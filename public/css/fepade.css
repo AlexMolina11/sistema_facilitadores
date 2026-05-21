@@ -636,3 +636,312 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================
+   LAYOUT: SIDEBAR COLAPSABLE + RESPONSIVE
+========================================================== */
+
+.app-wrapper {
+    transition: .2s ease;
+}
+
+.app-sidebar {
+    width: 260px;
+    min-height: 100vh;
+    overflow-y: auto;
+    transition: width .2s ease, transform .2s ease;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 40;
+}
+
+.sidebar-brand-text,
+.sidebar-label,
+.sidebar-section,
+.sidebar-caret,
+.sidebar-submenu,
+.sidebar-subtitle {
+    transition: opacity .15s ease, visibility .15s ease;
+}
+
+.sidebar-icon {
+    width: 22px;
+    min-width: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+}
+
+.sidebar-dropdown-toggle {
+    width: 100%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255,255,255,.58);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    transition: .15s ease;
+    text-align: left;
+}
+
+.sidebar-dropdown-toggle:hover {
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.90);
+}
+
+.sidebar-caret {
+    margin-left: auto;
+    font-size: 11px;
+}
+
+.sidebar-submenu {
+    margin: 6px 0 10px 32px;
+    padding-left: 10px;
+    border-left: 1px solid rgba(255,255,255,.08);
+}
+
+.sidebar-sublink {
+    display: block;
+    color: rgba(255,255,255,.52);
+    text-decoration: none;
+    padding: 8px 10px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    transition: .15s ease;
+}
+
+.sidebar-sublink:hover {
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.90);
+}
+
+.sidebar-sublink.active {
+    background: rgba(0,200,150,.12);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.sidebar-subtitle {
+    margin: 12px 10px 4px;
+    color: rgba(255,255,255,.28);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+/* Estado comprimido escritorio */
+.app-wrapper.sidebar-collapsed {
+    grid-template-columns: 82px 1fr;
+}
+
+.app-wrapper.sidebar-collapsed .app-sidebar {
+    width: 82px;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+.app-wrapper.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+}
+
+.app-wrapper.sidebar-collapsed .sidebar-brand img {
+    height: 34px;
+}
+
+.app-wrapper.sidebar-collapsed .sidebar-brand-text,
+.app-wrapper.sidebar-collapsed .sidebar-label,
+.app-wrapper.sidebar-collapsed .sidebar-section,
+.app-wrapper.sidebar-collapsed .sidebar-caret,
+.app-wrapper.sidebar-collapsed .sidebar-submenu {
+    opacity: 0;
+    visibility: hidden;
+    display: none;
+}
+
+.app-wrapper.sidebar-collapsed .sidebar-link,
+.app-wrapper.sidebar-collapsed .sidebar-dropdown-toggle {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.app-wrapper.sidebar-collapsed .sidebar-icon {
+    width: 42px;
+    min-width: 42px;
+}
+
+/* Topbar */
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.topbar-sidebar-btn {
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    color: white;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    transition: .15s ease;
+}
+
+.topbar-sidebar-btn:hover {
+    background: rgba(255,255,255,.12);
+}
+
+.topbar-page-info {
+    min-width: 0;
+}
+
+.topbar-breadcrumb {
+    color: white;
+    font-weight: 700;
+    padding: 0;
+    text-align: left;
+}
+
+.topbar-menu-btn {
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    color: white;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.topbar-menu-btn:hover,
+.topbar-menu-btn:focus {
+    background: rgba(255,255,255,.12);
+    color: white;
+}
+
+/* Responsive móvil */
+.sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 992px) {
+    .app-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .app-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        transform: translateX(-105%);
+        width: 280px;
+        max-width: 86vw;
+        height: 100vh;
+        min-height: 100vh;
+    }
+
+    .app-wrapper.sidebar-open .app-sidebar {
+        transform: translateX(0);
+    }
+
+    .app-wrapper.sidebar-open .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(13,27,42,.45);
+        z-index: 30;
+    }
+
+    .app-topbar {
+        padding: 0 18px;
+    }
+
+    .app-content {
+        padding: 22px;
+    }
+}
+
+@media (max-width: 576px) {
+    .app-topbar {
+        height: 62px;
+    }
+
+    .topbar-menu-btn {
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+}
+
+/* ==========================================================
+   TOPBAR MOBILE
+========================================================== */
+
+.topbar-mobile-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 0 10px;
+}
+
+.topbar-mobile-logo img {
+    height: 34px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+}
+
+@media (max-width: 992px) {
+
+    .app-topbar {
+        height: 64px;
+        padding: 0 14px;
+    }
+
+    .topbar-left {
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .topbar-sidebar-btn {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+    }
+
+    .topbar-mobile-logo {
+        justify-content: flex-start;
+    }
+
+    .topbar-menu-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 576px) {
+
+    .topbar-mobile-logo img {
+        height: 28px;
+        max-width: 130px;
+    }
+
+    .app-topbar {
+        padding: 0 10px;
+    }
+
+    .topbar-menu-btn {
+        padding: 7px 8px;
+        font-size: 11px;
+    }
+}
