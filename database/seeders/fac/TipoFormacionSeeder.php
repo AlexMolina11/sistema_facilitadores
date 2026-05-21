@@ -12,15 +12,11 @@ class TipoFormacionSeeder extends Seeder
         $tipos = [
             [
                 'id_tipo_formacion' => 1,
-                'nombre' => 'Académica',
+                'nombre' => 'Educación formal',
             ],
             [
                 'id_tipo_formacion' => 2,
-                'nombre' => 'Técnica',
-            ],
-            [
-                'id_tipo_formacion' => 3,
-                'nombre' => 'Profesional',
+                'nombre' => 'Educación Continua',
             ],
         ];
 

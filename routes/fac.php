@@ -48,8 +48,17 @@ Route::prefix('consultores/{consultor}')
         Route::get('formacion', [ConsultorFormacionController::class, 'edit'])
             ->name('formacion.edit');
 
-        Route::post('formacion', [ConsultorFormacionController::class, 'update'])
-            ->name('formacion.update');
+        Route::post('formacion/atestados', [ConsultorFormacionController::class, 'store'])
+            ->name('formacion.store');
+
+        Route::put('formacion/atestados/{formacion}', [ConsultorFormacionController::class, 'updateAtestado'])
+            ->name('formacion.atestados.update');
+
+        Route::delete('formacion/atestados/{formacion}', [ConsultorFormacionController::class, 'destroyAtestado'])
+            ->name('formacion.atestados.destroy');
+
+        Route::post('formacion/continuar', [ConsultorFormacionController::class, 'continuar'])
+            ->name('formacion.continuar');
 
         Route::get('experiencia', [ConsultorExperienciaController::class, 'edit'])
             ->name('experiencia.edit');

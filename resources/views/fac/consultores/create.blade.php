@@ -14,7 +14,7 @@
 @include('fac.consultores.partials._wizard', ['step' => 1, 'consultor' => null])
 
 <div class="fepade-card">
-    <form method="POST" action="{{ route('fac.consultores.store') }}">
+    <form method="POST" action="{{ route('fac.consultores.store') }}" enctype="multipart/form-data">
         @csrf
 
         @include('fac.consultores.partials._form', [
