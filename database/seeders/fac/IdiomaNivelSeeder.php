@@ -15,7 +15,7 @@ class IdiomaNivelSeeder extends Seeder
             ['id_idioma_nivel' => 2,  'nombre' => 'Intermedio'],
             ['id_idioma_nivel' => 3,  'nombre' => 'Avanzado'],
             ['id_idioma_nivel' => 4,  'nombre' => 'Técnico'],
-            ['id_idioma_nivel' => 7,  'nombre' => 'Nativo'],
+            ['id_idioma_nivel' => 5,  'nombre' => 'Nativo'],
             ];
 
         foreach ($niveles as $nivel) {
