@@ -22,10 +22,17 @@
     <div class="col-lg-4">
         <div class="fepade-card h-100 expediente-profile-card">
             <div class="text-center">
-                <div class="expediente-avatar">
-                    {{ strtoupper(substr($consultor->nombres, 0, 1) . substr($consultor->apellidos, 0, 1)) }}
-                </div>
-
+                @if($consultor->ruta_foto)
+                    <img 
+                        src="{{ \Illuminate\Support\Facades\Storage::url($consultor->ruta_foto) }}" 
+                        alt="Foto de {{ $consultor->nombre_completo }}"
+                        class="expediente-avatar-img"
+                    >
+                @else
+                    <div class="expediente-avatar">
+                        {{ strtoupper(substr($consultor->nombres, 0, 1) . substr($consultor->apellidos, 0, 1)) }}
+                    </div>
+                @endif
                 <h4 class="mb-1">{{ $consultor->nombre_completo }}</h4>
                 <p class="text-muted mb-3">{{ $consultor->nacionalidad ?? 'Nacionalidad no registrada' }}</p>
 
@@ -104,6 +111,148 @@
                     <span class="expediente-label">Dirección de residencia</span>
                     <span class="expediente-value">{{ $consultor->direccion_residencia ?? 'No registrada' }}</span>
                 </div>
+            </div>
+
+            <hr class="formacion-divider">
+
+            @php
+                $documentoIdentificacion = $consultor->documentos->first(function ($documento) use ($catalogos, $consultor) {
+                    $tipo = $catalogos['tiposDocumento']->get($documento->id_tipo_documento);
+
+                    return $tipo && strtolower($tipo->nombre) === strtolower($consultor->tipo_identificacion ?? '');
+                });
+
+                $documentoNit = $consultor->documentos->first(function ($documento) use ($catalogos) {
+                    $tipo = $catalogos['tiposDocumento']->get($documento->id_tipo_documento);
+
+                    return $tipo && strtolower($tipo->nombre) === 'nit';
+                });
+
+                $documentoNrc = $consultor->documentos->first(function ($documento) use ($catalogos) {
+                    $tipo = $catalogos['tiposDocumento']->get($documento->id_tipo_documento);
+
+                    return $tipo && strtolower($tipo->nombre) === 'nrc';
+                });
+            @endphp
+
+            <h6 class="expediente-subtitle mb-3">
+                Documentos de identificación
+            </h6>
+
+            <div class="row g-3">
+
+                {{-- DUI / PASAPORTE --}}
+                <div class="col-md-4">
+                    <div class="expediente-item h-100">
+
+                        <div class="fw-semibold mb-2">
+                            {{ $consultor->tipo_identificacion ?? 'Documento de identificación' }}
+                        </div>
+
+                        <div class="mb-2">
+                            <span class="expediente-label">
+                                Número
+                            </span>
+
+                            <span class="expediente-value">
+                                {{ $consultor->numero_identificacion ?? 'No registrado' }}
+                            </span>
+                        </div>
+
+                        @if($documentoIdentificacion?->url_archivo)
+                            <a
+                                href="{{ Storage::url($documentoIdentificacion->url_archivo) }}"
+                                target="_blank"
+                                class="formacion-document-link"
+                            >
+                                Ver documento
+                            </a>
+                        @else
+                            <div class="text-muted small">
+                                Sin documento adjunto
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- NIT --}}
+                <div class="col-md-4">
+                    <div class="expediente-item h-100">
+
+                        <div class="fw-semibold mb-2">
+                            NIT
+                        </div>
+
+                        <div class="mb-2">
+                            <span class="expediente-label">
+                                Número
+                            </span>
+
+                            <span class="expediente-value">
+                                {{ $consultor->nit ?? 'No registrado' }}
+                            </span>
+                        </div>
+
+                        @if($documentoNit?->url_archivo)
+                            <a
+                                href="{{ Storage::url($documentoNit->url_archivo) }}"
+                                target="_blank"
+                                class="formacion-document-link"
+                            >
+                                Ver documento
+                            </a>
+                        @else
+                            <div class="text-muted small">
+                                Sin documento adjunto
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- NRC --}}
+                <div class="col-md-4">
+                    <div class="expediente-item h-100">
+
+                        <div class="fw-semibold mb-2">
+                            NRC
+                        </div>
+
+                        <div class="mb-2">
+                            <span class="expediente-label">
+                                Número
+                            </span>
+
+                            <span class="expediente-value">
+                                {{ $consultor->nrc ?? 'No registrado' }}
+                            </span>
+                        </div>
+
+                        <div class="mb-3">
+                            <span class="expediente-label">
+                                Actividad / Giro
+                            </span>
+
+                            <span class="expediente-value">
+                                {{ $documentoNrc?->actividad_giro ?? 'No registrado' }}
+                            </span>
+                        </div>
+
+                        @if($documentoNrc?->url_archivo)
+                            <a
+                                href="{{ Storage::url($documentoNrc->url_archivo) }}"
+                                target="_blank"
+                                class="formacion-document-link"
+                            >
+                                Ver documento
+                            </a>
+                        @else
+                            <div class="text-muted small">
+                                Sin documento adjunto
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

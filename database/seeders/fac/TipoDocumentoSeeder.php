@@ -10,10 +10,11 @@ class TipoDocumentoSeeder extends Seeder
     public function run(): void
     {
         $tipos = [
-            ['id_tipo_documento' => 1, 'nombre' => 'N.I.T.'],
-            ['id_tipo_documento' => 2, 'nombre' => 'D.U.I.'],
-            ['id_tipo_documento' => 3, 'nombre' => 'PASAPORTE'],
-            ['id_tipo_documento' => 4, 'nombre' => 'CARNET DE RESIDENTE'],
+            ['id_tipo_documento' => 1, 'nombre' => 'NIT'],
+            ['id_tipo_documento' => 2, 'nombre' => 'DUI'],
+            ['id_tipo_documento' => 3, 'nombre' => 'NRC'],
+            ['id_tipo_documento' => 4, 'nombre' => 'PASAPORTE'],
+            ['id_tipo_documento' => 5, 'nombre' => 'CARNET DE RESIDENTE'],
         ];
  
         foreach ($tipos as $tipo) {

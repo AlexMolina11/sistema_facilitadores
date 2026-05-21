@@ -81,4 +81,13 @@ class Consultor extends Model
         );
     }
 
+    public function documentos()
+    {
+        return $this->hasMany(
+            ConsultorDocumento::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
 }
