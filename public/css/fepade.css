@@ -955,3 +955,47 @@ body {
     margin-bottom: 18px;
 }
 
+/* ==========================================================
+   CONTACTO CONSULTOR
+========================================================== */
+
+.contacto-section {
+    margin-bottom: 34px;
+}
+
+.contacto-section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.contacto-section-header h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.contacto-section-header p {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 6px 0 0;
+}
+
+.contacto-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 10px 28px rgba(13,27,42,.04);
+}
+
+@media (max-width: 768px) {
+    .contacto-section-header {
+        flex-direction: column;
+    }
+}
