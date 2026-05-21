@@ -90,4 +90,49 @@ class Consultor extends Model
         );
     }
 
+    public function experienciasLaborales()
+    {
+        return $this->hasMany(
+            ConsultorExperienciaLaboral::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function disponibilidades()
+    {
+        return $this->hasMany(
+            ConsultorDisponibilidad::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function habilidades()
+    {
+        return $this->hasMany(
+            ConsultorHabilidad::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function idiomas()
+    {
+        return $this->hasMany(
+            ConsultorIdioma::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function tiposConsultoria()
+    {
+        return $this->hasMany(
+            ConsultorTipoConsultoria::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
 }
