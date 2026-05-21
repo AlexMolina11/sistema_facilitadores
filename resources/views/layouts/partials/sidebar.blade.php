@@ -20,7 +20,10 @@
     <a href="#" class="sidebar-link">Bitácora de acceso</a>
 
     <div class="sidebar-section">Consultores</div>
-    <a href="#" class="sidebar-link">Consultores</a>
+    <a href="{{ route('fac.consultores.index') }}" 
+        class="sidebar-link {{ request()->routeIs('fac.consultores.*') ? 'active' : '' }}">
+        Consultores
+    </a>
     <a href="#" class="sidebar-link">Búsqueda avanzada</a>
     <a href="#" class="sidebar-link">Revisión de perfiles</a>
     <a href="#" class="sidebar-link">Exportación CV</a>
