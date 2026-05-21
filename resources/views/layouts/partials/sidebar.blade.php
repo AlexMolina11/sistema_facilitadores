@@ -58,9 +58,63 @@
     class="sidebar-link {{ request()->routeIs('fac.catalogos.habilidad.*') ? 'active' : '' }}">
         Habilidades
     </a>
+    <a href="{{ route('fac.catalogos.paises.index') }}"
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.paises.*') ? 'active' : '' }}">
+        Países
+    </a>
+
+    <a href="{{ route('fac.catalogos.departamentos.index') }}"
+         class="sidebar-link {{ request()->routeIs('fac.catalogos.departamentos.*') ? 'active' : '' }}">
+         Departamentos
+    </a>
+    <a href="{{ route('fac.catalogos.municipios_mh.index') }}"
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.municipios_mh.*') ? 'active' : '' }}">
+        Municipios 
+    </a>
+    <a href="{{ route('fac.catalogos.municipios.index') }}"
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.municipios.*') ? 'active' : '' }}">
+        Distritos
+    </a>
+    <a href="{{ route('fac.catalogos.tipo_telefono.index') }}"
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo_telefono.*') ? 'active' : '' }}">
+        Tipos de teléfono
+    </a>
+    <a href="{{ route('fac.catalogos.idioma-nivel.index') }}" 
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.idioma-nivel.*') ? 'active' : '' }}">
+        Niveles de idioma
+    </a>
+
+    <a href="{{ route('fac.catalogos.nivel-academico.index') }}"
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.nivel-academico.*') ? 'active' : '' }}">      
+        Niveles académicos
+    </a>
+
+    <a href="{{ route('fac.catalogos.tipo-disponibilidad.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-disponibilidad.*') ? 'active' : '' }}">     
+        Tipo disponibilidad
+    </a>
+
+    <a href="{{ route('fac.catalogos.tipo-documento.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-documento.*') ? 'active' : '' }}">
+        Tipo documento
+    </a>
+
+    <a href="{{ route('fac.catalogos.tipo-consultoria.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-consultoria.*') ? 'active' : '' }}">
+        Tipo consultoría
+    </a>
+
+
+</a>
+
+
+</a>
+</a>
+    </a>
     <a href="#" class="sidebar-link">Países</a>
     <a href="#" class="sidebar-link">Departamentos</a>
     <a href="#" class="sidebar-link">Municipios</a>
     <a href="#" class="sidebar-link">Habilidades</a>
     <a href="#" class="sidebar-link">Tipos de consultoría</a>
+
 </aside>
