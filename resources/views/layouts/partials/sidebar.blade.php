@@ -28,7 +28,35 @@
     <div class="sidebar-section">Catálogos</div>
     <a href="{{ route('fac.catalogos.idiomas.index') }}" 
         class="sidebar-link {{ request()->routeIs('fac.catalogos.idiomas.*') ? 'active' : '' }}">
-        Idiomas
+        Idiomas   
+    </a>
+    <a href="{{ route('fac.catalogos.tipo-referencia.index') }}"
+        class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-referencia.*') ? 'active' : '' }}">
+        Tipos de referencia
+    </a>
+    <a href="{{ route('fac.catalogos.tipo-formacion.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-formacion.*') ? 'active' : '' }}">
+        Tipos de formación
+    </a>
+
+        <a href="{{ route('fac.catalogos.tipo-atestado.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-atestado.*') ? 'active' : '' }}">
+        Tipos de atestado
+    </a>
+
+    <a href="{{ route('fac.catalogos.tipo-red-social.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-red-social.*') ? 'active' : '' }}">
+        Tipos de red social
+    </a>
+
+    <a href="{{ route('fac.catalogos.tipo-habilidad.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.tipo-habilidad.*') ? 'active' : '' }}">
+        Tipos de habilidad
+    </a>
+
+    <a href="{{ route('fac.catalogos.habilidad.index') }}"
+    class="sidebar-link {{ request()->routeIs('fac.catalogos.habilidad.*') ? 'active' : '' }}">
+        Habilidades
     </a>
     <a href="{{ route('fac.catalogos.paises.index') }}"
         class="sidebar-link {{ request()->routeIs('fac.catalogos.paises.*') ? 'active' : '' }}">
