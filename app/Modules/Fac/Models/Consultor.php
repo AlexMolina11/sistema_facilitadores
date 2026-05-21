@@ -72,4 +72,13 @@ class Consultor extends Model
         return $this->hasMany(ConsultorEmergencia::class, 'id_consultor', 'id_consultor');
     }
 
+    public function formaciones()
+    {
+        return $this->hasMany(
+            ConsultorFormacionAcademica::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
 }

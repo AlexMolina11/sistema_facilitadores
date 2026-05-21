@@ -168,7 +168,7 @@
         >{{ old('direccion_residencia', $consultor->direccion_residencia ?? '') }}</textarea>
     </div>
 
-    <div class="col-12">
+    <!--<div class="col-12">
         <label class="form-label">Contacto de emergencia</label>
         <input 
             type="text" 
@@ -177,7 +177,7 @@
             class="form-control"
             placeholder="Nombre y teléfono de contacto"
         >
-    </div>
+    </div>-->
 
     <div class="col-md-6">
         <label class="form-label d-block">Vigencia</label>

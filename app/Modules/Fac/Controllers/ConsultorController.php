@@ -59,7 +59,41 @@ class ConsultorController extends Controller
 
     public function show(Consultor $consultor)
     {
-        return view('fac.consultores.show', compact('consultor'));
+        $consultor->load([
+            'emails' => fn ($query) => $query->where('activo', true)->orderByDesc('principal'),
+            'telefonos' => fn ($query) => $query->where('activo', true),
+            'redesSociales' => fn ($query) => $query->where('activo', true),
+            'emergencias' => fn ($query) => $query->where('activo', true),
+            'formaciones' => fn ($query) => $query->where('activo', true)->orderByDesc('fecha_fin'),
+        ]);
+
+        $catalogos = [
+            'tiposTelefono' => DB::table('tbl_tipo_telefono')
+                ->get()
+                ->keyBy('id_tipo_telefono'),
+
+            'tiposRedSocial' => DB::table('tbl_tipo_red_social')
+                ->get()
+                ->keyBy('id_tipo_red_social'),
+
+            'tiposAtestado' => DB::table('tbl_tipo_atestado')
+                ->get()
+                ->keyBy('id_tipo_atestado'),
+
+            'tiposFormacion' => DB::table('tbl_tipo_formacion')
+                ->get()
+                ->keyBy('id_tipo_formacion'),
+
+            'nivelesAcademicos' => DB::table('tbl_nivel_academico')
+                ->get()
+                ->keyBy('id_nivel_academico'),
+
+            'paises' => DB::table('tbl_pais')
+                ->get()
+                ->keyBy('id_pais'),
+        ];
+
+        return view('fac.consultores.show', compact('consultor', 'catalogos'));
     }
 
     public function edit(Consultor $consultor)
