@@ -174,6 +174,35 @@
         </div>
     </div>
 
+    <div class="fepade-card mb-4">
+        <div class="contacto-section-header">
+            <div>
+                <h4>Referencias</h4>
+                <p>Registra hasta 3 referencias personales y hasta 3 referencias laborales.</p>
+            </div>
+
+            <button type="button" class="btn btn-fepade" onclick="agregarReferencia()">
+                + Añadir referencia
+            </button>
+        </div>
+
+        <div id="referencias-wrapper">
+            @forelse($consultor->referencias as $index => $referencia)
+                @include('fac.consultores.partials._referencia_item', [
+                    'index' => $index,
+                    'referencia' => $referencia,
+                    'catalogos' => $catalogos
+                ])
+            @empty
+                @include('fac.consultores.partials._referencia_item', [
+                    'index' => 0,
+                    'referencia' => null,
+                    'catalogos' => $catalogos
+                ])
+            @endforelse
+        </div>
+    </div>
+
     <div class="d-flex justify-content-between">
         <a href="{{ route('fac.consultores.formacion.edit', $consultor) }}" class="btn btn-outline-secondary">
             Anterior: Formación
@@ -188,6 +217,7 @@
 <script>
     let experienciaIndex = {{ max($consultor->experienciasLaborales->count(), 1) }};
     let idiomaIndex = {{ max($consultor->idiomas->count(), 1) }};
+    let referenciaIndex = {{ max($consultor->referencias->count(), 1) }};
 
     function eliminarBloque(button, selector) {
         button.closest(selector).remove();
@@ -211,6 +241,16 @@
         `);
 
         idiomaIndex++;
+    }
+
+    function agregarReferencia() {
+        const wrapper = document.getElementById('referencias-wrapper');
+
+        wrapper.insertAdjacentHTML('beforeend', `
+            @include('fac.consultores.partials._referencia_item_js')
+        `);
+
+        referenciaIndex++;
     }
 </script>
 

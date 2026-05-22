@@ -135,4 +135,13 @@ class Consultor extends Model
         );
     }
 
+    public function referencias()
+    {
+        return $this->hasMany(
+            ConsultorReferencia::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
 }

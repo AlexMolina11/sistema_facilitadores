@@ -12,6 +12,7 @@ use App\Modules\Fac\Models\ConsultorTipoConsultoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Modules\Fac\Models\ConsultorReferencia;
 
 class ConsultorExperienciaController extends Controller
 {
@@ -23,6 +24,7 @@ class ConsultorExperienciaController extends Controller
             'habilidades' => fn ($query) => $query->where('activo', true),
             'idiomas' => fn ($query) => $query->where('activo', true),
             'tiposConsultoria' => fn ($query) => $query->where('activo', true),
+            'referencias' => fn ($query) => $query->where('activo', true),
         ]);
 
         $catalogos = [
@@ -52,6 +54,11 @@ class ConsultorExperienciaController extends Controller
                 ->get(),
 
             'tiposConsultoria' => DB::table('tbl_tipo_consultoria')
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(),
+
+            'tiposReferencia' => DB::table('tbl_tipo_referencia')
                 ->where('activo', true)
                 ->orderBy('nombre')
                 ->get(),
@@ -108,13 +115,31 @@ class ConsultorExperienciaController extends Controller
 
             'tipos_consultoria' => ['nullable', 'array'],
             'tipos_consultoria.*' => ['integer', 'exists:tbl_tipo_consultoria,id_tipo_consultoria'],
+
+            'referencias' => ['nullable', 'array'],
+            'referencias.*.id_tipo_referencia' => ['nullable', 'integer', 'exists:tbl_tipo_referencia,id_tipo_referencia'],
+            'referencias.*.nombre' => ['nullable', 'string', 'max:150'],
+            'referencias.*.telefono' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]{7,20}$/'],
+            'referencias.*.correo' => [
+                'nullable',
+                'string',
+                'max:120',
+                'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/',
+            ],
+            'referencias.*.empresa' => ['nullable', 'string', 'max:150'],
+            'referencias.*.cargo' => ['nullable', 'string', 'max:100'],
+
         ], [
+
             'experiencias.*.jefe_email.regex' => 'El correo del jefe inmediato debe tener un dominio completo. Ejemplo: nombre@dominio.com',
             'experiencias.*.jefe_telefono.regex' => 'El teléfono del jefe inmediato solo puede contener números, espacios, guiones o +.',
             'experiencias.*.evidencia.mimes' => 'La evidencia laboral debe ser PDF, JPG, JPEG, PNG o WEBP.',
             'experiencias.*.evidencia.max' => 'La evidencia laboral no debe superar los 5 MB.',
             'idiomas.*.certificado.mimes' => 'El certificado de idioma debe ser PDF, JPG, JPEG, PNG o WEBP.',
             'idiomas.*.certificado.max' => 'El certificado de idioma no debe superar los 5 MB.',
+            'referencias.*.telefono.regex' => 'El teléfono de referencia solo puede contener números, espacios, guiones o +.',
+            'referencias.*.correo.regex' => 'El correo de referencia debe tener un dominio completo. Ejemplo: nombre@dominio.com',
+
         ]);
 
         foreach ($request->input('experiencias', []) as $index => $experiencia) {
@@ -155,6 +180,37 @@ class ConsultorExperienciaController extends Controller
             return back()->withErrors(['idiomas' => 'No puedes seleccionar idiomas duplicados.'])->withInput();
         }
 
+        $referencias = collect($request->input('referencias', []))
+            ->filter(fn ($item) => !empty($item['id_tipo_referencia']) && !empty($item['nombre']))
+            ->values();
+
+        $tiposReferencia = DB::table('tbl_tipo_referencia')
+            ->where('activo', true)
+            ->get()
+            ->keyBy('id_tipo_referencia');
+
+        $personales = $referencias->filter(function ($item) use ($tiposReferencia) {
+            $tipo = $tiposReferencia->get($item['id_tipo_referencia']);
+            return $tipo && strtolower($tipo->nombre) === 'personal';
+        });
+
+        $laborales = $referencias->filter(function ($item) use ($tiposReferencia) {
+            $tipo = $tiposReferencia->get($item['id_tipo_referencia']);
+            return $tipo && strtolower($tipo->nombre) === 'laboral';
+        });
+
+        if ($personales->count() > 3) {
+            return back()
+                ->withErrors(['referencias' => 'Solo puedes registrar un máximo de 3 referencias personales.'])
+                ->withInput();
+        }
+
+        if ($laborales->count() > 3) {
+            return back()
+                ->withErrors(['referencias' => 'Solo puedes registrar un máximo de 3 referencias laborales.'])
+                ->withInput();
+        }
+
         DB::transaction(function () use ($request, $consultor) {
             $userId = auth()->id();
 
@@ -163,6 +219,7 @@ class ConsultorExperienciaController extends Controller
             $this->eliminarActuales($consultor->habilidades(), $userId);
             $this->eliminarActuales($consultor->idiomas(), $userId, true, 'url_certificado');
             $this->eliminarActuales($consultor->tiposConsultoria(), $userId);
+            $this->eliminarActuales($consultor->referencias(), $userId);
 
             foreach ($request->input('experiencias', []) as $index => $experiencia) {
                 if (empty($experiencia['empresa']) && empty($experiencia['cargo'])) {
@@ -246,6 +303,24 @@ class ConsultorExperienciaController extends Controller
                         'usuario_crea' => $userId,
                     ]);
                 }
+            }
+
+            foreach ($request->input('referencias', []) as $referencia) {
+                if (empty($referencia['id_tipo_referencia']) || empty($referencia['nombre'])) {
+                    continue;
+                }
+
+                ConsultorReferencia::create([
+                    'id_consultor' => $consultor->id_consultor,
+                    'id_tipo_referencia' => $referencia['id_tipo_referencia'],
+                    'nombre' => trim($referencia['nombre']),
+                    'telefono' => $referencia['telefono'] ?? null,
+                    'correo' => !empty($referencia['correo']) ? strtolower(trim($referencia['correo'])) : null,
+                    'empresa' => $referencia['empresa'] ?? null,
+                    'cargo' => $referencia['cargo'] ?? null,
+                    'activo' => true,
+                    'usuario_crea' => $userId,
+                ]);
             }
         });
 
