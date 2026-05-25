@@ -19,6 +19,7 @@ use Database\Seeders\fac\TipoTelefonoSeeder;
 use Database\Seeders\fac\TipoDisponibilidadSeeder;
 use Database\Seeders\fac\TipoDocumentoSeeder;
 use Database\Seeders\fac\TipoRedSocialSeeder;
+use Database\Seeders\fac\HabilidadSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -42,6 +43,7 @@ class DatabaseSeeder extends Seeder
             TipoDisponibilidadSeeder::class,
             TipoDocumentoSeeder::class,
             TipoRedSocialSeeder::class,
+            HabilidadSeeder::class,
         ]);
     }
 }
