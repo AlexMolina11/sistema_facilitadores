@@ -63,8 +63,38 @@ Route::prefix('consultores/{consultor}')
         Route::get('experiencia', [ConsultorExperienciaController::class, 'edit'])
             ->name('experiencia.edit');
 
-        Route::post('experiencia', [ConsultorExperienciaController::class, 'update'])
-            ->name('experiencia.update');
+        Route::post('experiencia/competencias', [ConsultorExperienciaController::class, 'updateCompetencias'])
+            ->name('experiencia.competencias.update');
+
+        Route::post('experiencia/laboral', [ConsultorExperienciaController::class, 'storeExperiencia'])
+            ->name('experiencia.laboral.store');
+
+        Route::put('experiencia/laboral/{experiencia}', [ConsultorExperienciaController::class, 'updateExperiencia'])
+            ->name('experiencia.laboral.update');
+
+        Route::delete('experiencia/laboral/{experiencia}', [ConsultorExperienciaController::class, 'destroyExperiencia'])
+            ->name('experiencia.laboral.destroy');
+
+        Route::post('experiencia/idiomas', [ConsultorExperienciaController::class, 'storeIdioma'])
+            ->name('experiencia.idiomas.store');
+
+        Route::put('experiencia/idiomas/{idioma}', [ConsultorExperienciaController::class, 'updateIdioma'])
+            ->name('experiencia.idiomas.update');
+
+        Route::delete('experiencia/idiomas/{idioma}', [ConsultorExperienciaController::class, 'destroyIdioma'])
+            ->name('experiencia.idiomas.destroy');
+
+        Route::post('experiencia/referencias', [ConsultorExperienciaController::class, 'storeReferencia'])
+            ->name('experiencia.referencias.store');
+
+        Route::put('experiencia/referencias/{referencia}', [ConsultorExperienciaController::class, 'updateReferencia'])
+            ->name('experiencia.referencias.update');
+
+        Route::delete('experiencia/referencias/{referencia}', [ConsultorExperienciaController::class, 'destroyReferencia'])
+            ->name('experiencia.referencias.destroy');
+
+        Route::post('experiencia/continuar', [ConsultorExperienciaController::class, 'continuar'])
+            ->name('experiencia.continuar');
 
         Route::get('documentos', [ConsultorDocumentoController::class, 'edit'])
             ->name('documentos.edit');
