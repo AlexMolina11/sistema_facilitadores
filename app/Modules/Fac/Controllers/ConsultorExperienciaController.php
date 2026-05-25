@@ -19,20 +19,65 @@ class ConsultorExperienciaController extends Controller
 {
     public function edit(Consultor $consultor)
     {
+        return $this->editExperiencia($consultor);
+    }
+
+    public function editExperiencia(Consultor $consultor)
+    {
         $consultor->load([
             'experienciasLaborales' => fn ($query) => $query->where('activo', true)->orderByDesc('desde'),
-            'disponibilidades' => fn ($query) => $query->where('activo', true),
+        ]);
+
+        return view('fac.consultores.experiencia', compact('consultor'));
+    }
+
+    public function editHabilidades(Consultor $consultor)
+    {
+        $consultor->load([
             'habilidades' => fn ($query) => $query->where('activo', true),
-            'idiomas' => fn ($query) => $query->where('activo', true),
             'tiposConsultoria' => fn ($query) => $query->where('activo', true),
-            'referencias' => fn ($query) => $query->where('activo', true)->orderBy('id_tipo_referencia')->orderBy('nombre'),
         ]);
 
         $catalogos = $this->catalogos();
 
+        return view('fac.consultores.habilidades', compact('consultor', 'catalogos'));
+    }
+
+    public function editIdiomas(Consultor $consultor)
+    {
+        $consultor->load([
+            'idiomas' => fn ($query) => $query->where('activo', true),
+        ]);
+
+        $catalogos = $this->catalogos();
+
+        return view('fac.consultores.idiomas', compact('consultor', 'catalogos'));
+    }
+
+    public function editReferencias(Consultor $consultor)
+    {
+        $consultor->load([
+            'referencias' => fn ($query) => $query
+                ->where('activo', true)
+                ->orderBy('id_tipo_referencia')
+                ->orderBy('nombre'),
+        ]);
+
+        $catalogos = $this->catalogos();
         $referenciasPorTipo = $consultor->referencias->groupBy('id_tipo_referencia');
 
-        return view('fac.consultores.experiencia', compact('consultor', 'catalogos', 'referenciasPorTipo'));
+        return view('fac.consultores.referencias', compact('consultor', 'catalogos', 'referenciasPorTipo'));
+    }
+
+    public function editDisponibilidad(Consultor $consultor)
+    {
+        $consultor->load([
+            'disponibilidades' => fn ($query) => $query->where('activo', true),
+        ]);
+
+        $catalogos = $this->catalogos();
+
+        return view('fac.consultores.disponibilidad', compact('consultor', 'catalogos'));
     }
 
     public function storeExperiencia(Request $request, Consultor $consultor)
@@ -105,28 +150,17 @@ class ConsultorExperienciaController extends Controller
     public function updateCompetencias(Request $request, Consultor $consultor)
     {
         $request->validate([
-            'disponibilidades' => ['nullable', 'array'],
-            'disponibilidades.*' => ['integer', 'exists:tbl_tipo_disponibilidad,id_tipo_disponibilidad'],
             'habilidades' => ['nullable', 'array'],
             'habilidades.*' => ['integer', 'exists:tbl_habilidad,id_habilidad'],
             'tipos_consultoria' => ['nullable', 'array'],
             'tipos_consultoria.*' => ['integer', 'exists:tbl_tipo_consultoria,id_tipo_consultoria'],
         ]);
 
-        $disponibilidades = collect($request->input('disponibilidades', []))->filter()->unique()->values();
         $habilidades = collect($request->input('habilidades', []))->filter()->unique()->values();
         $tiposConsultoria = collect($request->input('tipos_consultoria', []))->filter()->unique()->values();
 
-        DB::transaction(function () use ($consultor, $disponibilidades, $habilidades, $tiposConsultoria) {
+        DB::transaction(function () use ($consultor, $habilidades, $tiposConsultoria) {
             $userId = auth()->id();
-
-            $this->sincronizarRelacionSimple(
-                ConsultorDisponibilidad::class,
-                'id_tipo_disponibilidad',
-                $consultor,
-                $disponibilidades,
-                $userId
-            );
 
             $this->sincronizarRelacionSimple(
                 ConsultorHabilidad::class,
@@ -146,8 +180,32 @@ class ConsultorExperienciaController extends Controller
         });
 
         return redirect()
-            ->route('fac.consultores.experiencia.edit', $consultor)
-            ->with('success', 'Disponibilidad, habilidades y tipos de consultoría actualizados correctamente.');
+            ->route('fac.consultores.habilidades.edit', $consultor)
+            ->with('success', 'Habilidades y tipos de consultoría actualizados correctamente.');
+    }
+
+    public function updateDisponibilidad(Request $request, Consultor $consultor)
+    {
+        $request->validate([
+            'disponibilidades' => ['nullable', 'array'],
+            'disponibilidades.*' => ['integer', 'exists:tbl_tipo_disponibilidad,id_tipo_disponibilidad'],
+        ]);
+
+        $disponibilidades = collect($request->input('disponibilidades', []))->filter()->unique()->values();
+
+        DB::transaction(function () use ($consultor, $disponibilidades) {
+            $this->sincronizarRelacionSimple(
+                ConsultorDisponibilidad::class,
+                'id_tipo_disponibilidad',
+                $consultor,
+                $disponibilidades,
+                auth()->id()
+            );
+        });
+
+        return redirect()
+            ->route('fac.consultores.disponibilidad.edit', $consultor)
+            ->with('success', 'Disponibilidad actualizada correctamente.');
     }
 
     public function storeIdioma(Request $request, Consultor $consultor)
@@ -185,7 +243,7 @@ class ConsultorExperienciaController extends Controller
         );
 
         return redirect()
-            ->route('fac.consultores.experiencia.edit', $consultor)
+            ->route('fac.consultores.idiomas.edit', $consultor)
             ->with('success', 'Idioma registrado correctamente.');
     }
 
@@ -218,7 +276,7 @@ class ConsultorExperienciaController extends Controller
         $idioma->update($data);
 
         return redirect()
-            ->route('fac.consultores.experiencia.edit', $consultor)
+            ->route('fac.consultores.idiomas.edit', $consultor)
             ->with('success', 'Idioma actualizado correctamente.');
     }
 
@@ -234,13 +292,14 @@ class ConsultorExperienciaController extends Controller
         $idioma->delete();
 
         return redirect()
-            ->route('fac.consultores.experiencia.edit', $consultor)
+            ->route('fac.consultores.idiomas.edit', $consultor)
             ->with('success', 'Idioma eliminado correctamente.');
     }
 
     public function storeReferencia(Request $request, Consultor $consultor)
     {
         $data = $this->validarReferencia($request);
+        $this->validarCamposPorTipoReferencia($data);
         $this->validarMaximoReferenciasPorTipo($consultor, (int) $data['id_tipo_referencia']);
 
         $data['id_consultor'] = $consultor->id_consultor;
@@ -252,7 +311,7 @@ class ConsultorExperienciaController extends Controller
         ConsultorReferencia::create($data);
 
         return redirect()
-            ->route('fac.consultores.experiencia.edit', $consultor)
+            ->route('fac.consultores.referencias.edit', $consultor)
             ->with('success', 'Referencia registrada correctamente.');
     }
 
@@ -261,6 +320,7 @@ class ConsultorExperienciaController extends Controller
         $this->validarPertenencia($consultor, $referencia->id_consultor);
 
         $data = $this->validarReferencia($request);
+        $this->validarCamposPorTipoReferencia($data);
         $this->validarMaximoReferenciasPorTipo($consultor, (int) $data['id_tipo_referencia'], $referencia->id_referencia);
 
         $data['nombre'] = trim($data['nombre']);
@@ -271,7 +331,7 @@ class ConsultorExperienciaController extends Controller
         $referencia->update($data);
 
         return redirect()
-            ->route('fac.consultores.experiencia.edit', $consultor)
+            ->route('fac.consultores.referencias.edit', $consultor)
             ->with('success', 'Referencia actualizada correctamente.');
     }
 
@@ -287,15 +347,43 @@ class ConsultorExperienciaController extends Controller
         $referencia->delete();
 
         return redirect()
-            ->route('fac.consultores.experiencia.edit', $consultor)
+            ->route('fac.consultores.referencias.edit', $consultor)
             ->with('success', 'Referencia eliminada correctamente.');
     }
 
     public function continuar(Consultor $consultor)
     {
         return redirect()
-            ->route('fac.consultores.documentos.edit', $consultor)
-            ->with('success', 'Continúa con la sección de documentos.');
+            ->route('fac.consultores.formacion.edit', $consultor)
+            ->with('success', 'Experiencia guardada correctamente. Continúa con títulos académicos.');
+    }
+
+    public function continuarHabilidades(Consultor $consultor)
+    {
+        return redirect()
+            ->route('fac.consultores.idiomas.edit', $consultor)
+            ->with('success', 'Continúa con idiomas.');
+    }
+
+    public function continuarIdiomas(Consultor $consultor)
+    {
+        return redirect()
+            ->route('fac.consultores.referencias.edit', $consultor)
+            ->with('success', 'Continúa con referencias.');
+    }
+
+    public function continuarReferencias(Consultor $consultor)
+    {
+        return redirect()
+            ->route('fac.consultores.disponibilidad.edit', $consultor)
+            ->with('success', 'Continúa con disponibilidad.');
+    }
+
+    public function continuarDisponibilidad(Consultor $consultor)
+    {
+        return redirect()
+            ->route('fac.consultores.seguimiento.edit', $consultor)
+            ->with('success', 'Perfil actualizado correctamente. Continúa con seguimiento.');
     }
 
     private function catalogos(): array
@@ -308,6 +396,7 @@ class ConsultorExperienciaController extends Controller
             'nivelesIdioma' => DB::table('tbl_idioma_nivel')->where('activo', true)->orderBy('nombre')->get(),
             'tiposConsultoria' => DB::table('tbl_tipo_consultoria')->where('activo', true)->orderBy('nombre')->get(),
             'tiposReferencia' => DB::table('tbl_tipo_referencia')->where('activo', true)->orderBy('nombre')->get(),
+            'tiposRelacion' => DB::table('tbl_tipo_relacion')->where('activo', true)->orderBy('nombre')->get(),
         ];
     }
 
@@ -369,12 +458,40 @@ class ConsultorExperienciaController extends Controller
             'correo' => ['nullable', 'string', 'max:120', 'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/'],
             'empresa' => ['nullable', 'string', 'max:150'],
             'cargo' => ['nullable', 'string', 'max:100'],
+            'id_tipo_relacion' => ['nullable', 'integer', 'exists:tbl_tipo_relacion,id_tipo_relacion'],
         ], [
             'id_tipo_referencia.required' => 'El tipo de referencia es obligatorio.',
             'nombre.required' => 'El nombre de la referencia es obligatorio.',
             'telefono.regex' => 'El teléfono de referencia solo puede contener números, espacios, guiones o +.',
             'correo.regex' => 'El correo de referencia debe tener un dominio completo. Ejemplo: nombre@dominio.com',
         ]);
+    }
+
+    private function validarCamposPorTipoReferencia(array $data): void
+    {
+        $tipo = DB::table('tbl_tipo_referencia')
+            ->where('id_tipo_referencia', $data['id_tipo_referencia'])
+            ->first();
+
+        $nombreTipo = strtolower($tipo->nombre ?? '');
+
+        if (str_contains($nombreTipo, 'personal')) {
+            if (empty($data['id_tipo_relacion'])) {
+                throw ValidationException::withMessages([
+                    'id_tipo_relacion' => 'Debes seleccionar la relación para una referencia personal.',
+                ]);
+            }
+        }
+
+        if (str_contains($nombreTipo, 'laboral') || str_contains($nombreTipo, 'profesional')) {
+            if (empty($data['cargo'])) {
+                throw ValidationException::withMessages(['cargo' => 'El cargo es obligatorio para una referencia profesional.']);
+            }
+
+            if (empty($data['empresa'])) {
+                throw ValidationException::withMessages(['empresa' => 'La empresa u organización es obligatoria para una referencia profesional.']);
+            }
+        }
     }
 
     private function validarMaximoReferenciasPorTipo(Consultor $consultor, int $idTipoReferencia, ?int $idReferenciaIgnorar = null): void

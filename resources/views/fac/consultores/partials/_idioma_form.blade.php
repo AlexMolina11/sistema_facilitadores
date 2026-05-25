@@ -5,8 +5,8 @@
 <form
     method="POST"
     action="{{ $esEdicion
-        ? route('fac.consultores.experiencia.idiomas.update', [$consultor, $idiomaConsultor])
-        : route('fac.consultores.experiencia.idiomas.store', $consultor)
+        ? route('fac.consultores.idiomas.update', [$consultor, $idiomaConsultor])
+        : route('fac.consultores.idiomas.store', $consultor)
     }}"
     enctype="multipart/form-data"
     class="border rounded p-3 mb-3 bg-light"
@@ -55,7 +55,7 @@
         </div>
 
         <div class="col-12 d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-outline-secondary" onclick="cerrarFormulariosExperiencia()">Cancelar</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="cerrarFormulariosPerfil()">Cancelar</button>
             <button type="submit" class="btn btn-fepade">{{ $esEdicion ? 'Actualizar idioma' : 'Guardar idioma' }}</button>
         </div>
     </div>

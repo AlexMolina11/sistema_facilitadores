@@ -20,6 +20,7 @@ class ConsultorReferencia extends Model
         'correo',
         'empresa',
         'cargo',
+        'id_tipo_relacion',
         'activo',
         'usuario_crea',
         'usuario_mod',
@@ -29,4 +30,14 @@ class ConsultorReferencia extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+
+    public function tipoRelacion()
+    {
+        return $this->belongsTo(TipoRelacion::class, 'id_tipo_relacion', 'id_tipo_relacion');
+    }
+
+    public function tipoReferencia()
+    {
+        return $this->belongsTo(TipoReferencia::class, 'id_tipo_referencia', 'id_tipo_referencia');
+    }
 }

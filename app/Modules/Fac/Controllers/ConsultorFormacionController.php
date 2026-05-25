@@ -136,8 +136,8 @@ class ConsultorFormacionController extends Controller
     public function continuar(Consultor $consultor)
     {
         return redirect()
-            ->route('fac.consultores.experiencia.edit', $consultor)
-            ->with('success', 'Formación guardada correctamente. Continúa con experiencia.');
+            ->route('fac.consultores.habilidades.edit', $consultor)
+            ->with('success', 'Títulos académicos guardados correctamente. Continúa con habilidades.');
     }
 
     private function validarAtestado(Request $request, bool $archivoRequerido): array

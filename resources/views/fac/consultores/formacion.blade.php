@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Formación consultor | Facilitadores FEPADE')
-@section('page-title', 'Formación académica y atestados')
+@section('page-title', 'Títulos Académicos y atestados')
 @section('page-subtitle', 'Registra formación académica y educación continua')
 
 @section('content')
 
 <x-ui.page-header 
-    title="Formación académica y atestados"
+    title="Títulos Académicos y atestados"
     subtitle="{{ $consultor->nombre_completo }}"
 >
     <a href="{{ route('fac.consultores.contacto.edit', $consultor) }}" class="btn btn-outline-secondary">
@@ -15,7 +15,7 @@
     </a>
 </x-ui.page-header>
 
-@include('fac.consultores.partials._wizard', ['step' => 3, 'consultor' => $consultor])
+@include('fac.consultores.partials._wizard', ['step' => 4, 'consultor' => $consultor])
 
 @if($errors->any())
     <div class="alert alert-danger">

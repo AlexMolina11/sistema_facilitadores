@@ -78,7 +78,7 @@
         </div>
 
         <div class="col-12 d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-outline-secondary" onclick="cerrarFormulariosExperiencia()">Cancelar</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="cerrarFormulariosPerfil()">Cancelar</button>
             <button type="submit" class="btn btn-fepade">{{ $esEdicion ? 'Actualizar experiencia' : 'Guardar experiencia' }}</button>
         </div>
     </div>
