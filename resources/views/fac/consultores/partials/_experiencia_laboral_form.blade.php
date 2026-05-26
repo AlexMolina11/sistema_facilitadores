@@ -30,7 +30,7 @@
 
         <div class="col-md-4 d-flex align-items-end">
             <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" name="trabajo_actual" value="1" id="trabajo_actual_{{ $esEdicion ? $experiencia->id_experiencia : 'nuevo' }}" {{ old('trabajo_actual', $experiencia->trabajo_actual ?? false) ? 'checked' : '' }}>
+                <input class="form-check-input js-trabajo-actual" type="checkbox" name="trabajo_actual" value="1" id="trabajo_actual_{{ $esEdicion ? $experiencia->id_experiencia : 'nuevo' }}" {{ old('trabajo_actual', $experiencia->trabajo_actual ?? false) ? 'checked' : '' }}>
                 <label class="form-check-label" for="trabajo_actual_{{ $esEdicion ? $experiencia->id_experiencia : 'nuevo' }}">Trabajo actual</label>
             </div>
         </div>
@@ -42,7 +42,7 @@
 
         <div class="col-md-3">
             <label class="form-label">Fecha hasta</label>
-            <input type="date" name="hasta" value="{{ old('hasta', isset($experiencia) && $experiencia?->hasta ? $experiencia->hasta->format('Y-m-d') : '') }}" class="form-control">
+            <input type="date" name="hasta" value="{{ old('hasta', isset($experiencia) && $experiencia?->hasta ? $experiencia->hasta->format('Y-m-d') : '') }}" class="form-control js-fecha-hasta">
         </div>
 
         <div class="col-md-6">
@@ -83,3 +83,34 @@
         </div>
     </div>
 </form>
+
+@once
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const forms = document.querySelectorAll('form');
+
+                forms.forEach(function (form) {
+                    const trabajoActual = form.querySelector('.js-trabajo-actual');
+                    const fechaHasta = form.querySelector('.js-fecha-hasta');
+
+                    if (!trabajoActual || !fechaHasta) {
+                        return;
+                    }
+
+                    const actualizarFechaHasta = function () {
+                        if (trabajoActual.checked) {
+                            fechaHasta.value = '';
+                            fechaHasta.disabled = true;
+                        } else {
+                            fechaHasta.disabled = false;
+                        }
+                    };
+
+                    trabajoActual.addEventListener('change', actualizarFechaHasta);
+                    actualizarFechaHasta();
+                });
+            });
+        </script>
+    @endpush
+@endonce

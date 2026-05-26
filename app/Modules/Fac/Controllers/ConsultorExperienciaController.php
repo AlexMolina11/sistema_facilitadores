@@ -83,7 +83,12 @@ class ConsultorExperienciaController extends Controller
     public function storeExperiencia(Request $request, Consultor $consultor)
     {
         $data = $this->validarExperiencia($request);
+
+        $data['trabajo_actual'] = $request->boolean('trabajo_actual');
+
         $this->validarFechasExperiencia($data);
+
+        $data = $this->normalizarExperiencia($data);
 
         if ($request->hasFile('evidencia')) {
             $data['url_evidencia'] = $request->file('evidencia')
@@ -91,9 +96,6 @@ class ConsultorExperienciaController extends Controller
         }
 
         $data['id_consultor'] = $consultor->id_consultor;
-        $data['trabajo_actual'] = $request->boolean('trabajo_actual');
-        $data['hasta'] = $data['trabajo_actual'] ? null : ($data['hasta'] ?? null);
-        $data['jefe_email'] = !empty($data['jefe_email']) ? strtolower(trim($data['jefe_email'])) : null;
         $data['activo'] = true;
         $data['usuario_crea'] = auth()->id();
 
@@ -109,7 +111,12 @@ class ConsultorExperienciaController extends Controller
         $this->validarPertenencia($consultor, $experiencia->id_consultor);
 
         $data = $this->validarExperiencia($request);
+
+        $data['trabajo_actual'] = $request->boolean('trabajo_actual');
+
         $this->validarFechasExperiencia($data);
+
+        $data = $this->normalizarExperiencia($data);
 
         if ($request->hasFile('evidencia')) {
             $this->eliminarArchivoPublico($experiencia->url_evidencia);
@@ -118,9 +125,6 @@ class ConsultorExperienciaController extends Controller
                 ->store("consultores/{$consultor->id_consultor}/experiencia", 'public');
         }
 
-        $data['trabajo_actual'] = $request->boolean('trabajo_actual');
-        $data['hasta'] = $data['trabajo_actual'] ? null : ($data['hasta'] ?? null);
-        $data['jefe_email'] = !empty($data['jefe_email']) ? strtolower(trim($data['jefe_email'])) : null;
         $data['activo'] = true;
         $data['usuario_mod'] = auth()->id();
 
@@ -134,6 +138,8 @@ class ConsultorExperienciaController extends Controller
     public function destroyExperiencia(Consultor $consultor, ConsultorExperienciaLaboral $experiencia)
     {
         $this->validarPertenencia($consultor, $experiencia->id_consultor);
+
+        $this->eliminarArchivoPublico($experiencia->url_evidencia);
 
         $experiencia->update([
             'activo' => false,
@@ -186,22 +192,40 @@ class ConsultorExperienciaController extends Controller
 
     public function updateDisponibilidad(Request $request, Consultor $consultor)
     {
-        $request->validate([
+        $data = $request->validate([
             'disponibilidades' => ['nullable', 'array'],
             'disponibilidades.*' => ['integer', 'exists:tbl_tipo_disponibilidad,id_tipo_disponibilidad'],
         ]);
 
-        $disponibilidades = collect($request->input('disponibilidades', []))->filter()->unique()->values();
+        $idsSeleccionados = collect($data['disponibilidades'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
-        DB::transaction(function () use ($consultor, $disponibilidades) {
-            $this->sincronizarRelacionSimple(
-                ConsultorDisponibilidad::class,
-                'id_tipo_disponibilidad',
-                $consultor,
-                $disponibilidades,
-                auth()->id()
-            );
-        });
+        $consultor->disponibilidades()
+            ->whereNotIn('id_tipo_disponibilidad', $idsSeleccionados)
+            ->update([
+                'activo' => false,
+                'usuario_elim' => auth()->id(),
+                'deleted_at' => now(),
+            ]);
+
+        foreach ($idsSeleccionados as $idTipoDisponibilidad) {
+            $consultor->disponibilidades()
+                ->withTrashed()
+                ->updateOrCreate(
+                    [
+                        'id_consultor' => $consultor->id_consultor,
+                        'id_tipo_disponibilidad' => $idTipoDisponibilidad,
+                    ],
+                    [
+                        'activo' => true,
+                        'usuario_mod' => auth()->id(),
+                        'usuario_elim' => null,
+                        'deleted_at' => null,
+                    ]
+                );
+        }
 
         return redirect()
             ->route('fac.consultores.disponibilidad.edit', $consultor)
@@ -478,14 +502,36 @@ class ConsultorExperienciaController extends Controller
 
     private function validarFechasExperiencia(array $data): void
     {
+        if (!empty($data['trabajo_actual'])) {
+            return;
+        }
+
         if (
-            empty($data['trabajo_actual']) &&
             !empty($data['desde']) &&
             !empty($data['hasta']) &&
             $data['hasta'] < $data['desde']
         ) {
-            throw ValidationException::withMessages(['hasta' => 'La fecha hasta no puede ser menor que la fecha desde.']);
+            throw ValidationException::withMessages([
+                'hasta' => 'La fecha hasta no puede ser menor que la fecha desde.',
+            ]);
         }
+    }
+
+    private function normalizarExperiencia(array $data): array
+    {
+        $data['empresa'] = trim($data['empresa']);
+        $data['cargo'] = trim($data['cargo']);
+        $data['descripcion'] = !empty($data['descripcion']) ? trim($data['descripcion']) : null;
+
+        $data['jefe_nombre'] = !empty($data['jefe_nombre']) ? trim($data['jefe_nombre']) : null;
+        $data['jefe_email'] = !empty($data['jefe_email']) ? strtolower(trim($data['jefe_email'])) : null;
+        $data['jefe_telefono'] = !empty($data['jefe_telefono']) ? trim($data['jefe_telefono']) : null;
+
+        $data['hasta'] = !empty($data['trabajo_actual'])
+            ? null
+            : ($data['hasta'] ?? null);
+
+        return $data;
     }
 
     private function validarIdioma(Request $request): array

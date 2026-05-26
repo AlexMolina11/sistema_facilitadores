@@ -25,7 +25,11 @@
                     <div>
                         <div class="perfil-card-title">{{ $experiencia->cargo ?: 'Cargo no registrado' }}</div>
                         <div class="perfil-card-subtitle">{{ $experiencia->empresa ?: 'Empresa no registrada' }}</div>
-                        <div class="perfil-card-meta">{{ $experiencia->desde ? $experiencia->desde->format('F Y') : 'Sin fecha' }} – {{ $experiencia->trabajo_actual ? 'Actualidad' : ($experiencia->hasta ? $experiencia->hasta->format('F Y') : 'Sin fecha') }}</div>
+                        <div class="perfil-card-meta">
+                            {{ $experiencia->desde ? ucfirst($experiencia->desde->translatedFormat('F Y')) : 'Sin fecha' }}
+                            –
+                            {{ $experiencia->trabajo_actual ? 'Actualidad' : ($experiencia->hasta ? ucfirst($experiencia->hasta->translatedFormat('F Y')) : 'Sin fecha') }}
+                        </div>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-sm btn-link text-secondary" onclick="mostrarFormularioPerfil('editar-experiencia-{{ $experiencia->id_experiencia }}')">✎</button>
