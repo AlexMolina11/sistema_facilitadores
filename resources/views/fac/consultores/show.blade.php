@@ -87,7 +87,7 @@
 
                 <div>
                     <span class="expediente-label">Sexo</span>
-                    <span class="expediente-value">{{ $consultor->sexo ?? 'No registrado' }}</span>
+                    <span class="expediente-value">{{ $consultor->sexoCatalogo?->nombre ?? 'No registrado' }}</span>
                 </div>
 
                 <div>

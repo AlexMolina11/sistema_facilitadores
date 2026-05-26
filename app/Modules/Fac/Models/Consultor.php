@@ -25,7 +25,7 @@ class Consultor extends Model
         'numero_identificacion',
         'nit',
         'nrc',
-        'sexo',
+        'id_sexo',
         'fecha_nacimiento',
         'id_pais',
         'id_municipio',
@@ -142,6 +142,11 @@ class Consultor extends Model
             'id_consultor',
             'id_consultor'
         );
+    }
+
+    public function sexoCatalogo()
+    {
+        return $this->belongsTo(Sexo::class, 'id_sexo', 'id_sexo');
     }
 
 }

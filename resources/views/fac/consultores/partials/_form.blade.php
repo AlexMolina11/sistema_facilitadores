@@ -102,12 +102,18 @@
 
     <div class="col-md-4">
         <label class="form-label">Sexo</label>
-        <select name="sexo" class="form-select @error('sexo') is-invalid @enderror">
+        <select name="id_sexo" class="form-select @error('id_sexo') is-invalid @enderror">
             <option value="">Seleccione</option>
-            <option value="M" {{ old('sexo', $consultor->sexo ?? '') === 'M' ? 'selected' : '' }}>Masculino</option>
-            <option value="F" {{ old('sexo', $consultor->sexo ?? '') === 'F' ? 'selected' : '' }}>Femenino</option>
+            @foreach(($catalogos['sexos'] ?? collect()) as $sexo)
+                <option value="{{ $sexo->id_sexo }}"
+                    {{ (string) old('id_sexo', $consultor->id_sexo ?? '') === (string) $sexo->id_sexo ? 'selected' : '' }}>
+                    {{ $sexo->nombre }}
+                </option>
+            @endforeach
         </select>
-        @error('sexo') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        @error('id_sexo')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="col-md-4">

@@ -85,6 +85,7 @@ class ConsultorController extends Controller
     public function show(Consultor $consultor)
     {
         $consultor->load([
+            'sexoCatalogo',
             'emails' => fn ($query) => $query->where('activo', true)->orderByDesc('principal'),
             'telefonos' => fn ($query) => $query->where('activo', true),
             'redesSociales' => fn ($query) => $query->where('activo', true),
@@ -212,6 +213,11 @@ class ConsultorController extends Controller
             'tiposDocumento' => DB::table('tbl_tipo_documento')
                 ->get()
                 ->keyBy('id_tipo_documento'),
+
+            'sexos' => DB::table('tbl_sexo')
+                ->where('activo', true)
+                ->orderBy('nombre')
+                ->get(),
         ];
     }
 

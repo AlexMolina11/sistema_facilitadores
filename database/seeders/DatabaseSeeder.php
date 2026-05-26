@@ -21,6 +21,7 @@ use Database\Seeders\fac\TipoDocumentoSeeder;
 use Database\Seeders\fac\TipoRedSocialSeeder;
 use Database\Seeders\fac\HabilidadSeeder;
 use Database\Seeders\fac\TipoRelacionSeeder;
+use Database\Seeders\fac\SexoSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -46,6 +47,7 @@ class DatabaseSeeder extends Seeder
             TipoDocumentoSeeder::class,
             TipoRedSocialSeeder::class,
             HabilidadSeeder::class,
+            SexoSeeder::class,
         ]);
     }
 }

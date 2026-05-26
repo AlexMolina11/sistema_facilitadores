@@ -43,7 +43,7 @@ class StoreConsultorRequest extends FormRequest
                 Rule::unique('tbl_consultor', 'nrc')->whereNull('deleted_at'),
             ],
 
-            'sexo' => ['nullable', 'in:M,F'],
+            'id_sexo' => ['nullable', 'integer', 'exists:tbl_sexo,id_sexo'],
             'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
 
             'id_pais' => ['nullable', 'integer', 'exists:tbl_pais,id_pais'],
