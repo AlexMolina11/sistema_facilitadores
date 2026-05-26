@@ -30,7 +30,7 @@
 
         @if($esPersonal)
             <div class="col-md-4">
-                <label class="form-label">Relación / relacion <span class="text-danger">*</span></label>
+                <label class="form-label">Relación <span class="text-danger">*</span></label>
                 <select name="id_tipo_relacion" class="form-select" required>
                     <option value="">Seleccione</option>
                     @foreach($catalogos['tiposRelacion'] as $relacion)

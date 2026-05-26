@@ -14,7 +14,17 @@
             <div class="perfil-section-header">
                 <div><h4>{{ $tipoReferencia->nombre }}</h4><p class="text-muted mb-0">Máximo 3 referencias para este tipo. Registradas: {{ $items->count() }}/3.</p></div>
                 @if($items->count() < 3)
-                    <button type="button" class="btn btn-fepade" onclick="mostrarFormularioPerfil('crear-referencia-{{ $tipoReferencia->id_tipo_referencia }}')">+ Añadir referencia</button>
+                    <button 
+                        type="button" 
+                        class="btn btn-fepade" 
+                        onclick="mostrarFormularioPerfil('crear-referencia-{{ $tipoReferencia->id_tipo_referencia }}')"
+                    >
+                        + Añadir referencia
+                    </button>
+                @else
+                    <span class="badge badge-warning-soft">
+                        Límite alcanzado
+                    </span>
                 @endif
             </div>
 

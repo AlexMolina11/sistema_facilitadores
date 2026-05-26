@@ -299,12 +299,13 @@ class ConsultorExperienciaController extends Controller
     public function storeReferencia(Request $request, Consultor $consultor)
     {
         $data = $this->validarReferencia($request);
+
         $this->validarCamposPorTipoReferencia($data);
         $this->validarMaximoReferenciasPorTipo($consultor, (int) $data['id_tipo_referencia']);
 
+        $data = $this->normalizarReferencia($data);
+
         $data['id_consultor'] = $consultor->id_consultor;
-        $data['nombre'] = trim($data['nombre']);
-        $data['correo'] = !empty($data['correo']) ? strtolower(trim($data['correo'])) : null;
         $data['activo'] = true;
         $data['usuario_crea'] = auth()->id();
 
@@ -320,11 +321,16 @@ class ConsultorExperienciaController extends Controller
         $this->validarPertenencia($consultor, $referencia->id_consultor);
 
         $data = $this->validarReferencia($request);
-        $this->validarCamposPorTipoReferencia($data);
-        $this->validarMaximoReferenciasPorTipo($consultor, (int) $data['id_tipo_referencia'], $referencia->id_referencia);
 
-        $data['nombre'] = trim($data['nombre']);
-        $data['correo'] = !empty($data['correo']) ? strtolower(trim($data['correo'])) : null;
+        $this->validarCamposPorTipoReferencia($data);
+        $this->validarMaximoReferenciasPorTipo(
+            $consultor,
+            (int) $data['id_tipo_referencia'],
+            $referencia->id_referencia
+        );
+
+        $data = $this->normalizarReferencia($data);
+
         $data['activo'] = true;
         $data['usuario_mod'] = auth()->id();
 
@@ -556,9 +562,36 @@ class ConsultorExperienciaController extends Controller
             $nombreTipo = $tipo->nombre ?? 'este tipo';
 
             throw ValidationException::withMessages([
-                'id_tipo_referencia' => "Solo puedes registrar un máximo de 3 referencias para {$nombreTipo}.",
+                'id_tipo_referencia' => "Ya alcanzaste el máximo permitido: 3 referencias para {$nombreTipo}.",
             ]);
         }
+    }
+
+    private function normalizarReferencia(array $data): array
+    {
+        $tipo = DB::table('tbl_tipo_referencia')
+            ->where('id_tipo_referencia', $data['id_tipo_referencia'])
+            ->first();
+
+        $nombreTipo = strtolower($tipo->nombre ?? '');
+
+        $data['nombre'] = trim($data['nombre']);
+        $data['telefono'] = !empty($data['telefono']) ? trim($data['telefono']) : null;
+        $data['correo'] = !empty($data['correo']) ? strtolower(trim($data['correo'])) : null;
+        $data['empresa'] = !empty($data['empresa']) ? trim($data['empresa']) : null;
+        $data['cargo'] = !empty($data['cargo']) ? trim($data['cargo']) : null;
+        $data['id_tipo_relacion'] = !empty($data['id_tipo_relacion']) ? $data['id_tipo_relacion'] : null;
+
+        if (str_contains($nombreTipo, 'personal')) {
+            $data['empresa'] = null;
+            $data['cargo'] = null;
+        }
+
+        if (str_contains($nombreTipo, 'laboral') || str_contains($nombreTipo, 'profesional')) {
+            $data['id_tipo_relacion'] = null;
+        }
+
+        return $data;
     }
 
     private function sincronizarRelacionSimple(string $modelo, string $campo, Consultor $consultor, $idsSeleccionados, ?int $userId): void
