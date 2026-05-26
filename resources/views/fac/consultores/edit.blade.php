@@ -6,7 +6,6 @@
 
 @section('content')
 @include('fac.consultores.partials._wizard', ['step' => 1, 'consultor' => $consultor])
-@include('fac.consultores.partials._perfil_cards_styles')
 
 <div class="perfil-panel mb-4">
     <div class="perfil-section-header">

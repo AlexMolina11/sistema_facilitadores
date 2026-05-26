@@ -6,7 +6,6 @@
 
 @section('content')
 @include('fac.consultores.partials._wizard', ['step' => 8, 'consultor' => $consultor])
-@include('fac.consultores.partials._perfil_cards_styles')
 
 <form method="POST" action="{{ route('fac.consultores.disponibilidad.continuar', $consultor) }}">
     @csrf

@@ -86,12 +86,33 @@ class ConsultorController extends Controller
     {
         $consultor->load([
             'sexoCatalogo',
+
             'emails' => fn ($query) => $query->where('activo', true)->orderByDesc('principal'),
+
             'telefonos' => fn ($query) => $query->where('activo', true),
+
             'redesSociales' => fn ($query) => $query->where('activo', true),
+
             'emergencias' => fn ($query) => $query->where('activo', true),
-            'formaciones' => fn ($query) => $query->where('activo', true)->orderByDesc('fecha_fin'),
+
             'documentos' => fn ($query) => $query->where('activo', true),
+
+            'formaciones' => fn ($query) => $query->where('activo', true)->orderByDesc('fecha_fin'),
+
+            'experienciasLaborales' => fn ($query) => $query
+                ->where('activo', true)
+                ->orderByDesc('trabajo_actual')
+                ->orderByDesc('desde'),
+
+            'disponibilidades' => fn ($query) => $query->where('activo', true),
+
+            'habilidades' => fn ($query) => $query->where('activo', true),
+
+            'idiomas' => fn ($query) => $query->where('activo', true),
+
+            'referencias' => fn ($query) => $query->where('activo', true),
+
+            'tiposConsultoria' => fn ($query) => $query->where('activo', true),
         ]);
 
         $catalogos = [
@@ -122,6 +143,37 @@ class ConsultorController extends Controller
             'tiposDocumento' => DB::table('tbl_tipo_documento')
                 ->get()
                 ->keyBy('id_tipo_documento'),
+            'tiposDisponibilidad' => DB::table('tbl_tipo_disponibilidad')
+                ->get()
+                ->keyBy('id_tipo_disponibilidad'),
+
+            'habilidades' => DB::table('tbl_habilidad')
+                ->get()
+                ->keyBy('id_habilidad'),
+
+            'tiposHabilidad' => DB::table('tbl_tipo_habilidad')
+                ->get()
+                ->keyBy('id_tipo_habilidad'),
+
+            'idiomas' => DB::table('tbl_idioma')
+                ->get()
+                ->keyBy('id_idioma'),
+
+            'nivelesIdioma' => DB::table('tbl_idioma_nivel')
+                ->get()
+                ->keyBy('id_idioma_nivel'),
+
+            'tiposReferencia' => DB::table('tbl_tipo_referencia')
+                ->get()
+                ->keyBy('id_tipo_referencia'),
+
+            'tiposRelacion' => DB::table('tbl_tipo_relacion')
+                ->get()
+                ->keyBy('id_tipo_relacion'),
+
+            'tiposConsultoria' => DB::table('tbl_tipo_consultoria')
+                ->get()
+                ->keyBy('id_tipo_consultoria'),
         ];
 
         return view('fac.consultores.show', compact('consultor', 'catalogos'));

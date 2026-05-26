@@ -6,7 +6,6 @@
 
 @section('content')
 @include('fac.consultores.partials._wizard', ['step' => 6, 'consultor' => $consultor])
-@include('fac.consultores.partials._perfil_cards_styles')
 
 <div class="perfil-panel mb-4">
     <div class="perfil-section-header"><div><h4>Idiomas</h4><p class="text-muted mb-0">Registra cada idioma de forma individual.</p></div><button type="button" class="btn btn-fepade" onclick="mostrarFormularioPerfil('crear-idioma')">+ Añadir idioma</button></div>

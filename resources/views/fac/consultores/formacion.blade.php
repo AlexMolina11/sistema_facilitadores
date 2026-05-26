@@ -7,7 +7,6 @@
 @section('content')
 
 @include('fac.consultores.partials._wizard', ['step' => 4, 'consultor' => $consultor])
-@include('fac.consultores.partials._perfil_cards_styles')
 
 <div class="formacion-panel">
     @foreach($catalogos['tiposFormacion'] as $tipoFormacion)
