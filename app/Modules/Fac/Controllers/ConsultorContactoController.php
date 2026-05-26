@@ -34,15 +34,28 @@ class ConsultorContactoController extends Controller
     public function storeEmail(Request $request, Consultor $consultor)
     {
         $data = $this->validarEmail($request);
+
+        $data['email'] = strtolower(trim($data['email']));
+
         $this->validarCorreoUnico($consultor, $data['email']);
 
+        $yaTieneCorreos = ConsultorEmail::where('id_consultor', $consultor->id_consultor)
+            ->where('activo', true)
+            ->exists();
+
+        if (!$yaTieneCorreos) {
+            $data['principal'] = true;
+        }
+
         if (!empty($data['principal'])) {
-            ConsultorEmail::where('id_consultor', $consultor->id_consultor)->where('activo', true)->update(['principal' => false]);
+            ConsultorEmail::where('id_consultor', $consultor->id_consultor)
+                ->where('activo', true)
+                ->update(['principal' => false]);
         }
 
         ConsultorEmail::create([
             'id_consultor' => $consultor->id_consultor,
-            'email' => strtolower(trim($data['email'])),
+            'email' => $data['email'],
             'principal' => !empty($data['principal']),
             'activo' => true,
             'usuario_crea' => auth()->id(),
@@ -58,7 +71,10 @@ class ConsultorContactoController extends Controller
         $this->validarCorreoUnico($consultor, $data['email'], $email->id_email);
 
         if (!empty($data['principal'])) {
-            ConsultorEmail::where('id_consultor', $consultor->id_consultor)->where('id_email', '!=', $email->id_email)->where('activo', true)->update(['principal' => false]);
+            ConsultorEmail::where('id_consultor', $consultor->id_consultor)
+                ->where('id_email', '!=', $email->id_email)
+                ->where('activo', true)
+                ->update(['principal' => false]);
         }
 
         $email->update([
@@ -74,8 +90,36 @@ class ConsultorContactoController extends Controller
     public function destroyEmail(Consultor $consultor, ConsultorEmail $email)
     {
         $this->validarPertenencia($consultor, $email->id_consultor);
-        $email->update(['activo' => false, 'usuario_elim' => auth()->id()]);
+
+        $eraPrincipal = (bool) $email->principal;
+
+        $email->update([
+            'activo' => false,
+            'principal' => false,
+            'usuario_elim' => auth()->id(),
+        ]);
+
         $email->delete();
+
+        if ($eraPrincipal) {
+            $nuevoPrincipal = ConsultorEmail::where('id_consultor', $consultor->id_consultor)
+                ->where('activo', true)
+                ->orderByDesc('updated_at')
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($nuevoPrincipal) {
+                ConsultorEmail::where('id_consultor', $consultor->id_consultor)
+                    ->where('activo', true)
+                    ->update(['principal' => false]);
+
+                $nuevoPrincipal->update([
+                    'principal' => true,
+                    'usuario_mod' => auth()->id(),
+                ]);
+            }
+        }
+
         return back()->with('success', 'Correo eliminado correctamente.');
     }
 
