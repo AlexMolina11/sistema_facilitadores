@@ -1,38 +1,69 @@
 @extends('layouts.app')
 
-@section('title', 'Experiencia consultor | Facilitadores FEPADE')
-@section('page-title', 'Experiencia del consultor')
-@section('page-subtitle', 'Experiencia laboral, habilidades e idiomas')
+@section('title', 'Experiencia | Facilitadores FEPADE')
+@section('page-title', 'Editar perfil')
+@section('page-subtitle', 'Completa y actualiza tu experiencia laboral.')
 
 @section('content')
+@include('fac.consultores.partials._wizard', ['step' => 3, 'consultor' => $consultor])
 
-<x-ui.page-header 
-    title="Experiencia del consultor"
-    subtitle="{{ $consultor->nombre_completo }}"
-/>
-
-@include('fac.consultores.partials._wizard', ['step' => 4, 'consultor' => $consultor])
-
-<form method="POST" action="{{ route('fac.consultores.experiencia.update', $consultor) }}">
-    @csrf
-
-    <div class="fepade-card">
-        <h5 class="mb-3">Experiencia y competencias</h5>
-
-        <div class="alert alert-info mb-0">
-            Esta sección ya está conectada al flujo del wizard. En el siguiente paso agregaremos experiencia laboral, idiomas, habilidades, referencias, disponibilidad y tipos de consultoría.
-        </div>
+<div class="perfil-panel mb-4">
+    <div class="perfil-section-header">
+        <div><h4>Experiencia laboral</h4><p class="text-muted mb-0">Registra cada experiencia de forma individual.</p></div>
+        <button type="button" class="btn btn-fepade" onclick="mostrarFormularioPerfil('crear-experiencia')">+ Añadir experiencia</button>
     </div>
 
-    <div class="d-flex justify-content-between mt-4">
-        <a href="{{ route('fac.consultores.formacion.edit', $consultor) }}" class="btn btn-outline-secondary">
-            Volver a formación
-        </a>
+    <div id="crear-experiencia" class="perfil-form-wrapper d-none">
+        @include('fac.consultores.partials._experiencia_laboral_form', ['consultor' => $consultor, 'experiencia' => null])
+    </div>
 
-        <button type="submit" class="btn btn-fepade">
-            Guardar y continuar
-        </button>
+    @forelse($consultor->experienciasLaborales as $experiencia)
+        <article class="perfil-card-item">
+            <div class="perfil-card-icon">💼</div>
+            <div class="perfil-card-body">
+                <div class="d-flex justify-content-between gap-3">
+                    <div>
+                        <div class="perfil-card-title">{{ $experiencia->cargo ?: 'Cargo no registrado' }}</div>
+                        <div class="perfil-card-subtitle">{{ $experiencia->empresa ?: 'Empresa no registrada' }}</div>
+                        <div class="perfil-card-meta">
+                            {{ $experiencia->desde ? ucfirst($experiencia->desde->translatedFormat('F Y')) : 'Sin fecha' }}
+                            –
+                            {{ $experiencia->trabajo_actual ? 'Actualidad' : ($experiencia->hasta ? ucfirst($experiencia->hasta->translatedFormat('F Y')) : 'Sin fecha') }}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-link text-secondary" onclick="mostrarFormularioPerfil('editar-experiencia-{{ $experiencia->id_experiencia }}')">✎</button>
+                        <form method="POST" action="{{ route('fac.consultores.experiencia.laboral.destroy', [$consultor, $experiencia]) }}" onsubmit="return confirm('¿Deseas eliminar esta experiencia laboral?')">@csrf @method('DELETE')<button type="submit" class="btn btn-sm btn-link text-danger">🗑</button></form>
+                    </div>
+                </div>
+                @if($experiencia->descripcion)<hr><p class="mb-2"><em>“{{ $experiencia->descripcion }}”</em></p>@endif
+                <div class="perfil-card-meta">
+                    @if($experiencia->jefe_nombre) Supervisor: {{ $experiencia->jefe_nombre }}<br>@endif
+                    @if($experiencia->jefe_email) {{ $experiencia->jefe_email }}<br>@endif
+                    @if($experiencia->jefe_telefono) {{ $experiencia->jefe_telefono }}<br>@endif
+                    @if($experiencia->url_evidencia)<a href="{{ Storage::url($experiencia->url_evidencia) }}" target="_blank" class="fw-semibold">Ver Evidencia</a>@endif
+                </div>
+                <div id="editar-experiencia-{{ $experiencia->id_experiencia }}" class="perfil-form-wrapper d-none mt-3">
+                    @include('fac.consultores.partials._experiencia_laboral_form', ['consultor' => $consultor, 'experiencia' => $experiencia])
+                </div>
+            </div>
+        </article>
+    @empty
+        <div class="text-muted border rounded p-4">No hay experiencias laborales registradas.</div>
+    @endforelse
+</div>
+
+<form method="POST" action="{{ route('fac.consultores.experiencia.continuar', $consultor) }}" class="mb-5">@csrf
+    <div class="d-flex justify-content-between">
+        <a href="{{ route('fac.consultores.contacto.edit', $consultor) }}" class="btn btn-outline-secondary">Anterior: Contacto</a>
+        <button type="submit" class="btn btn-fepade">Guardar y continuar</button>
     </div>
 </form>
-
 @endsection
+
+@push('scripts')
+<script>
+function mostrarFormularioPerfil(id){document.querySelectorAll('.perfil-form-wrapper').forEach(el=>el.classList.add('d-none'));const t=document.getElementById(id);if(t)t.classList.remove('d-none');}
+function cerrarFormulariosPerfil(){document.querySelectorAll('.perfil-form-wrapper').forEach(el=>el.classList.add('d-none'));}
+</script>
+@endpush

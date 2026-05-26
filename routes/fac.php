@@ -42,8 +42,23 @@ Route::prefix('consultores/{consultor}')
         Route::get('contacto', [ConsultorContactoController::class, 'edit'])
             ->name('contacto.edit');
 
-        Route::post('contacto', [ConsultorContactoController::class, 'update'])
-            ->name('contacto.update');
+        Route::post('contacto/emails', [ConsultorContactoController::class, 'storeEmail'])->name('contacto.emails.store');
+        Route::put('contacto/emails/{email}', [ConsultorContactoController::class, 'updateEmail'])->name('contacto.emails.update');
+        Route::delete('contacto/emails/{email}', [ConsultorContactoController::class, 'destroyEmail'])->name('contacto.emails.destroy');
+
+        Route::post('contacto/telefonos', [ConsultorContactoController::class, 'storeTelefono'])->name('contacto.telefonos.store');
+        Route::put('contacto/telefonos/{telefono}', [ConsultorContactoController::class, 'updateTelefono'])->name('contacto.telefonos.update');
+        Route::delete('contacto/telefonos/{telefono}', [ConsultorContactoController::class, 'destroyTelefono'])->name('contacto.telefonos.destroy');
+
+        Route::post('contacto/redes', [ConsultorContactoController::class, 'storeRed'])->name('contacto.redes.store');
+        Route::put('contacto/redes/{red}', [ConsultorContactoController::class, 'updateRed'])->name('contacto.redes.update');
+        Route::delete('contacto/redes/{red}', [ConsultorContactoController::class, 'destroyRed'])->name('contacto.redes.destroy');
+
+        Route::post('contacto/emergencias', [ConsultorContactoController::class, 'storeEmergencia'])->name('contacto.emergencias.store');
+        Route::put('contacto/emergencias/{emergencia}', [ConsultorContactoController::class, 'updateEmergencia'])->name('contacto.emergencias.update');
+        Route::delete('contacto/emergencias/{emergencia}', [ConsultorContactoController::class, 'destroyEmergencia'])->name('contacto.emergencias.destroy');
+
+        Route::post('contacto/continuar', [ConsultorContactoController::class, 'continuar'])->name('contacto.continuar');
 
         Route::get('formacion', [ConsultorFormacionController::class, 'edit'])
             ->name('formacion.edit');
@@ -60,17 +75,35 @@ Route::prefix('consultores/{consultor}')
         Route::post('formacion/continuar', [ConsultorFormacionController::class, 'continuar'])
             ->name('formacion.continuar');
 
-        Route::get('experiencia', [ConsultorExperienciaController::class, 'edit'])
-            ->name('experiencia.edit');
+        Route::get('experiencia', [ConsultorExperienciaController::class, 'editExperiencia'])->name('experiencia.edit');
+        Route::post('experiencia/laboral', [ConsultorExperienciaController::class, 'storeExperiencia'])->name('experiencia.laboral.store');
+        Route::put('experiencia/laboral/{experiencia}', [ConsultorExperienciaController::class, 'updateExperiencia'])->name('experiencia.laboral.update');
+        Route::delete('experiencia/laboral/{experiencia}', [ConsultorExperienciaController::class, 'destroyExperiencia'])->name('experiencia.laboral.destroy');
+        Route::post('experiencia/continuar', [ConsultorExperienciaController::class, 'continuar'])->name('experiencia.continuar');
 
-        Route::post('experiencia', [ConsultorExperienciaController::class, 'update'])
-            ->name('experiencia.update');
+        Route::get('habilidades', [ConsultorExperienciaController::class, 'editHabilidades'])->name('habilidades.edit');
+        Route::post('habilidades', [ConsultorExperienciaController::class, 'updateCompetencias'])->name('habilidades.update');
+        Route::post('habilidades/continuar', [ConsultorExperienciaController::class, 'continuarHabilidades'])->name('habilidades.continuar');
 
-        Route::get('documentos', [ConsultorDocumentoController::class, 'edit'])
-            ->name('documentos.edit');
+        Route::get('idiomas', [ConsultorExperienciaController::class, 'editIdiomas'])->name('idiomas.edit');
+        Route::post('idiomas', [ConsultorExperienciaController::class, 'storeIdioma'])->name('idiomas.store');
+        Route::put('idiomas/{idioma}', [ConsultorExperienciaController::class, 'updateIdioma'])->name('idiomas.update');
+        Route::delete('idiomas/{idioma}', [ConsultorExperienciaController::class, 'destroyIdioma'])->name('idiomas.destroy');
+        Route::post('idiomas/continuar', [ConsultorExperienciaController::class, 'continuarIdiomas'])->name('idiomas.continuar');
 
-        Route::post('documentos', [ConsultorDocumentoController::class, 'update'])
-            ->name('documentos.update');
+        Route::get('referencias', [ConsultorExperienciaController::class, 'editReferencias'])->name('referencias.edit');
+        Route::post('referencias', [ConsultorExperienciaController::class, 'storeReferencia'])->name('referencias.store');
+        Route::put('referencias/{referencia}', [ConsultorExperienciaController::class, 'updateReferencia'])->name('referencias.update');
+        Route::delete('referencias/{referencia}', [ConsultorExperienciaController::class, 'destroyReferencia'])->name('referencias.destroy');
+        Route::post('referencias/continuar', [ConsultorExperienciaController::class, 'continuarReferencias'])->name('referencias.continuar');
+
+        Route::get('disponibilidad', [ConsultorExperienciaController::class, 'editDisponibilidad'])->name('disponibilidad.edit');
+        Route::post('disponibilidad', [ConsultorExperienciaController::class, 'updateDisponibilidad'])->name('disponibilidad.update');
+        Route::post('disponibilidad/continuar', [ConsultorExperienciaController::class, 'continuarDisponibilidad'])->name('disponibilidad.continuar');
+
+
+        Route::get('documentos', [ConsultorDocumentoController::class, 'edit'])->name('documentos.edit');
+        Route::post('documentos', [ConsultorDocumentoController::class, 'update'])->name('documentos.update');
 });
 
 Route::prefix('catalogos')->name('fac.catalogos.')->group(function () {

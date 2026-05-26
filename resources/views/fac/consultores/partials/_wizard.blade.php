@@ -1,53 +1,22 @@
 @php
     $steps = [
-        1 => [
-            'label' => 'Datos personales',
-            'route' => isset($consultor) ? route('fac.consultores.edit', $consultor) : null,
-        ],
-        2 => [
-            'label' => 'Contacto',
-            'route' => isset($consultor) ? route('fac.consultores.contacto.edit', $consultor) : null,
-        ],
-        3 => [
-            'label' => 'Formación',
-            'route' => isset($consultor) ? route('fac.consultores.formacion.edit', $consultor) : null,
-        ],
-        4 => [
-            'label' => 'Experiencia',
-            'route' => isset($consultor) ? route('fac.consultores.experiencia.edit', $consultor) : null,
-        ],
-        5 => [
-            'label' => 'Documentos',
-            'route' => isset($consultor) ? route('fac.consultores.documentos.edit', $consultor) : null,
-        ],
+        1 => ['label' => 'Perfil Personal', 'route' => isset($consultor) ? route('fac.consultores.edit', $consultor) : null],
+        2 => ['label' => 'Contacto', 'route' => isset($consultor) ? route('fac.consultores.contacto.edit', $consultor) : null],
+        3 => ['label' => 'Experiencia', 'route' => isset($consultor) ? route('fac.consultores.experiencia.edit', $consultor) : null],
+        4 => ['label' => 'Títulos Académicos', 'route' => isset($consultor) ? route('fac.consultores.formacion.edit', $consultor) : null],
+        5 => ['label' => 'Habilidades', 'route' => isset($consultor) ? route('fac.consultores.habilidades.edit', $consultor) : null],
+        6 => ['label' => 'Idiomas', 'route' => isset($consultor) ? route('fac.consultores.idiomas.edit', $consultor) : null],
+        7 => ['label' => 'Referencias', 'route' => isset($consultor) ? route('fac.consultores.referencias.edit', $consultor) : null],
+        8 => ['label' => 'Disponibilidad', 'route' => isset($consultor) ? route('fac.consultores.disponibilidad.edit', $consultor) : null],
     ];
 @endphp
 
-<div class="fepade-card mb-4">
-    <div class="row g-3">
-        @foreach($steps as $number => $item)
-            <div class="col">
-                @if($item['route'])
-                    <a href="{{ $item['route'] }}" class="text-decoration-none">
-                @endif
-
-                <div class="d-flex align-items-center gap-2">
-                    <div 
-                        class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                        style="width: 34px; height: 34px; {{ $step === $number ? 'background:#00C896;color:white;' : 'background:#EEF2F8;color:#6B7A90;' }}"
-                    >
-                        {{ $number }}
-                    </div>
-
-                    <div class="{{ $step === $number ? 'fw-semibold text-dark' : 'text-muted' }}">
-                        {{ $item['label'] }}
-                    </div>
-                </div>
-
-                @if($item['route'])
-                    </a>
-                @endif
-            </div>
-        @endforeach
-    </div>
+<div class="perfil-tabs">
+    @foreach($steps as $number => $item)
+        @if($item['route'])
+            <a href="{{ $item['route'] }}" class="perfil-tab {{ (int) $step === (int) $number ? 'active' : '' }}">{{ $item['label'] }}</a>
+        @else
+            <span class="perfil-tab {{ (int) $step === (int) $number ? 'active' : '' }}">{{ $item['label'] }}</span>
+        @endif
+    @endforeach
 </div>

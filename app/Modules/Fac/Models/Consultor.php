@@ -25,7 +25,7 @@ class Consultor extends Model
         'numero_identificacion',
         'nit',
         'nrc',
-        'sexo',
+        'id_sexo',
         'fecha_nacimiento',
         'id_pais',
         'id_municipio',
@@ -88,6 +88,65 @@ class Consultor extends Model
             'id_consultor',
             'id_consultor'
         );
+    }
+
+    public function experienciasLaborales()
+    {
+        return $this->hasMany(
+            ConsultorExperienciaLaboral::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function disponibilidades()
+    {
+        return $this->hasMany(
+            ConsultorDisponibilidad::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function habilidades()
+    {
+        return $this->hasMany(
+            ConsultorHabilidad::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function idiomas()
+    {
+        return $this->hasMany(
+            ConsultorIdioma::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function tiposConsultoria()
+    {
+        return $this->hasMany(
+            ConsultorTipoConsultoria::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function referencias()
+    {
+        return $this->hasMany(
+            ConsultorReferencia::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function sexoCatalogo()
+    {
+        return $this->belongsTo(Sexo::class, 'id_sexo', 'id_sexo');
     }
 
 }

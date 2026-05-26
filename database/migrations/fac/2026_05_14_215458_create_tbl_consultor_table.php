@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('numero_identificacion', 30)->nullable();
             $table->string('nit', 20)->nullable();
             $table->string('nrc', 20)->nullable();
-            $table->char('sexo', 1)->nullable();
+            $table->unsignedInteger('id_sexo')->nullable();
             $table->date('fecha_nacimiento')->nullable();
 
             $table->unsignedInteger('id_pais')->nullable();
@@ -41,6 +41,11 @@ return new class extends Migration
 
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('id_sexo')
+                ->references('id_sexo')
+                ->on('tbl_sexo')
+                ->nullOnDelete();
 
             $table->foreign('id_pais')
                 ->references('id_pais')
