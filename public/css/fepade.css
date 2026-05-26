@@ -1596,3 +1596,48 @@ body {
     border-color: var(--accent);
     background: rgba(0, 200, 150, .08);
 }
+
+/* ==========================================================
+   DASHBOARD FACILITADORES
+========================================================== */
+
+.dashboard-filter-card,
+.dashboard-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 10px 28px rgba(13, 27, 42, .04);
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.dashboard-card-header h5 {
+    margin: 0;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.dashboard-card-header p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.dashboard-chart-wrap {
+    position: relative;
+    height: 320px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-chart-wrap {
+        height: 280px;
+    }
+}
