@@ -6,29 +6,10 @@
 
 @section('content')
 
-<x-ui.page-header 
-    title="Títulos Académicos y atestados"
-    subtitle="{{ $consultor->nombre_completo }}"
->
-    <a href="{{ route('fac.consultores.contacto.edit', $consultor) }}" class="btn btn-outline-secondary">
-        Volver a contacto
-    </a>
-</x-ui.page-header>
-
 @include('fac.consultores.partials._wizard', ['step' => 4, 'consultor' => $consultor])
+@include('fac.consultores.partials._perfil_cards_styles')
 
-@if($errors->any())
-    <div class="alert alert-danger">
-        <strong>Revisa los campos marcados.</strong>
-        <ul class="mb-0 mt-2">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
-<div class="fepade-card formacion-panel">
+<div class="formacion-panel">
     @foreach($catalogos['tiposFormacion'] as $tipoFormacion)
         @php
             $formaciones = $formacionesPorTipo->get($tipoFormacion->id_tipo_formacion, collect());
@@ -162,8 +143,8 @@
     @csrf
 
     <div class="d-flex justify-content-between">
-        <a href="{{ route('fac.consultores.contacto.edit', $consultor) }}" class="btn btn-outline-secondary">
-            Anterior: Contacto
+        <a href="{{ route('fac.consultores.experiencia.edit', $consultor) }}" class="btn btn-outline-secondary">
+            Anterior: Experiencia
         </a>
 
         <button type="submit" class="btn btn-fepade">

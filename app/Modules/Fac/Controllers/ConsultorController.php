@@ -168,8 +168,8 @@ class ConsultorController extends Controller
         $this->guardarDocumentosIdentificacion($request, $consultor);
 
         return redirect()
-            ->route('fac.consultores.show', $consultor)
-            ->with('success', 'Datos personales actualizados correctamente.');
+            ->route('fac.consultores.contacto.edit', $consultor)
+            ->with('success', 'Datos personales actualizados correctamente. Continúa con la información de contacto.');
     }
 
     public function destroy(Consultor $consultor)

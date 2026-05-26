@@ -50,7 +50,12 @@
     @endforelse
 </div>
 
-<form method="POST" action="{{ route('fac.consultores.experiencia.continuar', $consultor) }}" class="d-flex justify-content-end mb-5">@csrf<button type="submit" class="btn btn-fepade">Guardar y continuar</button></form>
+<form method="POST" action="{{ route('fac.consultores.experiencia.continuar', $consultor) }}" class="mb-5">@csrf
+    <div class="d-flex justify-content-between">
+        <a href="{{ route('fac.consultores.contacto.edit', $consultor) }}" class="btn btn-outline-secondary">Anterior: Contacto</a>
+        <button type="submit" class="btn btn-fepade">Guardar y continuar</button>
+    </div>
+</form>
 @endsection
 
 @push('scripts')

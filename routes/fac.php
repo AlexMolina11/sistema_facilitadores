@@ -101,8 +101,6 @@ Route::prefix('consultores/{consultor}')
         Route::post('disponibilidad', [ConsultorExperienciaController::class, 'updateDisponibilidad'])->name('disponibilidad.update');
         Route::post('disponibilidad/continuar', [ConsultorExperienciaController::class, 'continuarDisponibilidad'])->name('disponibilidad.continuar');
 
-        Route::get('seguimiento', [ConsultorDocumentoController::class, 'edit'])->name('seguimiento.edit');
-        Route::post('seguimiento', [ConsultorDocumentoController::class, 'update'])->name('seguimiento.update');
 
         Route::get('documentos', [ConsultorDocumentoController::class, 'edit'])->name('documentos.edit');
         Route::post('documentos', [ConsultorDocumentoController::class, 'update'])->name('documentos.update');

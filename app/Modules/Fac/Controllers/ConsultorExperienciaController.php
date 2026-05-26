@@ -358,11 +358,41 @@ class ConsultorExperienciaController extends Controller
             ->with('success', 'Experiencia guardada correctamente. Continúa con títulos académicos.');
     }
 
-    public function continuarHabilidades(Consultor $consultor)
+    public function continuarHabilidades(Request $request, Consultor $consultor)
     {
+        $request->validate([
+            'habilidades' => ['nullable', 'array'],
+            'habilidades.*' => ['integer', 'exists:tbl_habilidad,id_habilidad'],
+            'tipos_consultoria' => ['nullable', 'array'],
+            'tipos_consultoria.*' => ['integer', 'exists:tbl_tipo_consultoria,id_tipo_consultoria'],
+        ]);
+
+        $habilidades = collect($request->input('habilidades', []))->filter()->unique()->values();
+        $tiposConsultoria = collect($request->input('tipos_consultoria', []))->filter()->unique()->values();
+
+        DB::transaction(function () use ($consultor, $habilidades, $tiposConsultoria) {
+            $userId = auth()->id();
+
+            $this->sincronizarRelacionSimple(
+                ConsultorHabilidad::class,
+                'id_habilidad',
+                $consultor,
+                $habilidades,
+                $userId
+            );
+
+            $this->sincronizarRelacionSimple(
+                ConsultorTipoConsultoria::class,
+                'id_tipo_consultoria',
+                $consultor,
+                $tiposConsultoria,
+                $userId
+            );
+        });
+
         return redirect()
             ->route('fac.consultores.idiomas.edit', $consultor)
-            ->with('success', 'Continúa con idiomas.');
+            ->with('success', 'Habilidades guardadas correctamente. Continúa con idiomas.');
     }
 
     public function continuarIdiomas(Consultor $consultor)
@@ -379,11 +409,28 @@ class ConsultorExperienciaController extends Controller
             ->with('success', 'Continúa con disponibilidad.');
     }
 
-    public function continuarDisponibilidad(Consultor $consultor)
+    public function continuarDisponibilidad(Request $request, Consultor $consultor)
     {
+        $request->validate([
+            'disponibilidades' => ['nullable', 'array'],
+            'disponibilidades.*' => ['integer', 'exists:tbl_tipo_disponibilidad,id_tipo_disponibilidad'],
+        ]);
+
+        $disponibilidades = collect($request->input('disponibilidades', []))->filter()->unique()->values();
+
+        DB::transaction(function () use ($consultor, $disponibilidades) {
+            $this->sincronizarRelacionSimple(
+                ConsultorDisponibilidad::class,
+                'id_tipo_disponibilidad',
+                $consultor,
+                $disponibilidades,
+                auth()->id()
+            );
+        });
+
         return redirect()
-            ->route('fac.consultores.seguimiento.edit', $consultor)
-            ->with('success', 'Perfil actualizado correctamente. Continúa con seguimiento.');
+            ->route('fac.consultores.show', $consultor)
+            ->with('success', 'Perfil del consultor actualizado correctamente.');
     }
 
     private function catalogos(): array

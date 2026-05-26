@@ -20,6 +20,11 @@
     @endforelse
 </div>
 
-<form method="POST" action="{{ route('fac.consultores.idiomas.continuar', $consultor) }}" class="d-flex justify-content-end mb-5">@csrf<button type="submit" class="btn btn-fepade">Guardar y continuar</button></form>
+<form method="POST" action="{{ route('fac.consultores.idiomas.continuar', $consultor) }}" class="mb-5">@csrf
+    <div class="d-flex justify-content-between">
+        <a href="{{ route('fac.consultores.habilidades.edit', $consultor) }}" class="btn btn-outline-secondary">Anterior: Habilidades</a>
+        <button type="submit" class="btn btn-fepade">Guardar y continuar</button>
+    </div>
+</form>
 @endsection
 @push('scripts')<script>function mostrarFormularioPerfil(id){document.querySelectorAll('.perfil-form-wrapper').forEach(el=>el.classList.add('d-none'));const t=document.getElementById(id);if(t)t.classList.remove('d-none');}function cerrarFormulariosPerfil(){document.querySelectorAll('.perfil-form-wrapper').forEach(el=>el.classList.add('d-none'));}</script>@endpush
