@@ -164,6 +164,11 @@
                     Tipos de disponibilidad
                 </a>
 
+                <a href="{{ route('fac.catalogos.sexo.index') }}"
+                   class="sidebar-link {{ request()->routeIs('fac.catalogos.sexo.*') ? 'active' : '' }}">
+                         Sexo
+                </a>
+
             </div>
         </div>
     </div>
