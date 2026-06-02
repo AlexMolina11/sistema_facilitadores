@@ -13,7 +13,6 @@ subtitle="Completa la información del sexo."
 
 <div class="fepade-card">
 
-```
 <form method="POST" action="{{ route('fac.catalogos.sexo.store') }}">
 
     @csrf
@@ -90,7 +89,6 @@ subtitle="Completa la información del sexo."
     </div>
 
 </form>
-```
 
 </div>
 

@@ -122,6 +122,11 @@
 
                 <div class="sidebar-subtitle">Datos del consultor</div>
 
+                <a href="{{ route('fac.catalogos.sexo.index') }}"
+                   class="sidebar-link {{ request()->routeIs('fac.catalogos.sexo.*') ? 'active' : '' }}">
+                    Sexo
+                </a>
+
                 <a href="{{ route('fac.catalogos.tipo_telefono.index') }}"
                    class="sidebar-sublink {{ request()->routeIs('fac.catalogos.tipo_telefono.*') ? 'active' : '' }}">
                     Tipos de teléfono
@@ -163,12 +168,6 @@
                    class="sidebar-sublink {{ request()->routeIs('fac.catalogos.tipo-disponibilidad.*') ? 'active' : '' }}">
                     Tipos de disponibilidad
                 </a>
-
-                <a href="{{ route('fac.catalogos.sexo.index') }}"
-                   class="sidebar-link {{ request()->routeIs('fac.catalogos.sexo.*') ? 'active' : '' }}">
-                         Sexo
-                </a>
-
             </div>
         </div>
     </div>
