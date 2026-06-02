@@ -279,7 +279,7 @@
     <div class="col-12">
         <hr>
         <h5 class="mb-1">Residencia</h5>
-        <p class="text-muted mb-0">Selecciona país, departamento, municipio MH y municipio/distrito.</p>
+        <p class="text-muted mb-0">Selecciona país, departamento, municipio y distrito.</p>
     </div>
 
     <div class="col-md-6">
@@ -313,7 +313,7 @@
     </div>
 
     <div class="col-md-6">
-        <label class="form-label">Municipio MH</label>
+        <label class="form-label">Municipio</label>
         <select name="id_municipio_mh" id="id_municipio_mh" class="form-select @error('id_municipio_mh') is-invalid @enderror">
             <option value="">Seleccione</option>
             @foreach($catalogos['municipiosMh'] as $municipioMh)
@@ -330,7 +330,7 @@
     </div>
 
     <div class="col-md-6">
-        <label class="form-label">Municipio / Distrito</label>
+        <label class="form-label">Distrito</label>
         <select name="id_municipio" id="id_municipio" class="form-select @error('id_municipio') is-invalid @enderror">
             <option value="">Seleccione</option>
             @foreach($catalogos['municipios'] as $municipio)
