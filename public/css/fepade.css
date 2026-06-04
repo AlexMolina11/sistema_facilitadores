@@ -1641,3 +1641,36 @@ body {
         height: 280px;
     }
 }
+
+/*sección de nombre de usuario topbar*/
+
+.topbar-user-info {
+    text-align: right;
+    line-height: 1.15;
+}
+
+.topbar-user-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.topbar-user-role {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.topbar-menu-btn {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    border-radius: 0.75rem;
+    padding: 0.55rem 0.9rem;
+    font-weight: 700;
+}
+
+.topbar-menu-btn:hover,
+.topbar-menu-btn:focus {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
