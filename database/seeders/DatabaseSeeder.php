@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Database\Seeders\seg\SeguridadBaseSeeder;
 use Database\Seeders\fac\TipoHabilidadSeeder;
 use Database\Seeders\fac\PaisSeeder;
 use Database\Seeders\fac\DepartamentoSeeder;
@@ -30,6 +31,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            SeguridadBaseSeeder::class,
+
             TipoHabilidadSeeder::class,
             PaisSeeder::class,
             DepartamentoSeeder::class,
