@@ -47,7 +47,7 @@ class RolController extends Controller
 
         $rol = Rol::create($data + ['activo' => $request->boolean('activo', true)]);
         $rol->permisos()->sync($request->input('permisos', []));
-        $this->bitacora->registrarActual('seg_rol_creado', $request);
+        $this->bitacora->rolesCrear($request);
 
         return redirect()->route('seg.roles.index')->with('success', 'Rol creado correctamente.');
     }
@@ -73,7 +73,7 @@ class RolController extends Controller
 
         $role->update($data);
         $role->permisos()->sync($request->input('permisos', []));
-        $this->bitacora->registrarActual('seg_rol_actualizado', $request);
+        $this->bitacora->rolesActualizar($request);
 
         return redirect()->route('seg.roles.index')->with('success', 'Rol actualizado correctamente.');
     }
@@ -90,7 +90,7 @@ class RolController extends Controller
 
         $role->update(['activo' => false]);
         $role->delete();
-        $this->bitacora->registrarActual('seg_rol_eliminado', $request);
+        $this->bitacora->rolesEliminar($request);
 
         return back()->with('success', 'Rol eliminado correctamente.');
     }

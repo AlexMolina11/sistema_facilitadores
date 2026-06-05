@@ -7,6 +7,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('css/fepade.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/fepade-ux-unificado.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
 <body>
@@ -21,7 +22,7 @@
 
         <section class="app-content">
             @include('layouts.partials.alerts')
-
+            <x-ui.alerts />
             @yield('content')
         </section>
     </main>

@@ -6,50 +6,42 @@
 
 @section('content')
 
-<x-ui.page-header
-    title="Usuarios"
-    subtitle="Administración de cuentas, roles y consultores asociados."
-/>
+<x-ui.page-header title="Usuarios" subtitle="Administración de cuentas, roles y consultores asociados.">
+    <a href="{{ route('seg.usuarios.create') }}" class="btn btn-fepade">
+        Nuevo usuario
+    </a>
+</x-ui.page-header>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-5">
-                <label class="form-label">Buscar</label>
-                <input type="text"
-                       name="q"
-                       value="{{ request('q') }}"
-                       class="form-control"
-                       placeholder="Nombre, apellido o correo">
-            </div>
+<div class="fepade-card mb-4">
+    <form method="GET" action="{{ route('seg.usuarios.index') }}" class="row g-3 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">Buscar</label>
+            <input type="text"
+                   name="q"
+                   value="{{ request('q') }}"
+                   class="form-control"
+                   placeholder="Nombre, apellido o correo">
+        </div>
 
-            <div class="col-md-3">
-                <label class="form-label">Estado</label>
-                <select name="activo" class="form-select">
-                    <option value="">Todos</option>
-                    <option value="1" @selected(request('activo') === '1')>Activos</option>
-                    <option value="0" @selected(request('activo') === '0')>Inactivos</option>
-                </select>
-            </div>
+        <div class="col-md-3">
+            <label class="form-label">Estado</label>
+            <select name="activo" class="form-select">
+                <option value="">Todos</option>
+                <option value="1" @selected(request('activo') === '1')>Activos</option>
+                <option value="0" @selected(request('activo') === '0')>Inactivos</option>
+            </select>
+        </div>
 
-            <div class="col-md-2">
-                <button class="btn btn-primary w-100">
-                    Filtrar
-                </button>
-            </div>
-
-            <div class="col-md-2">
-                <a href="{{ route('seg.usuarios.create') }}" class="btn btn-success w-100">
-                    Nuevo
-                </a>
-            </div>
-        </form>
-    </div>
+        <div class="col-md-3 fepade-filter-actions">
+            <button class="btn btn-navy w-100">Filtrar</button>
+            <a href="{{ route('seg.usuarios.index') }}" class="btn btn-outline-secondary w-100">Limpiar</a>
+        </div>
+    </form>
 </div>
 
-<div class="card">
+<div class="fepade-card">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle">
             <thead>
                 <tr>
                     <th>Usuario</th>
@@ -65,14 +57,15 @@
                 @forelse($usuarios as $usuario)
                     <tr>
                         <td>
-                            <strong>{{ $usuario->nombres }} {{ $usuario->apellidos }}</strong>
+                            <div class="fw-semibold">{{ $usuario->nombres }} {{ $usuario->apellidos }}</div>
+                            <div class="text-muted small">ID: {{ $usuario->id_usuario }}</div>
                         </td>
 
                         <td>{{ $usuario->email }}</td>
 
                         <td>
                             @forelse($usuario->roles as $rol)
-                                <span class="badge bg-primary">
+                                <span class="badge badge-primary-soft mb-1">
                                     {{ $rol->nombre }}
                                 </span>
                             @empty
@@ -82,7 +75,7 @@
 
                         <td>
                             @if($usuario->consultor)
-                                {{ $usuario->consultor->nombres }} {{ $usuario->consultor->apellidos }}
+                                <div class="fw-semibold">{{ $usuario->consultor->nombres }} {{ $usuario->consultor->apellidos }}</div>
                             @else
                                 <span class="text-muted">No asociado</span>
                             @endif
@@ -90,29 +83,30 @@
 
                         <td>
                             @if($usuario->activo)
-                                <span class="badge bg-success">Activo</span>
+                                <span class="badge badge-success-soft">Activo</span>
                             @else
-                                <span class="badge bg-secondary">Inactivo</span>
+                                <span class="badge badge-warning-soft">Inactivo</span>
                             @endif
                         </td>
 
                         <td class="text-end">
-                            <a href="{{ route('seg.usuarios.edit', $usuario) }}"
-                               class="btn btn-sm btn-outline-primary">
-                                Editar
-                            </a>
+                            <div class="fepade-actions">
+                                <a href="{{ route('seg.usuarios.edit', $usuario) }}" class="btn btn-sm btn-outline-primary">
+                                    Editar
+                                </a>
 
-                            <form method="POST"
-                                  action="{{ route('seg.usuarios.destroy', $usuario) }}"
-                                  class="d-inline"
-                                  onsubmit="return confirm('¿Seguro que deseas eliminar este usuario?');">
-                                @csrf
-                                @method('DELETE')
+                                <form method="POST"
+                                      action="{{ route('seg.usuarios.destroy', $usuario) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('¿Seguro que deseas eliminar este usuario?');">
+                                    @csrf
+                                    @method('DELETE')
 
-                                <button class="btn btn-sm btn-outline-danger">
-                                    Eliminar
-                                </button>
-                            </form>
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -127,8 +121,8 @@
     </div>
 
     @if($usuarios->hasPages())
-        <div class="card-footer">
-            {{ $usuarios->links() }}
+        <div class="mt-4 pagination-wrapper">
+            {{ $usuarios->links('pagination::bootstrap-5') }}
         </div>
     @endif
 </div>

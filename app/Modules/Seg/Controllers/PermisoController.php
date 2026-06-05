@@ -55,7 +55,7 @@ class PermisoController extends Controller
         $data['activo'] = $request->boolean('activo', true);
 
         Permiso::create($data);
-        $this->bitacora->registrarActual('seg_permiso_creado', $request);
+        $this->bitacora->permisosCrear($request);
 
         return redirect()->route('seg.permisos.index')->with('success', 'Permiso creado correctamente.');
     }
@@ -73,7 +73,7 @@ class PermisoController extends Controller
         $data['activo'] = $request->boolean('activo');
 
         $permiso->update($data);
-        $this->bitacora->registrarActual('seg_permiso_actualizado', $request);
+        $this->bitacora->permisosActualizar($request);
 
         return redirect()->route('seg.permisos.index')->with('success', 'Permiso actualizado correctamente.');
     }
@@ -86,7 +86,7 @@ class PermisoController extends Controller
 
         $permiso->update(['activo' => false]);
         $permiso->delete();
-        $this->bitacora->registrarActual('seg_permiso_eliminado', $request);
+        $this->bitacora->permisosEliminar($request);
 
         return back()->with('success', 'Permiso eliminado correctamente.');
     }

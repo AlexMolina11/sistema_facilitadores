@@ -11,9 +11,8 @@
     subtitle="Modificación de datos, roles, permisos directos y consultor asociado."
 />
 
-<div class="card">
-    <div class="card-body">
-        <form method="POST" action="{{ route('seg.usuarios.update', $usuario) }}">
+<div class="fepade-card">
+    <form method="POST" action="{{ route('seg.usuarios.update', $usuario) }}">
             @csrf
             @method('PUT')
 
@@ -27,10 +26,9 @@
 
             <div class="d-flex justify-content-end gap-2 mt-4">
                 <a href="{{ route('seg.usuarios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-                <button class="btn btn-primary">Actualizar usuario</button>
+                <button class="btn btn-navy">Actualizar usuario</button>
             </div>
-        </form>
-    </div>
+    </form>
 </div>
 
 @endsection

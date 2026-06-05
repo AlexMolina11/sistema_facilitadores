@@ -58,7 +58,7 @@ class UsuarioController extends Controller
 
             $usuario->roles()->sync($request->input('roles', []));
             $this->syncPermisosDirectos($usuario, $request);
-            $this->bitacora->registrarActual('seg_usuario_creado', $request);
+            $this->bitacora->usuariosCrear($request);
         });
 
         return redirect()->route('seg.usuarios.index')->with('success', 'Usuario creado correctamente.');
@@ -100,7 +100,7 @@ class UsuarioController extends Controller
             $usuario->update($data);
             $usuario->roles()->sync($request->input('roles', []));
             $this->syncPermisosDirectos($usuario, $request);
-            $this->bitacora->registrarActual('seg_usuario_actualizado', $request);
+            $this->bitacora->usuariosActualizar($request);
         });
 
         return redirect()->route('seg.usuarios.index')->with('success', 'Usuario actualizado correctamente.');
@@ -119,7 +119,7 @@ class UsuarioController extends Controller
         DB::transaction(function () use ($request, $usuario) {
             $usuario->update(['usuario_elim' => auth()->id(), 'activo' => false]);
             $usuario->delete();
-            $this->bitacora->registrarActual('seg_usuario_eliminado', $request);
+            $this->bitacora->usuariosEliminar($request);
         });
 
         return back()->with('success', 'Usuario eliminado correctamente.');

@@ -11,13 +11,13 @@
 <form method="POST" action="{{ route('seg.roles.store') }}">
     @csrf
 
-    <div class="card">
-        <div class="card-body">
+    <div class="fepade-card">
+        <div>
             @include('seg.roles.partials.form')
         </div>
-        <div class="card-footer d-flex justify-content-end gap-2">
+        <div class="d-flex justify-content-end gap-2 mt-4">
             <a href="{{ route('seg.roles.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-            <button class="btn btn-primary">Guardar</button>
+            <button class="btn btn-navy">Guardar</button>
         </div>
     </div>
 </form>

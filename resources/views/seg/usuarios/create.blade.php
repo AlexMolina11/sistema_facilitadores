@@ -11,9 +11,8 @@
     subtitle="Registro de usuarios internos del sistema con roles y permisos específicos."
 />
 
-<div class="card">
-    <div class="card-body">
-        <form method="POST" action="{{ route('seg.usuarios.store') }}">
+<div class="fepade-card">
+    <form method="POST" action="{{ route('seg.usuarios.store') }}">
             @csrf
 
             @include('seg.usuarios.partials.form', [
@@ -26,10 +25,9 @@
 
             <div class="d-flex justify-content-end gap-2 mt-4">
                 <a href="{{ route('seg.usuarios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-                <button class="btn btn-primary">Guardar usuario</button>
+                <button class="btn btn-navy">Guardar usuario</button>
             </div>
-        </form>
-    </div>
+    </form>
 </div>
 
 @endsection
