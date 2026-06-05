@@ -27,9 +27,12 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): RedirectResponse
     {
+        $request->ensureIsNotRateLimited();
+
         $usuario = Usuario::where('email', $request->email)->first();
 
         if (!$usuario || !Hash::check($request->password, $usuario->password)) {
+            $request->hitRateLimiter();
             $this->bitacora->registrar($usuario?->id_usuario, 'login_fallido', $request);
 
             return back()
@@ -38,12 +41,15 @@ class AuthController extends Controller
         }
 
         if (!$usuario->activo) {
+            $request->hitRateLimiter();
             $this->bitacora->registrar($usuario->id_usuario, 'login_usuario_inactivo', $request);
 
             return back()
                 ->withErrors(['email' => 'El usuario se encuentra inactivo.'])
                 ->onlyInput('email');
         }
+
+        $request->clearRateLimiter();
 
         Auth::login($usuario, $request->boolean('remember'));
         $request->session()->regenerate();

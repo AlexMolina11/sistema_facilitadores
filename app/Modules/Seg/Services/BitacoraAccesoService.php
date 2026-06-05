@@ -17,4 +17,9 @@ class BitacoraAccesoService
             'fecha_evento' => now(),
         ]);
     }
+
+    public function registrarActual(string $evento, ?Request $request = null): void
+    {
+        $this->registrar(auth()->id(), $evento, $request);
+    }
 }

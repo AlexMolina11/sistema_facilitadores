@@ -8,7 +8,7 @@
 
 <x-ui.page-header
     title="Nuevo usuario"
-    subtitle="Registro de usuarios internos del sistema."
+    subtitle="Registro de usuarios internos del sistema con roles y permisos específicos."
 />
 
 <div class="card">
@@ -19,16 +19,14 @@
             @include('seg.usuarios.partials.form', [
                 'usuario' => null,
                 'rolesSeleccionados' => [],
+                'permisosPermitidos' => [],
+                'permisosDenegados' => [],
+                'permisosEfectivos' => [],
             ])
 
             <div class="d-flex justify-content-end gap-2 mt-4">
-                <a href="{{ route('seg.usuarios.index') }}" class="btn btn-outline-secondary">
-                    Cancelar
-                </a>
-
-                <button class="btn btn-primary">
-                    Guardar usuario
-                </button>
+                <a href="{{ route('seg.usuarios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                <button class="btn btn-primary">Guardar usuario</button>
             </div>
         </form>
     </div>

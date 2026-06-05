@@ -1,3 +1,37 @@
+@php
+    use Illuminate\Support\Facades\Route;
+
+    $usuario = auth()->user();
+
+    $seguridadItems = collect([
+        [
+            'label' => 'Usuarios',
+            'route' => 'seg.usuarios.index',
+            'permission' => 'seg.usuarios.gestionar',
+        ],
+        [
+            'label' => 'Roles',
+            'route' => 'seg.roles.index',
+            'permission' => 'seg.roles.gestionar',
+        ],
+        [
+            'label' => 'Permisos',
+            'route' => 'seg.permisos.index',
+            'permission' => 'seg.permisos.gestionar',
+        ],
+        [
+            'label' => 'Invitaciones',
+            'route' => 'seg.invitaciones.index',
+            'permission' => 'seg.invitaciones.gestionar',
+        ],
+        [
+            'label' => 'Bitácora de acceso',
+            'route' => 'seg.bitacora.index',
+            'permission' => 'seg.bitacora.ver',
+        ],
+    ])->filter(fn ($item) => $usuario?->tienePermiso($item['permission']) && Route::has($item['route']))->values();
+@endphp
+
 <header class="app-topbar">
     <div class="topbar-left">
         <button type="button" class="topbar-sidebar-btn d-none d-lg-inline-flex" id="sidebarToggle">
@@ -25,32 +59,21 @@
 
     <div class="d-flex align-items-center gap-3">
         @auth
-            @php
-                $usuario = auth()->user();
-            @endphp
-
-            @if($usuario->tienePermiso('seg.usuarios.gestionar') || $usuario->tienePermiso('seg.bitacora.ver'))
+            @if($seguridadItems->isNotEmpty())
                 <div class="dropdown">
                     <button class="topbar-menu-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         Seguridad
                     </button>
 
                     <ul class="dropdown-menu dropdown-menu-end">
-                        @if($usuario->tienePermiso('seg.usuarios.gestionar'))
+                        @foreach($seguridadItems as $item)
                             <li>
-                                <a class="dropdown-item" href="{{ route('seg.usuarios.index') }}">
-                                    Usuarios
+                                <a class="dropdown-item {{ request()->routeIs(Str::beforeLast($item['route'], '.index') . '.*') ? 'active' : '' }}"
+                                   href="{{ route($item['route']) }}">
+                                    {{ $item['label'] }}
                                 </a>
                             </li>
-                        @endif
-
-                        @if($usuario->tienePermiso('seg.bitacora.ver'))
-                            <li>
-                                <a class="dropdown-item" href="{{ route('seg.bitacora.index') }}">
-                                    Bitácora de acceso
-                                </a>
-                            </li>
-                        @endif
+                        @endforeach
                     </ul>
                 </div>
             @endif
