@@ -36,9 +36,10 @@
                    class="sidebar-sublink {{ request()->routeIs('fac.consultores.index') ? 'active' : '' }}">
                     Listado de consultores
                 </a>
-
-                <a href="#" class="sidebar-sublink">
-                    Búsqueda avanzada
+              
+                <a href="{{ route('fac.consultores.busqueda-avanzada') }}"
+                    class="sidebar-link {{ request()->routeIs('fac.consultores.busqueda-avanzada') ? 'active' : '' }}">
+                    Búsqueda Avanzada
                 </a>
 
                 <a href="#" class="sidebar-sublink">
