@@ -205,24 +205,53 @@
                                         Habilidades Blandas
                                     </label>
 
-                                    <select class="form-select">
+                                    <select
+                                        name="habilidad_blanda"
+                                        class="form-select"
+                                    >
                                         <option value="">
-                                            Seleccione
+                                            Todas
                                         </option>
+
+                                        @foreach($habilidadesBlandas ?? [] as $habilidadblanda)
+
+                                            <option
+                                                value="{{ $habilidadblanda->id_habilidad }}"
+                                                {{ request('habilidad_blanda') == $habilidadblanda->id_habilidad ? 'selected' : '' }}
+                                            >
+                                                {{ $habilidadblanda->nombre }}
+                                            </option>
+
+                                        @endforeach
+
                                     </select>
 
                                 </div>
 
-                                <div class="mb-3">
-
+                               <div class="mb-3">
                                     <label class="form-label">
-                                        Habilidades técnicas
+                                        Habilidades Técnicas
                                     </label>
 
-                                    <select class="form-select">
+                                    <select
+                                        name="habilidad_tecnicas"
+                                        class="form-select"
+                                    >
                                         <option value="">
-                                            Seleccione
+                                            Todas
                                         </option>
+
+                                        @foreach($habilidadesTecnicas ?? [] as $habilidadtecnica)
+
+                                            <option
+                                                value="{{ $habilidadtecnica->id_habilidad }}"
+                                                {{ request('habilidad_tecnicas') == $habilidadtecnica->id_habilidad ? 'selected' : '' }}
+                                            >
+                                                {{ $habilidadtecnica->nombre }}
+                                            </option>
+
+                                        @endforeach
+
                                     </select>
 
                                 </div>

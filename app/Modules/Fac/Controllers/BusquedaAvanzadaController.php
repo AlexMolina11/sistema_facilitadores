@@ -21,6 +21,16 @@ class BusquedaAvanzadaController extends Controller
         ->orderBy('nombre')
         ->get();
 
+    $habilidadesBlandas = Habilidad::where('activo', 1)
+        ->where('id_tipo_habilidad', 2)
+        ->orderBy('nombre')
+        ->get();
+
+    $habilidadesTecnicas = Habilidad::where('activo', 1)
+        ->where('id_tipo_habilidad', 3)
+        ->orderBy('nombre')
+        ->get();
+
     $tiposFormacion = TipoFormacion::where('activo', true)
         ->orderBy('nombre')
         ->get();
@@ -43,6 +53,8 @@ class BusquedaAvanzadaController extends Controller
             'tiposAtestado',
             'consultores',
             'areaEspecializacion',
+            'habilidadesBlandas',
+            'habilidadesTecnicas',
         )
     );
 }
