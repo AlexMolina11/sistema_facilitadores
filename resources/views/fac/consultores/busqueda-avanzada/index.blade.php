@@ -179,6 +179,32 @@
                                         Área de especialización
                                     </label>
 
+                                    <select name="area_especializacion" class="form-select">
+                                        <option value="">
+                                            Todas
+                                        </option>
+
+                                        @foreach($areaEspecializacion ?? [] as $area)
+
+                                            <option 
+                                                value="{{ $area->id_habilidad }}"
+                                                {{ request('area_especializacion') == $area->id_habilidad ? 'selected' : ''}}
+                                            >
+                                                {{ $area->nombre }}
+                                            </option>
+
+                                        @endforeach
+
+                                    </select>
+
+                                </div>
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">
+                                        Habilidades Blandas
+                                    </label>
+
                                     <select class="form-select">
                                         <option value="">
                                             Seleccione
@@ -190,7 +216,7 @@
                                 <div class="mb-3">
 
                                     <label class="form-label">
-                                        Habilidad
+                                        Habilidades técnicas
                                     </label>
 
                                     <select class="form-select">
@@ -231,30 +257,92 @@
 
                             <div class="accordion-body">
 
+                                {{-- Tipo Formación --}}
+                                <div class="mb-3">
+
+                                    <label class="form-label">
+                                        Tipo de Formación
+                                    </label>
+
+                                    <select
+                                        name="tipo_formacion"
+                                        class="form-select"
+                                    >
+                                        <option value="">
+                                            Todas
+                                        </option>
+
+                                        @foreach($tiposFormacion ?? [] as $tipo)
+
+                                            <option
+                                                value="{{ $tipo->id_tipo_formacion }}"
+                                                {{ request('tipo_formacion') == $tipo->id_tipo_formacion ? 'selected' : '' }}
+                                            >
+                                                {{ $tipo->nombre }}
+                                            </option>
+
+                                        @endforeach
+
+                                    </select>
+
+                                </div>
+
+                                {{-- Nivel Académico --}}
                                 <div class="mb-3">
 
                                     <label class="form-label">
                                         Nivel Académico
                                     </label>
 
-                                    <select class="form-select">
+                                    <select
+                                        name="nivel_academico"
+                                        class="form-select"
+                                    >
                                         <option value="">
-                                            Seleccione
+                                            Todos
                                         </option>
+
+                                        @foreach($nivelesAcademicos ?? [] as $nivel)
+
+                                            <option
+                                                value="{{ $nivel->id_nivel_academico }}"
+                                                {{ request('nivel_academico') == $nivel->id_nivel_academico ? 'selected' : '' }}
+                                            >
+                                                {{ $nivel->nombre }}
+                                            </option>
+
+                                        @endforeach
+
                                     </select>
 
                                 </div>
 
+                                {{-- Tipo de Atestado --}}
                                 <div class="mb-3">
 
                                     <label class="form-label">
-                                        Tipo de atestado
+                                        Tipo de Atestado
                                     </label>
 
-                                    <select class="form-select">
+                                    <select
+                                        name="tipo_atestado"
+                                        class="form-select"
+                                    >
                                         <option value="">
-                                            Seleccione
+                                            Todos
                                         </option>
+
+                                        @foreach($tiposAtestado ?? [] as $atestado)
+
+                                            <option
+                                                value="{{ $atestado->id_tipo_atestado }}"
+                                                {{ request('tipo_atestado') == $atestado->id_tipo_atestado ? 'selected' : '' }}
+                                            >
+                                                {{ $atestado->nombre }}
+                                            </option>
+
+                                        @endforeach
+
                                     </select>
 
                                 </div>
@@ -588,10 +676,12 @@
 
         </div>
 
-        <div class="mt-4">
-            {{ $consultores->links('pagination::bootstrap-5') ?? '' }}
-        </div>
-
+       
+ @if(isset($consultores) && method_exists($consultores, 'links'))
+    <div class="mt-4">
+        {{ $consultores->links('pagination::bootstrap-5') }}
+    </div>
+@endif
     </div>
 
 </div>
