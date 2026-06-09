@@ -8,6 +8,9 @@ use App\Modules\Fac\Models\TipoAtestado;
 use App\Modules\Fac\Models\NivelAcademico;
 use App\Modules\Fac\Models\TipoFormacion;
 use App\Modules\Fac\Models\Habilidad;
+use App\Modules\Fac\Models\Sexo;
+use App\Modules\Fac\Models\Pais;
+use App\Modules\Fac\Models\Departamento;
 use Illuminate\Support\Collection;
 
 
@@ -30,6 +33,19 @@ class BusquedaAvanzadaController extends Controller
         ->where('id_tipo_habilidad', 3)
         ->orderBy('nombre')
         ->get();
+
+    $sexos = Sexo::where('activo', 1)
+        ->orderBy('nombre')
+        ->get();
+
+    $pais = Pais::where('Activo', 1)
+        ->orderBy('nombre_pais')
+         ->get();
+
+    $Departamentos = Departamento::where('Activo', 1)
+        ->orderBy('nombre_pais')
+        ->get();
+
 
     $tiposFormacion = TipoFormacion::where('activo', true)
         ->orderBy('nombre')
@@ -55,6 +71,10 @@ class BusquedaAvanzadaController extends Controller
             'areaEspecializacion',
             'habilidadesBlandas',
             'habilidadesTecnicas',
+            'sexos',
+            'pais',
+            'departamento';
+
         )
     );
 }

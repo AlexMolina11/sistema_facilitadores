@@ -412,11 +412,26 @@
                                         Sexo
                                     </label>
 
-                                    <select class="form-select">
-                                        <option value="">
-                                            Todos
-                                        </option>
-                                    </select>
+                                    <select
+                                name="sexo"
+                                class="form-select"
+>   
+                            <option value="">
+                                      Todos
+                                    </option>
+
+                                @foreach($sexos ?? [] as $sexo)
+
+                                     <option
+                                   value="{{ $sexo->id_sexo }}"
+                                {{ request('sexo') == $sexo->id_sexo ? 'selected' : '' }}
+                             >
+                              {{ $sexo->nombre }}
+                             </option>
+
+                             @endforeach
+
+                                </select>
 
                                 </div>
 
@@ -475,15 +490,71 @@
                             <div class="accordion-body">
 
                                 <div class="mb-3">
+
+                        <label class="form-label">
+                                     País
+                                </label>
+
+                            <select
+                              name="pais"
+                            class="form-select"
+    >
+                         <option value="">
+                         Todos
+                             </option>
+
+                                 @foreach($pais ?? [] as $pais)
+
+                                 <option
+                                  value="{{ $pais->id_pais }}"
+                        {{ request('pais') == $pais->id_pais ? 'selected' : '' }}
+                     >
+                     {{ $pais->nombre_pais }}
+                     </option>
+
+                 @endforeach
+
+                     </select>
+
+                        <div class="mb-3">
+
+    <label class="form-label">
+        Departamento
+    </label>
+
+    <select
+        name="departamento"
+        class="form-select"
+    >
+        <option value="">
+            Todos
+        </option>
+
+        @foreach($departamentos ?? [] as $departamento)
+
+            <option
+                value="{{ $departamento->id_departamento }}"
+                {{ request('departamento') == $departamento->id_departamento ? 'selected' : '' }}
+            >
+                {{ $departamento->nombre }}
+            </option>
+
+        @endforeach
+
+    </select>
+
+</div>
+
+                                <div class="mb-3">
                                     <label class="form-label">
-                                        Departamento
+                                        Municipio
                                     </label>
                                     <select class="form-select"></select>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label">
-                                        Municipio
+                                        Distrito
                                     </label>
                                     <select class="form-select"></select>
                                 </div>
