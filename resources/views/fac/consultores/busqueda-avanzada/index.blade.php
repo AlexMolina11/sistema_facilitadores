@@ -477,7 +477,7 @@
                                         País
                                     </label>
 
-                                    <select name="pais" class="form-select">
+                                    <select id="pais" name="pais" class="form-select">
                         
                                         <option value="">
                                             Todos
@@ -501,10 +501,7 @@
                                         Departamento
                                     </label>
 
-                                    <select
-                                        name="departamento"
-                                        class="form-select"
-                                    >
+                                    <select id="departamento" name="departamento" class="form-select">
                                         <option value="">
                                             Todos
                                         </option>
@@ -529,10 +526,7 @@
         Municipio
     </label>
 
-    <select
-        name="municipio"
-        class="form-select"
-    >
+    <select id="municipio" name="municipio" class="form-select">
         <option value="">
             Todos
         </option>
@@ -558,25 +552,24 @@
         Distrito
     </label>
 
-    <select
-        name="distrito"
-        class="form-select"
-    >
+    <select  id="distrito" name="distrito" class="form-select">
+
         <option value="">
             Todos
         </option>
 
         @foreach($distritos ?? [] as $distrito)
 
-            <option
-                value="{{ $distrito->id_municipio }}"
-                {{ request('distrito') == $distrito->id_municipio ? 'selected' : '' }}
-            >
-                {{ $distrito->nombre_distrito }}
-            </option>
+<option
+    value="{{ $distrito->id_municipio }}"
+    data-pais="{{ $distrito->id_pais }}"
+    data-departamento="{{ $distrito->id_departamento }}"
+    data-municipio="{{ $distrito->id_municipio_mh }}"
+>
+    {{ $distrito->nombre_distrito }}
+</option>
 
-        @endforeach
-
+@endforeach
     </select>
 
 </div>
@@ -799,5 +792,48 @@
     </div>
 
 </div>
+
+@push('scripts')
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const distrito = document.getElementById('distrito');
+
+    if (!distrito) {
+        return;
+    }
+
+    distrito.addEventListener('change', function () {
+
+        const opcion =
+            distrito.options[distrito.selectedIndex];
+
+        const pais =
+            opcion.dataset.pais;
+
+        const departamento =
+            opcion.dataset.departamento;
+
+        const municipio =
+            opcion.dataset.municipio;
+
+        document.getElementById('pais').value =
+            pais;
+
+        document.getElementById('departamento').value =
+            departamento;
+
+        document.getElementById('municipio').value =
+            municipio;
+
+    });
+
+});
+
+</script>
+
+@endpush
 
 @endsection
