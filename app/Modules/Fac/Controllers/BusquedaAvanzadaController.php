@@ -13,6 +13,8 @@ use App\Modules\Fac\Models\Pais;
 use App\Modules\Fac\Models\Departamento;
 use App\Modules\Fac\Models\MunicipioMh;
 use App\Modules\Fac\Models\Municipio;
+use App\Modules\Fac\Models\Idioma;
+use App\Modules\Fac\Models\IdiomaNivel;
 use Illuminate\Support\Collection;
 
 
@@ -49,12 +51,20 @@ class BusquedaAvanzadaController extends Controller
         ->get();
 
     $municipiosMh = MunicipioMh::where('activo', 1)
-    ->orderBy('municipio_mh_nombre')
-    ->get();
+        ->orderBy('municipio_mh_nombre')
+        ->get();
 
     $distritos = Municipio::where('activo', 1)
-    ->orderBy('nombre_distrito')
-    ->get();
+        ->orderBy('nombre_distrito')
+        ->get();
+
+    $idiomas = Idioma::where('activo', true)
+        ->orderBy('nombre')
+        ->get();
+
+    $nivelesIdioma = IdiomaNivel::where('activo', true)
+         ->orderBy('nombre')
+         ->get();
         
     $tiposFormacion = TipoFormacion::where('activo', true)
         ->orderBy('nombre')
@@ -85,6 +95,8 @@ class BusquedaAvanzadaController extends Controller
             'departamentos',
             'municipiosMh',
             'distritos',
+            'idiomas',
+            'nivelesIdioma'
 
 
         )

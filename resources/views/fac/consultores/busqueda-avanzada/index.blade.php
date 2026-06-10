@@ -595,37 +595,85 @@
 
                         </h2>
 
-                        <div
-                            id="idiomas"
-                            class="accordion-collapse collapse"
-                            data-bs-parent="#accordionFiltros"
+                        <div class="accordion-item">
+
+
+
+    <div
+        id="idiomas"
+        class="accordion-collapse collapse"
+        data-bs-parent="#accordionFiltros"
+    >
+
+        <div class="accordion-body">
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Idioma
+                </label>
+
+                <select
+                    name="idioma"
+                    class="form-select"
+                >
+
+                    <option value="">
+                        Todos
+                    </option>
+
+                    @foreach($idiomas ?? [] as $idioma)
+
+                        <option
+                            value="{{ $idioma->id_idioma }}"
+                            {{ request('idioma') == $idioma->id_idioma ? 'selected' : '' }}
                         >
+                            {{ $idioma->nombre }}
+                        </option>
 
-                            <div class="accordion-body">
+                    @endforeach
 
-                                <div class="mb-3">
+                </select>
 
-                                    <label class="form-label">
-                                        Idioma
-                                    </label>
+            </div>
 
-                                    <select class="form-select"></select>
+            <div class="mb-3">
 
-                                </div>
+                <label class="form-label">
+                    Nivel
+                </label>
 
-                                <div class="mb-3">
+                <select
+                    name="nivel_idioma"
+                    class="form-select"
+                >
 
-                                    <label class="form-label">
-                                        Nivel
-                                    </label>
+                    <option value="">
+                        Todos
+                    </option>
 
-                                    <select class="form-select"></select>
+                    @foreach($nivelesIdioma ?? [] as $nivel)
 
-                                </div>
+                        <option
+                            value="{{ $nivel->id_idioma_nivel }}"
+                            {{ request('nivel_idioma') == $nivel->id_idioma_nivel ? 'selected' : '' }}
+                        >
+                            {{ $nivel->nombre }}
+                        </option>
 
-                            </div>
+                    @endforeach
 
-                        </div>
+                </select>
+
+         </div>
+
+    </div>
+
+</div>
+
+                            
+
+                        
 
                     </div>
 
