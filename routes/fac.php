@@ -41,6 +41,13 @@ Route::middleware(['auth'])->group(function () {
         ])
         ->names('fac.consultores');
 
+        Route::get('ajax/departamentos-por-pais',[BusquedaAvanzadaController::class, 'departamentosPorPais'])->name('fac.ajax.departamentos');
+
+        Route::get('ajax/municipios-por-departamento',[BusquedaAvanzadaController::class, 'municipiosPorDepartamento'])->name('fac.ajax.municipios');
+
+        Route::get('ajax/distritos-por-municipio', [BusquedaAvanzadaController::class, 'distritosPorMunicipio'])->name('fac.ajax.distritos');
+        
+        Route::get('ajax/ubicacion-por-distrito', [BusquedaAvanzadaController::class, 'ubicacionPorDistrito'])->name('fac.ajax.ubicacion.distrito');
     
     Route::get( 'busqueda-avanzada',  [BusquedaAvanzadaController::class, 'index'])->name('fac.consultores.busqueda-avanzada');
 

@@ -171,92 +171,151 @@
                             data-bs-parent="#accordionFiltros"
                         >
 
-                            <div class="accordion-body">
+                            <div class="mb-3">
+
+    <label class="form-label fw-bold">
+        Área de Especialización
+
+        <span class="badge bg-primary">
+    {{ count($areaEspecializacion ?? []) }}
+
+</span>
+    </label>
+
+    <div
+        class="border rounded p-2"
+        style="max-height:250px; overflow-y:auto;"
+    >
+
+        @foreach($areaEspecializacion ?? [] as $area)
+
+            <div class="form-check">
+
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="area_especializacion[]"
+                    value="{{ $area->id_habilidad }}"
+                    id="area{{ $area->id_habilidad }}"
+
+                    {{ in_array(
+                        $area->id_habilidad,
+                        request()->get('area_especializacion', [])
+                    ) ? 'checked' : '' }}
+                >
+
+                <label
+                    class="form-check-label"
+                    for="area{{ $area->id_habilidad }}"
+                >
+                    {{ $area->nombre }}
+                </label>
+
+            </div>
+
+        @endforeach
+
+    </div>
+
+</div>
 
                                 <div class="mb-3">
 
-                                    <label class="form-label">
-                                        Área de especialización
-                                    </label>
+    <label class="form-label fw-bold">
+        Habilidades Blandas
 
-                                    <select name="area_especializacion" class="form-select">
-                                        <option value="">
-                                            Todas
-                                        </option>
+<span class="badge bg-primary">
+    {{ count($habilidadesBlandas ?? []) }}
+</span>
 
-                                        @foreach($areaEspecializacion ?? [] as $area)
+    </label>
 
-                                            <option 
-                                                value="{{ $area->id_habilidad }}"
-                                                {{ request('area_especializacion') == $area->id_habilidad ? 'selected' : ''}}
-                                            >
-                                                {{ $area->nombre }}
-                                            </option>
+    <div
+        class="border rounded p-2"
+        style="max-height:250px; overflow-y:auto;"
+    >
 
-                                        @endforeach
+        @foreach($habilidadesBlandas ?? [] as $habilidad)
 
-                                    </select>
+            <div class="form-check">
 
-                                </div>
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="habilidades_blandas[]"
+                    value="{{ $habilidad->id_habilidad }}"
+                    id="blanda{{ $habilidad->id_habilidad }}"
 
-                                <div class="mb-3">
+                    {{ in_array(
+                        $habilidad->id_habilidad,
+                        request()->get('habilidades_blandas', [])
+                    ) ? 'checked' : '' }}
+                >
 
-                                    <label class="form-label">
-                                        Habilidades Blandas
-                                    </label>
+                <label
+                    class="form-check-label"
+                    for="blanda{{ $habilidad->id_habilidad }}"
+                >
+                    {{ $habilidad->nombre }}
+                </label>
 
-                                    <select
-                                        name="habilidad_blanda"
-                                        class="form-select"
-                                    >
-                                        <option value="">
-                                            Todas
-                                        </option>
+            </div>
 
-                                        @foreach($habilidadesBlandas ?? [] as $habilidadblanda)
+        @endforeach
 
-                                            <option
-                                                value="{{ $habilidadblanda->id_habilidad }}"
-                                                {{ request('habilidad_blanda') == $habilidadblanda->id_habilidad ? 'selected' : '' }}
-                                            >
-                                                {{ $habilidadblanda->nombre }}
-                                            </option>
+    </div>
 
-                                        @endforeach
-
-                                    </select>
-
-                                </div>
+</div>
 
                                <div class="mb-3">
-                                    <label class="form-label">
-                                        Habilidades Técnicas
-                                    </label>
 
-                                    <select
-                                        name="habilidad_tecnicas"
-                                        class="form-select"
-                                    >
-                                        <option value="">
-                                            Todas
-                                        </option>
+    <label class="form-label fw-bold">
+        Habilidades Técnicas
 
-                                        @foreach($habilidadesTecnicas ?? [] as $habilidadtecnica)
+<span class="badge bg-primary">
+    {{ count($habilidadesTecnicas ?? []) }}
+</span>
 
-                                            <option
-                                                value="{{ $habilidadtecnica->id_habilidad }}"
-                                                {{ request('habilidad_tecnicas') == $habilidadtecnica->id_habilidad ? 'selected' : '' }}
-                                            >
-                                                {{ $habilidadtecnica->nombre }}
-                                            </option>
+    </label>
 
-                                        @endforeach
+    <div
+        class="border rounded p-2"
+        style="max-height:250px; overflow-y:auto;"
+    >
 
-                                    </select>
+        @foreach($habilidadesTecnicas ?? [] as $habilidad)
 
-                                </div>
+            <div class="form-check">
 
-                            </div>
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="habilidades_tecnicas[]"
+                    value="{{ $habilidad->id_habilidad }}"
+                    id="tecnica{{ $habilidad->id_habilidad }}"
+
+                    {{ in_array(
+                        $habilidad->id_habilidad,
+                        request()->get('habilidades_tecnicas', [])
+                    ) ? 'checked' : '' }}
+                >
+
+                <label
+                    class="form-check-label"
+                    for="tecnica{{ $habilidad->id_habilidad }}"
+                >
+                    {{ $habilidad->nombre }}
+                </label>
+
+            </div>
+
+        @endforeach
+
+    </div>
+
+</div>
+
+                            
 
                         </div>
 
@@ -501,7 +560,8 @@
                                         Departamento
                                     </label>
 
-                                    <select id="departamento" name="departamento" class="form-select">
+                                    <select id="departamento"   name="departamento"    class="form-select">
+
                                         <option value="">
                                             Todos
                                         </option>
@@ -526,7 +586,8 @@
         Municipio
     </label>
 
-    <select id="municipio" name="municipio" class="form-select">
+    <select id="municipio"    name="municipio"    class="form-select">
+
         <option value="">
             Todos
         </option>
@@ -552,7 +613,7 @@
         Distrito
     </label>
 
-    <select  id="distrito" name="distrito" class="form-select">
+    <select id="distrito"    name="distrito"    class="form-select">
 
         <option value="">
             Todos
@@ -878,6 +939,117 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
+});
+
+</script>
+
+@endpush
+
+@push('scripts')
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const pais = document.getElementById('pais');
+    const departamento = document.getElementById('departamento');
+    const municipio = document.getElementById('municipio');
+    const distrito = document.getElementById('distrito');
+
+    pais.addEventListener('change', function () {
+
+        fetch('/ajax/departamentos-por-pais?id_pais=' + this.value)
+        .then(response => response.json())
+        .then(data => {
+
+            departamento.innerHTML =
+                '<option value="">Todos</option>';
+
+            municipio.innerHTML =
+                '<option value="">Todos</option>';
+
+            distrito.innerHTML =
+                '<option value="">Todos</option>';
+
+            data.forEach(item => {
+
+                departamento.innerHTML +=
+                    `<option value="${item.id_departamento}">
+                        ${item.nombre_departamento}
+                    </option>`;
+
+            });
+
+        });
+
+    });
+
+    departamento.addEventListener('change', function () {
+
+        fetch('/ajax/municipios-por-departamento?id_departamento=' + this.value)
+        .then(response => response.json())
+        .then(data => {
+
+            municipio.innerHTML =
+                '<option value="">Todos</option>';
+
+            distrito.innerHTML =
+                '<option value="">Todos</option>';
+
+            data.forEach(item => {
+
+                municipio.innerHTML +=
+                    `<option value="${item.id_municipio_mh}">
+                        ${item.municipio_mh_nombre}
+                    </option>`;
+
+            });
+
+        });
+
+    });
+
+    municipio.addEventListener('change', function () {
+
+        fetch('/ajax/distritos-por-municipio?id_municipio_mh=' + this.value)
+        .then(response => response.json())
+        .then(data => {
+
+            distrito.innerHTML =
+                '<option value="">Todos</option>';
+
+            data.forEach(item => {
+
+                distrito.innerHTML +=
+                    `<option value="${item.id_municipio}">
+                        ${item.nombre_distrito}
+                    </option>`;
+
+            });
+
+        });
+
+    });
+
+    distrito.addEventListener('change', function () {
+
+    if (!this.value) return;
+
+    fetch(
+        '/ajax/ubicacion-por-distrito?id_municipio=' + this.value
+    )
+    .then(response => response.json())
+    .then(data => {
+
+        pais.value = data.pais;
+
+        departamento.value = data.departamento;
+
+        municipio.value = data.municipio;
+
+    });
+
+    });
 });
 
 </script>

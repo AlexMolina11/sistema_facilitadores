@@ -2,6 +2,8 @@
 
 namespace App\Modules\Fac\Controllers;
 
+use Illuminate\Http\Request;
+
 use App\Http\Controllers\Controller;
 use App\Modules\Fac\Models\Consultor;
 use App\Modules\Fac\Models\TipoAtestado;
@@ -101,5 +103,55 @@ class BusquedaAvanzadaController extends Controller
 
         )
     );
+}
+
+    public function departamentosPorPais(Request $request)
+    {
+        return Departamento::where(
+                'id_pais',
+                $request->id_pais
+            )
+            ->where('activo', true)
+            ->orderBy('nombre_departamento')
+            ->get();
+    }
+
+    public function municipiosPorDepartamento(Request $request)
+    {
+        return MunicipioMh::where(
+                'id_departamento',
+                $request->id_departamento
+            )
+            ->where('activo', true)
+            ->orderBy('municipio_mh_nombre')
+            ->get();
+    }
+
+    public function distritosPorMunicipio(Request $request)
+    {
+        return Municipio::where(
+                'id_municipio_mh',
+                $request->id_municipio_mh
+            )
+            ->where('activo', true)
+            ->orderBy('nombre_distrito')
+            ->get();
+    }
+
+    public function ubicacionPorDistrito(Request $request)
+{
+    $distrito = Municipio::with([
+        'pais',
+        'departamento',
+        'municipioMh'
+    ])
+    ->find($request->id_municipio);
+
+    return response()->json([
+        'pais' => $distrito->id_pais,
+        'departamento' => $distrito->id_departamento,
+        'municipio' => $distrito->id_municipio_mh,
+        'distrito' => $distrito->id_municipio,
+    ]);
 }
 }
