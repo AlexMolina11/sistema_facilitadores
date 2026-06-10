@@ -11,6 +11,8 @@ use App\Modules\Fac\Models\Habilidad;
 use App\Modules\Fac\Models\Sexo;
 use App\Modules\Fac\Models\Pais;
 use App\Modules\Fac\Models\Departamento;
+use App\Modules\Fac\Models\MunicipioMh;
+use App\Modules\Fac\Models\Municipio;
 use Illuminate\Support\Collection;
 
 
@@ -38,15 +40,22 @@ class BusquedaAvanzadaController extends Controller
         ->orderBy('nombre')
         ->get();
 
-    $pais = Pais::where('Activo', 1)
+    $paises = Pais::where('activo', 1)
         ->orderBy('nombre_pais')
          ->get();
 
-    $Departamentos = Departamento::where('Activo', 1)
-        ->orderBy('nombre_pais')
+    $departamentos = Departamento::where('activo', 1)
+        ->orderBy('nombre_departamento')
         ->get();
 
+    $municipiosMh = MunicipioMh::where('activo', 1)
+    ->orderBy('municipio_mh_nombre')
+    ->get();
 
+    $distritos = Municipio::where('activo', 1)
+    ->orderBy('nombre_distrito')
+    ->get();
+        
     $tiposFormacion = TipoFormacion::where('activo', true)
         ->orderBy('nombre')
         ->get();
@@ -72,8 +81,11 @@ class BusquedaAvanzadaController extends Controller
             'habilidadesBlandas',
             'habilidadesTecnicas',
             'sexos',
-            'pais',
-            'departamento';
+            'paises',
+            'departamentos',
+            'municipiosMh',
+            'distritos',
+
 
         )
     );
