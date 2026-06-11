@@ -142,6 +142,10 @@
                     @endforeach
                 </div>
             </div>
+            <a href="{{ route('fac.consultores.busqueda-avanzada') }}"
+                class="sidebar-link {{ request()->routeIs('fac.consultores.busqueda-avanzada') ? 'active' : '' }}">
+                Búsqueda Avanzada
+            </a>
         </div>
     @endif
 

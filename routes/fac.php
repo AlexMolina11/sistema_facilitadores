@@ -26,6 +26,7 @@ use App\Modules\Fac\Controllers\Catalogo\TipoDisponibilidadController;
 use App\Modules\Fac\Controllers\Catalogo\TipoDocumentoController;
 use App\Modules\Fac\Controllers\Catalogo\TipoConsultoriaController;
 use App\Modules\Fac\Controllers\Catalogo\SexoController;
+use App\Modules\Fac\Controllers\BusquedaAvanzadaController;
 
 Route::middleware(['auth'])->group(function () {
 
@@ -64,6 +65,16 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('consultores/{consultor}', [ConsultorController::class, 'destroy'])
         ->middleware('permission:fac.consultores.gestionar')
         ->name('fac.consultores.destroy');
+
+        Route::get('ajax/departamentos-por-pais',[BusquedaAvanzadaController::class, 'departamentosPorPais'])->name('fac.ajax.departamentos');
+
+        Route::get('ajax/municipios-por-departamento',[BusquedaAvanzadaController::class, 'municipiosPorDepartamento'])->name('fac.ajax.municipios');
+
+        Route::get('ajax/distritos-por-municipio', [BusquedaAvanzadaController::class, 'distritosPorMunicipio'])->name('fac.ajax.distritos');
+        
+        Route::get('ajax/ubicacion-por-distrito', [BusquedaAvanzadaController::class, 'ubicacionPorDistrito'])->name('fac.ajax.ubicacion.distrito');
+    
+    Route::get( 'busqueda-avanzada',  [BusquedaAvanzadaController::class, 'index'])->name('fac.consultores.busqueda-avanzada');
 
     Route::prefix('consultores/{consultor}')
         ->name('fac.consultores.')
@@ -125,8 +136,10 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('documentos', [ConsultorDocumentoController::class, 'edit'])->name('documentos.edit');
             Route::post('documentos', [ConsultorDocumentoController::class, 'update'])->name('documentos.update');
+
         });
 
+        
     Route::prefix('catalogos')
         ->name('fac.catalogos.')
         ->middleware('permission:fac.catalogos.gestionar')
