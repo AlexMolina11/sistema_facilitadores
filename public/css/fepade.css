@@ -1641,3 +1641,33 @@ body {
         height: 280px;
     }
 }
+
+/* ==========================================================
+   RESULTADOS CONSULTOR
+========================================================== */
+
+.consultor-resultados {
+    width: 100%;
+}
+
+.consultor-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.consultor-card .btn {
+    margin-top: auto;
+}
+
+.consultor-item {
+    word-break: break-word;
+}
+
+@media (max-width: 991px) {
+
+    .consultor-resultados {
+        margin-top: 20px;
+    }
+
+}

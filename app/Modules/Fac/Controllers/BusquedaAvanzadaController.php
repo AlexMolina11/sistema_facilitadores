@@ -80,8 +80,11 @@ class BusquedaAvanzadaController extends Controller
         ->orderBy('nombre')
         ->get();
 
-    $consultores = collect();
-
+    $consultores = Consultor::with([
+    'telefonos',
+    'emails'
+])->paginate(12);
+ 
     return view(
         'fac.consultores.busqueda-avanzada.index',
         compact(

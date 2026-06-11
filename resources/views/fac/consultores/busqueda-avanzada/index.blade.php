@@ -8,6 +8,11 @@
 
 @section('content')
 
+<?php
+    $nombreCompleto = $consultor->nombre_completo ?? trim(($consultor->nombres ?? '') . ' ' . ($consultor->apellidos ?? ''));
+    $iniciales = strtoupper(substr($consultor->nombres ?? 'C', 0, 1) . substr($consultor->apellidos ?? 'F', 0, 1));
+?>
+
 <x-ui.page-header
     title="Búsqueda de Consultores"
     subtitle="Encuentra al profesional ideal para tus necesidades."
@@ -811,86 +816,123 @@
             </form>
 
         </div>
+     </div>
+
 
     </div>
 
     {{-- RESULTADOS --}}
     <div class="col-lg-9">
 
-        <div class="row g-3">
+    <h3>
+Consultores encontrados:
+{{ $consultores->count() }}
+</h3>
 
-            @forelse($consultores ?? [] as $consultor)
+       <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
 
-                <div class="col-md-6 col-xl-4">
+@forelse($consultores as $consultor)
 
-                    <div class="fepade-card h-100">
+<div class="col">
 
-                        <div class="text-center mb-3">
+    <div class="consultor-card">
 
-                            <img
-                                src="{{ $consultor->foto_url ?? asset('images/avatar-default.png') }}"
-                                class="rounded-circle"
-                                width="70"
-                                height="70"
-                            >
+        <div class="consultor-cover"></div>
 
-                        </div>
+        <div class="text-center expediente-avatar-large">
 
-                        <h6 class="fw-bold text-fepade mb-1">
-                            {{ $consultor->nombre_completo }}
-                        </h6>
-
-                        <small class="text-muted">
-                            {{ $consultor->nivel_academico }}
-                        </small>
-
-                        <hr>
-
-                        <div class="small">
-
-                            <div class="mb-2">
-                                <i class="fas fa-clock me-2"></i>
-                                {{ $consultor->disponibilidad }}
-                            </div>
-
-                            <div class="mb-2">
-                                <i class="fas fa-phone me-2"></i>
-                                {{ $consultor->telefono }}
-                            </div>
-
-                            <div class="mb-2">
-                                <i class="fas fa-language me-2"></i>
-                                {{ $consultor->idiomas }}
-                            </div>
-
-                        </div>
-
-                        <a
-                            href="#"
-                            class="btn btn-outline-secondary btn-sm mt-3"
-                        >
-                            Ver Perfil
-                        </a>
-
-                    </div>
-
-                </div>
-
-            @empty
-
-                <div class="col-12">
-
-                    <div class="alert alert-info">
-
-                        No se encontraron consultores para los criterios seleccionados.
-
-                    </div>
-
-                </div>
-
-            @endforelse
+            @if($consultor->ruta_foto)
+                <img 
+                    class="consultor-avatar"
+                    src="{{ \Illuminate\Support\Facades\Storage::url($consultor->ruta_foto) }}" 
+                    alt="Foto de {{ $nombreCompleto }}"
+                >
+            @else
+                <span class="consultor-avatar">{{ $iniciales }}</span>
+            @endif
 
         </div>
+
+        <div class="text-center mt-2">
+
+            <h5 class="fw-bold mb-1">
+
+                {{ $consultor->nombre_completo }}
+
+            </h5>
+
+            <small class="text-muted">
+
+                Consultor FEPADE
+
+            </small>
+
+        </div>
+
+        <hr>
+
+        <div class="small">
+
+            <div class="consultor-item">
+
+                <i class="fas fa-id-card text-primary"></i>
+                Disponibilidad:
+                {{ $consultor->numero_identificacion }}
+
+            </div>
+
+            <div class="consultor-item">
+
+                <i class="fas fa-phone text-success"></i>
+                Teléfono:
+                {{ optional($consultor->telefonos->first())->telefono ?? 'No registrado' }}
+
+            </div>
+
+            <div class="consultor-item">
+
+                <i class="fas fa-envelope text-danger"></i>
+                Correo:
+                {{ optional($consultor->emails->first())->correo ?? 'No registrado' }}
+
+            </div>
+
+        </div>
+
+        <div class="d-grid mt-3">
+
+            <a
+                href="{{ route('fac.consultores.show', $consultor->id_consultor) }}"
+                class="btn btn-primary"
+            >
+                Ver Perfil
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+@empty
+
+<div class="col-12">
+
+    <div class="alert alert-info">
+
+        No se encontraron consultores.
+
+    </div>
+
+</div>
+
+@endforelse
+
+</div> 
+
+</div>
+
+    
 
        
  @if(isset($consultores) && method_exists($consultores, 'links'))
@@ -1055,5 +1097,91 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 @endpush
+
+<style>
+
+.consultor-card{
+
+    width:100%;
+
+    background:#fff;
+
+    border-radius:20px;
+
+    padding:20px;
+
+    border:1px solid #e5e7eb;
+
+    box-shadow:0 5px 15px rgba(0,0,0,.06);
+
+    transition:all .3s ease;
+}
+
+.consultor-card:hover{
+
+    transform:
+        translateY(-1x)
+        scale(1.05);
+
+    box-shadow:
+        0 20px 40px rgba(0,0,0,.18);
+
+    border-color:#0d6efd;
+}
+
+.consultor-cover{
+
+    height:70px;
+
+    margin:-20px -20px 0 -20px;
+    border-radius: 20px 20px 0px 0px;
+
+    background:linear-gradient(
+        135deg,
+        #0d6efd,
+        #198754
+    );
+}
+
+.consultor-avatar{
+
+    width:90px;
+
+    height:90px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:4px solid #fff;
+
+    margin-top:-45px;
+
+    box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+.consultor-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:10px;
+}
+
+.consultor-card h5{
+
+    color:#1f2937;
+
+    font-size:1.1rem;
+}
+
+.consultor-card{
+
+    cursor:pointer;
+}
+</style>
 
 @endsection
