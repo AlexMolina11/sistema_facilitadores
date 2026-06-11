@@ -149,4 +149,14 @@ class Consultor extends Model
         return $this->belongsTo(Sexo::class, 'id_sexo', 'id_sexo');
     }
 
+    public function pais()
+    {
+        return $this->belongsTo(Pais::class, 'id_pais', 'id_pais');
+    }
+
+    public function municipio()
+    {
+        return $this->belongsTo(Municipio::class, 'id_municipio', 'id_municipio');
+    }
+
 }

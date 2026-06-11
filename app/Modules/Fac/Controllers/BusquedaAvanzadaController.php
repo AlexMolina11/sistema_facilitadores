@@ -2,159 +2,112 @@
 
 namespace App\Modules\Fac\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Http\Controllers\Controller;
-use App\Modules\Fac\Models\Consultor;
-use App\Modules\Fac\Models\TipoAtestado;
-use App\Modules\Fac\Models\NivelAcademico;
-use App\Modules\Fac\Models\TipoFormacion;
-use App\Modules\Fac\Models\Habilidad;
-use App\Modules\Fac\Models\Sexo;
-use App\Modules\Fac\Models\Pais;
 use App\Modules\Fac\Models\Departamento;
-use App\Modules\Fac\Models\MunicipioMh;
-use App\Modules\Fac\Models\Municipio;
+use App\Modules\Fac\Models\Habilidad;
 use App\Modules\Fac\Models\Idioma;
 use App\Modules\Fac\Models\IdiomaNivel;
-use Illuminate\Support\Collection;
-
-
+use App\Modules\Fac\Models\Municipio;
+use App\Modules\Fac\Models\MunicipioMh;
+use App\Modules\Fac\Models\NivelAcademico;
+use App\Modules\Fac\Models\Pais;
+use App\Modules\Fac\Models\Sexo;
+use App\Modules\Fac\Models\TipoAtestado;
+use App\Modules\Fac\Models\TipoDisponibilidad;
+use App\Modules\Fac\Models\TipoFormacion;
+use App\Modules\Fac\Requests\BuscarConsultoresRequest;
+use App\Modules\Fac\Services\BusquedaConsultorService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class BusquedaAvanzadaController extends Controller
 {
-  public function index()
-{
-    $areaEspecializacion = Habilidad::where('id_tipo_habilidad', 1)
-        ->where('Activo', true)
-        ->orderBy('nombre')
-        ->get();
-
-    $habilidadesBlandas = Habilidad::where('activo', 1)
-        ->where('id_tipo_habilidad', 2)
-        ->orderBy('nombre')
-        ->get();
-
-    $habilidadesTecnicas = Habilidad::where('activo', 1)
-        ->where('id_tipo_habilidad', 3)
-        ->orderBy('nombre')
-        ->get();
-
-    $sexos = Sexo::where('activo', 1)
-        ->orderBy('nombre')
-        ->get();
-
-    $paises = Pais::where('activo', 1)
-        ->orderBy('nombre_pais')
-         ->get();
-
-    $departamentos = Departamento::where('activo', 1)
-        ->orderBy('nombre_departamento')
-        ->get();
-
-    $municipiosMh = MunicipioMh::where('activo', 1)
-        ->orderBy('municipio_mh_nombre')
-        ->get();
-
-    $distritos = Municipio::where('activo', 1)
-        ->orderBy('nombre_distrito')
-        ->get();
-
-    $idiomas = Idioma::where('activo', true)
-        ->orderBy('nombre')
-        ->get();
-
-    $nivelesIdioma = IdiomaNivel::where('activo', true)
-         ->orderBy('nombre')
-         ->get();
-        
-    $tiposFormacion = TipoFormacion::where('activo', true)
-        ->orderBy('nombre')
-        ->get();
-
-    $nivelesAcademicos = NivelAcademico::where('activo', true)
-        ->orderBy('nombre')
-        ->get();
-
-    $tiposAtestado = TipoAtestado::where('activo', true)
-        ->orderBy('nombre')
-        ->get();
-
-    $consultores = Consultor::with([
-    'telefonos',
-    'emails'
-])->paginate(12);
- 
-    return view(
-        'fac.consultores.busqueda-avanzada.index',
-        compact(
-            'tiposFormacion',
-            'nivelesAcademicos',
-            'tiposAtestado',
-            'consultores',
-            'areaEspecializacion',
-            'habilidadesBlandas',
-            'habilidadesTecnicas',
-            'sexos',
-            'paises',
-            'departamentos',
-            'municipiosMh',
-            'distritos',
-            'idiomas',
-            'nivelesIdioma'
-
-
-        )
-    );
-}
-
-    public function departamentosPorPais(Request $request)
+    public function __construct(private readonly BusquedaConsultorService $busquedaService)
     {
-        return Departamento::where(
-                'id_pais',
-                $request->id_pais
-            )
-            ->where('activo', true)
-            ->orderBy('nombre_departamento')
-            ->get();
     }
 
-    public function municipiosPorDepartamento(Request $request)
+    public function index(BuscarConsultoresRequest $request)
     {
-        return MunicipioMh::where(
-                'id_departamento',
-                $request->id_departamento
-            )
-            ->where('activo', true)
-            ->orderBy('municipio_mh_nombre')
-            ->get();
+        $filtros = $request->validated();
+
+        $consultores = $this->busquedaService->buscar($filtros);
+
+        return view('fac.consultores.busqueda-avanzada.index', [
+            'consultores' => $consultores,
+            'totalConsultores' => $consultores->total(),
+            'filtros' => $filtros,
+            'areaEspecializacion' => $this->habilidadesPorTipo(1),
+            'habilidadesBlandas' => $this->habilidadesPorTipo(2),
+            'habilidadesTecnicas' => $this->habilidadesPorTipo(3),
+            'sexos' => Sexo::where('activo', true)->orderBy('nombre')->get(),
+            'paises' => Pais::where('activo', true)->orderBy('nombre_pais')->get(),
+            'departamentos' => Departamento::where('activo', true)->orderBy('nombre_departamento')->get(),
+            'municipiosMh' => MunicipioMh::where('activo', true)->orderBy('municipio_mh_nombre')->get(),
+            'distritos' => Municipio::where('activo', true)->orderBy('nombre_distrito')->get(),
+            'idiomas' => Idioma::where('activo', true)->orderBy('nombre')->get(),
+            'nivelesIdioma' => IdiomaNivel::where('activo', true)->orderBy('nombre')->get(),
+            'tiposFormacion' => TipoFormacion::where('activo', true)->orderBy('nombre')->get(),
+            'nivelesAcademicos' => NivelAcademico::where('activo', true)->orderBy('nombre')->get(),
+            'tiposAtestado' => TipoAtestado::where('activo', true)->orderBy('nombre')->get(),
+            'tiposDisponibilidad' => TipoDisponibilidad::where('activo', true)->orderBy('nombre')->get(),
+        ]);
     }
 
-    public function distritosPorMunicipio(Request $request)
+    public function departamentosPorPais(Request $request): JsonResponse
     {
-        return Municipio::where(
-                'id_municipio_mh',
-                $request->id_municipio_mh
-            )
-            ->where('activo', true)
-            ->orderBy('nombre_distrito')
-            ->get();
+        $request->validate(['id_pais' => ['required', 'integer', 'exists:tbl_pais,id_pais']]);
+
+        return response()->json(
+            Departamento::where('id_pais', $request->integer('id_pais'))
+                ->where('activo', true)
+                ->orderBy('nombre_departamento')
+                ->get(['id_departamento', 'nombre_departamento'])
+        );
     }
 
-    public function ubicacionPorDistrito(Request $request)
-{
-    $distrito = Municipio::with([
-        'pais',
-        'departamento',
-        'municipioMh'
-    ])
-    ->find($request->id_municipio);
+    public function municipiosPorDepartamento(Request $request): JsonResponse
+    {
+        $request->validate(['id_departamento' => ['required', 'integer', 'exists:tbl_departamento,id_departamento']]);
 
-    return response()->json([
-        'pais' => $distrito->id_pais,
-        'departamento' => $distrito->id_departamento,
-        'municipio' => $distrito->id_municipio_mh,
-        'distrito' => $distrito->id_municipio,
-    ]);
-}
+        return response()->json(
+            MunicipioMh::where('id_departamento', $request->integer('id_departamento'))
+                ->where('activo', true)
+                ->orderBy('municipio_mh_nombre')
+                ->get(['id_municipio_mh', 'municipio_mh_nombre'])
+        );
+    }
+
+    public function distritosPorMunicipio(Request $request): JsonResponse
+    {
+        $request->validate(['id_municipio_mh' => ['required', 'integer', 'exists:tbl_municipio_mh,id_municipio_mh']]);
+
+        return response()->json(
+            Municipio::where('id_municipio_mh', $request->integer('id_municipio_mh'))
+                ->where('activo', true)
+                ->orderBy('nombre_distrito')
+                ->get(['id_municipio', 'nombre_distrito', 'id_pais', 'id_departamento', 'id_municipio_mh'])
+        );
+    }
+
+    public function ubicacionPorDistrito(Request $request): JsonResponse
+    {
+        $request->validate(['id_municipio' => ['required', 'integer', 'exists:tbl_municipio,id_municipio']]);
+
+        $distrito = Municipio::findOrFail($request->integer('id_municipio'));
+
+        return response()->json([
+            'pais' => $distrito->id_pais,
+            'departamento' => $distrito->id_departamento,
+            'municipio_mh' => $distrito->id_municipio_mh,
+            'distrito' => $distrito->id_municipio,
+        ]);
+    }
+
+    private function habilidadesPorTipo(int $tipo)
+    {
+        return Habilidad::where('activo', true)
+            ->where('id_tipo_habilidad', $tipo)
+            ->orderBy('nombre')
+            ->get();
+    }
 }

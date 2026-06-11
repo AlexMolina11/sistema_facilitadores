@@ -66,16 +66,6 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('permission:fac.consultores.gestionar')
         ->name('fac.consultores.destroy');
 
-        Route::get('ajax/departamentos-por-pais',[BusquedaAvanzadaController::class, 'departamentosPorPais'])->name('fac.ajax.departamentos');
-
-        Route::get('ajax/municipios-por-departamento',[BusquedaAvanzadaController::class, 'municipiosPorDepartamento'])->name('fac.ajax.municipios');
-
-        Route::get('ajax/distritos-por-municipio', [BusquedaAvanzadaController::class, 'distritosPorMunicipio'])->name('fac.ajax.distritos');
-        
-        Route::get('ajax/ubicacion-por-distrito', [BusquedaAvanzadaController::class, 'ubicacionPorDistrito'])->name('fac.ajax.ubicacion.distrito');
-    
-    Route::get( 'busqueda-avanzada',  [BusquedaAvanzadaController::class, 'index'])->name('fac.consultores.busqueda-avanzada');
-
     Route::prefix('consultores/{consultor}')
         ->name('fac.consultores.')
         ->middleware('consultor.owner:fac.consultores.gestionar')
@@ -137,6 +127,27 @@ Route::middleware(['auth'])->group(function () {
             Route::get('documentos', [ConsultorDocumentoController::class, 'edit'])->name('documentos.edit');
             Route::post('documentos', [ConsultorDocumentoController::class, 'update'])->name('documentos.update');
 
+        });
+
+    Route::get('busqueda-avanzada', [BusquedaAvanzadaController::class, 'index'])
+    ->middleware('permission:fac.consultores.ver')
+    ->name('fac.consultores.busqueda-avanzada');
+
+    Route::prefix('ajax')
+        ->name('fac.ajax.')
+        ->middleware('permission:fac.consultores.ver')
+        ->group(function () {
+            Route::get('departamentos-por-pais', [BusquedaAvanzadaController::class, 'departamentosPorPais'])
+                ->name('departamentos');
+
+            Route::get('municipios-por-departamento', [BusquedaAvanzadaController::class, 'municipiosPorDepartamento'])
+                ->name('municipios');
+
+            Route::get('distritos-por-municipio', [BusquedaAvanzadaController::class, 'distritosPorMunicipio'])
+                ->name('distritos');
+
+            Route::get('ubicacion-por-distrito', [BusquedaAvanzadaController::class, 'ubicacionPorDistrito'])
+                ->name('ubicacion.distrito');
         });
 
         
