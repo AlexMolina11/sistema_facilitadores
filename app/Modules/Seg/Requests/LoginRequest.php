@@ -3,6 +3,9 @@
 namespace App\Modules\Seg\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
@@ -18,6 +21,34 @@ class LoginRequest extends FormRequest
             'password' => ['required', 'string'],
             'remember' => ['nullable', 'boolean'],
         ];
+    }
+
+    public function authenticateThrottleKey(): string
+    {
+        return Str::lower((string) $this->input('email')).'|'.$this->ip();
+    }
+
+    public function ensureIsNotRateLimited(): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->authenticateThrottleKey(), 5)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->authenticateThrottleKey());
+
+        throw ValidationException::withMessages([
+            'email' => "Demasiados intentos fallidos. Intente nuevamente en {$seconds} segundos.",
+        ]);
+    }
+
+    public function hitRateLimiter(): void
+    {
+        RateLimiter::hit($this->authenticateThrottleKey(), 60);
+    }
+
+    public function clearRateLimiter(): void
+    {
+        RateLimiter::clear($this->authenticateThrottleKey());
     }
 
     public function messages(): array

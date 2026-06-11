@@ -33,12 +33,37 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('permission:fac.dashboard.ver')
         ->name('fac.dashboard');
 
-    Route::resource('consultores', ConsultorController::class)
+    Route::get('consultores', [ConsultorController::class, 'index'])
         ->middleware('permission:fac.consultores.ver,fac.consultores.gestionar')
-        ->parameters([
-            'consultores' => 'consultor',
-        ])
-        ->names('fac.consultores');
+        ->name('fac.consultores.index');
+
+    Route::get('consultores/create', [ConsultorController::class, 'create'])
+        ->middleware('permission:fac.consultores.gestionar')
+        ->name('fac.consultores.create');
+
+    Route::post('consultores', [ConsultorController::class, 'store'])
+        ->middleware('permission:fac.consultores.gestionar')
+        ->name('fac.consultores.store');
+
+    Route::get('consultores/{consultor}', [ConsultorController::class, 'show'])
+        ->middleware('consultor.owner:fac.consultores.ver')
+        ->name('fac.consultores.show');
+
+    Route::get('consultores/{consultor}/edit', [ConsultorController::class, 'edit'])
+        ->middleware('consultor.owner:fac.consultores.gestionar')
+        ->name('fac.consultores.edit');
+
+    Route::put('consultores/{consultor}', [ConsultorController::class, 'update'])
+        ->middleware('consultor.owner:fac.consultores.gestionar')
+        ->name('fac.consultores.update');
+
+    Route::patch('consultores/{consultor}', [ConsultorController::class, 'update'])
+        ->middleware('consultor.owner:fac.consultores.gestionar')
+        ->name('fac.consultores.patch');
+
+    Route::delete('consultores/{consultor}', [ConsultorController::class, 'destroy'])
+        ->middleware('permission:fac.consultores.gestionar')
+        ->name('fac.consultores.destroy');
 
     Route::prefix('consultores/{consultor}')
         ->name('fac.consultores.')

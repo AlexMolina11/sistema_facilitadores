@@ -24,4 +24,11 @@ class Permiso extends Model
     {
         return $this->belongsToMany(Rol::class, 'seg_rol_permiso', 'id_permiso', 'id_rol')->withTimestamps();
     }
+
+    public function usuariosDirectos(): BelongsToMany
+    {
+        return $this->belongsToMany(Usuario::class, 'seg_usuario_permiso', 'id_permiso', 'id_usuario')
+            ->withPivot('permitido')
+            ->withTimestamps();
+    }
 }

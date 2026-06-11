@@ -4,7 +4,6 @@ namespace App\Modules\Seg\Models;
 
 use App\Modules\Fac\Models\Consultor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -66,13 +65,18 @@ class Usuario extends Authenticatable
     public function tieneRol(string|array $roles): bool
     {
         $roles = is_array($roles) ? $roles : [$roles];
-        return $this->roles()->whereIn('nombre', $roles)->exists();
+
+        return $this->roles()
+            ->where('seg_roles.activo', true)
+            ->whereIn('nombre', $roles)
+            ->exists();
     }
 
     public function tienePermiso(string $codigo): bool
     {
         $directo = $this->permisosDirectos()
-            ->where('codigo', $codigo)
+            ->where('seg_permisos.codigo', $codigo)
+            ->where('seg_permisos.activo', true)
             ->first();
 
         if ($directo) {
@@ -80,8 +84,37 @@ class Usuario extends Authenticatable
         }
 
         return $this->roles()
-            ->whereHas('permisos', fn ($q) => $q->where('codigo', $codigo)->where('seg_permisos.activo', true))
+            ->where('seg_roles.activo', true)
+            ->whereHas('permisos', fn ($q) => $q
+                ->where('seg_permisos.codigo', $codigo)
+                ->where('seg_permisos.activo', true))
             ->exists();
+    }
+
+    public function permisosEfectivos(): array
+    {
+        $porRol = Permiso::query()
+            ->where('seg_permisos.activo', true)
+            ->whereHas('roles', fn ($q) => $q
+                ->where('seg_roles.activo', true)
+                ->whereIn('seg_roles.id_rol', $this->roles()->pluck('seg_roles.id_rol')))
+            ->pluck('codigo')
+            ->all();
+
+        $directos = $this->permisosDirectos()
+            ->where('seg_permisos.activo', true)
+            ->get(['seg_permisos.codigo']);
+
+        $permitidos = $directos->where('pivot.permitido', true)->pluck('codigo')->all();
+        $denegados = $directos->where('pivot.permitido', false)->pluck('codigo')->all();
+
+        return collect($porRol)
+            ->merge($permitidos)
+            ->reject(fn ($codigo) => in_array($codigo, $denegados, true))
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 
     public function esConsultorPropietario(int $idConsultor): bool
