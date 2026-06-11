@@ -27,10 +27,13 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): RedirectResponse
     {
+        $request->ensureIsNotRateLimited();
+
         $usuario = Usuario::where('email', $request->email)->first();
 
         if (!$usuario || !Hash::check($request->password, $usuario->password)) {
-            $this->bitacora->registrar($usuario?->id_usuario, 'login_fallido', $request);
+            $request->hitRateLimiter();
+            $this->bitacora->seguridadLoginFallido($usuario?->id_usuario, $request);
 
             return back()
                 ->withErrors(['email' => 'Las credenciales ingresadas no son válidas.'])
@@ -38,18 +41,21 @@ class AuthController extends Controller
         }
 
         if (!$usuario->activo) {
-            $this->bitacora->registrar($usuario->id_usuario, 'login_usuario_inactivo', $request);
+            $request->hitRateLimiter();
+            $this->bitacora->seguridadUsuarioInactivo($usuario->id_usuario, $request);
 
             return back()
                 ->withErrors(['email' => 'El usuario se encuentra inactivo.'])
                 ->onlyInput('email');
         }
 
+        $request->clearRateLimiter();
+
         Auth::login($usuario, $request->boolean('remember'));
         $request->session()->regenerate();
 
         $usuario->forceFill(['ultimo_acceso' => now()])->save();
-        $this->bitacora->registrar($usuario->id_usuario, 'login_exitoso', $request);
+        $this->bitacora->seguridadLoginExitoso($usuario->id_usuario, $request);
 
         return redirect()->intended(route('fac.dashboard'));
     }
@@ -57,7 +63,7 @@ class AuthController extends Controller
     public function logout(Request $request): RedirectResponse
     {
         $idUsuario = Auth::id();
-        $this->bitacora->registrar($idUsuario, 'logout', $request);
+        $this->bitacora->seguridadLogout($idUsuario, $request);
 
         Auth::logout();
         $request->session()->invalidate();

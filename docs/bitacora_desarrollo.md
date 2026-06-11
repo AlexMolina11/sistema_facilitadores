@@ -435,3 +435,72 @@ Ruta funcional actual:
 /dashboard
 /catalogos/idiomas
 ```
+
+##Seguridad y módulo de usuarios
+
+SEG (Seguridad)
+Autenticación
+
+✅ Login
+
+✅ Logout
+
+✅ Contraseñas fuertes
+
+✅ Rate limit
+
+✅ Mensajes en español
+
+Usuarios
+
+✅ CRUD
+
+✅ Protección del último administrador
+
+✅ Asociación con consultores
+
+✅ Permisos directos
+
+Roles
+
+✅ CRUD
+
+✅ Asignación de permisos
+
+Permisos
+
+✅ CRUD
+
+✅ Middleware real
+
+✅ Menú dinámico
+
+Bitácora
+
+✅ Login exitoso
+
+✅ Login fallido
+
+✅ Logout
+
+✅ Usuarios
+
+✅ Roles
+
+✅ Permisos
+
+✅ Filtros
+
+✅ Diseño unificado
+
+UX
+
+✅ Paginación corregida
+
+✅ Alertas unificadas
+
+✅ Fechas en español
+
+✅ Zona horaria El Salvador
+
+✅ Consistencia visual con FAC
