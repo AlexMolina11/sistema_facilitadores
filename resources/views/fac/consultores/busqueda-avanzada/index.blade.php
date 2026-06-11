@@ -11,17 +11,6 @@
     subtitle="Filtra consultores por perfil profesional, experiencia, ubicación, formación, idiomas y disponibilidad."
 />
 
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <strong>Revisa los filtros ingresados.</strong>
-        <ul class="mb-0 mt-2">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
 <form method="GET" action="{{ route('fac.consultores.busqueda-avanzada') }}" id="formBusquedaAvanzada">
     <div class="fepade-card busqueda-toolbar mb-4">
         <div class="row g-3 align-items-end">
