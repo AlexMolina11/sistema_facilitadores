@@ -19,6 +19,7 @@ use App\Modules\Fac\Requests\BuscarConsultoresRequest;
 use App\Modules\Fac\Services\BusquedaConsultorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 
 class BusquedaAvanzadaController extends Controller
 {
@@ -28,14 +29,30 @@ class BusquedaAvanzadaController extends Controller
 
     public function index(BuscarConsultoresRequest $request)
     {
-        $filtros = $request->validated();
+        $filtros = $this->resolverFiltros($request);
 
         $consultores = $this->busquedaService->buscar($filtros);
+        $tokenFiltros = $this->crearTokenFiltros($filtros);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('fac.consultores.busqueda-avanzada.partials._resultados', [
+                    'consultores' => $consultores,
+                    'totalConsultores' => $consultores->total(),
+                ])->render(),
+                'total' => $consultores->total(),
+                'url' => route('fac.consultores.busqueda-avanzada', array_filter([
+                    's' => $tokenFiltros,
+                    'page' => $request->integer('page') > 1 ? $request->integer('page') : null,
+                ])),
+            ]);
+        }
 
         return view('fac.consultores.busqueda-avanzada.index', [
             'consultores' => $consultores,
             'totalConsultores' => $consultores->total(),
             'filtros' => $filtros,
+            'tokenFiltros' => $tokenFiltros,
             'areaEspecializacion' => $this->habilidadesPorTipo(1),
             'habilidadesBlandas' => $this->habilidadesPorTipo(2),
             'habilidadesTecnicas' => $this->habilidadesPorTipo(3),
@@ -101,6 +118,50 @@ class BusquedaAvanzadaController extends Controller
             'municipio_mh' => $distrito->id_municipio_mh,
             'distrito' => $distrito->id_municipio,
         ]);
+    }
+
+
+    private function resolverFiltros(BuscarConsultoresRequest $request): array
+    {
+        if ($request->filled('s')) {
+            try {
+                $filtros = json_decode(Crypt::decryptString((string) $request->string('s')), true);
+                return is_array($filtros) ? $this->limpiarFiltros($filtros) : [];
+            } catch (\Throwable) {
+                return [];
+            }
+        }
+
+        return $this->limpiarFiltros($request->validated());
+    }
+
+    private function crearTokenFiltros(array $filtros): ?string
+    {
+        $filtros = $this->limpiarFiltros($filtros);
+
+        if ($filtros === []) {
+            return null;
+        }
+
+        return Crypt::encryptString(json_encode($filtros));
+    }
+
+    private function limpiarFiltros(array $filtros): array
+    {
+        unset($filtros['s'], $filtros['page']);
+
+        return collect($filtros)
+            ->filter(function ($value) {
+                if (is_array($value)) {
+                    return collect($value)->filter(fn ($item) => $item !== null && $item !== '')->isNotEmpty();
+                }
+
+                return $value !== null && $value !== '';
+            })
+            ->map(function ($value) {
+                return is_array($value) ? array_values(array_filter($value, fn ($item) => $item !== null && $item !== '')) : $value;
+            })
+            ->all();
     }
 
     private function habilidadesPorTipo(int $tipo)
