@@ -130,8 +130,8 @@ Route::middleware(['auth'])->group(function () {
         });
 
     Route::get('busqueda-avanzada', [BusquedaAvanzadaController::class, 'index'])
-    ->middleware('permission:fac.consultores.ver')
-    ->name('fac.consultores.busqueda-avanzada');
+        ->middleware('permission:fac.consultores.ver')
+        ->name('fac.busqueda.index');
 
     Route::prefix('ajax')
         ->name('fac.ajax.')

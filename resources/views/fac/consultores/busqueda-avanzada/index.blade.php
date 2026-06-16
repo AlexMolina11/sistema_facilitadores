@@ -26,7 +26,7 @@
     subtitle="Filtra consultores por perfil profesional, experiencia, ubicación, formación, idiomas y disponibilidad."
 />
 
-<form method="GET" action="{{ route('fac.consultores.busqueda-avanzada') }}" id="formBusquedaAvanzada" data-url-base="{{ route('fac.consultores.busqueda-avanzada') }}">
+<form method="GET" action="{{ route('fac.busqueda.index') }}" id="formBusquedaAvanzada" data-url-base="{{ route('fac.busqueda.index') }}">
     <div class="fepade-card busqueda-toolbar mb-4">
         <div class="row g-3 align-items-end">
             <div class="col-lg-8">
@@ -45,7 +45,7 @@
                 </div>
             </div>
             <div class="col-lg-4 text-lg-end">
-                <a href="{{ route('fac.consultores.busqueda-avanzada') }}" class="btn btn-outline-secondary w-100 w-lg-auto">
+                <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-secondary w-100 w-lg-auto">
                     <i class="fas fa-eraser me-1"></i> Limpiar filtros
                 </a>
             </div>
@@ -336,7 +336,7 @@
                 <button class="btn btn-fepade" type="submit">
                     <i class="fas fa-filter me-1"></i> Aplicar ahora
                 </button>
-                <a href="{{ route('fac.consultores.busqueda-avanzada') }}" class="btn btn-outline-secondary">
+                <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-secondary">
                     Limpiar
                 </a>
             </div>
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let cargandoUbicacion = false;
 
     const rutas = {
-        busqueda: @json(route('fac.consultores.busqueda-avanzada')),
+        busqueda: @json(route('fac.busqueda.index')),
         departamentos: @json(route('fac.ajax.departamentos')),
         municipios: @json(route('fac.ajax.municipios')),
         distritos: @json(route('fac.ajax.distritos')),

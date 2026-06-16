@@ -79,7 +79,18 @@
 
                         <td>
                             @if($tipoRedSocial->icono)
-                                <i class="{{ $tipoRedSocial->icono }}"></i>
+                                @php
+                                    $icono = $tipoRedSocial->icono;
+
+                                    $iconosBootstrapAFontAwesome = [
+                                        'bi bi-facebook' => 'fa-brands fa-facebook',
+                                        'bi bi-linkedin' => 'fa-brands fa-linkedin',
+                                    ];
+
+                                    $iconoRender = $iconosBootstrapAFontAwesome[$icono] ?? $icono;
+                                @endphp
+
+                                <i class="{{ $iconoRender }}"></i>
                                 <span class="ms-1">
                                     {{ $tipoRedSocial->icono }}
                                 </span>
