@@ -26,4 +26,14 @@ class ConsultorIdioma extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+
+    public function idioma()
+    {
+        return $this->belongsTo(Idioma::class, 'id_idioma', 'id_idioma');
+    }
+
+    public function nivel()
+    {
+        return $this->belongsTo(IdiomaNivel::class, 'id_idioma_nivel', 'id_idioma_nivel');
+    }
 }

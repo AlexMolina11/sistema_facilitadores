@@ -21,8 +21,9 @@
                         type="text"
                         class="form-control"
                         name="q"
-                        placeholder="Nombre, apellido, documento, NIT, NRC o correo..."
+                        placeholder="Nombre, habilidad, idioma, experiencia, formación, ubicación, teléfono o correo..."
                         value="{{ request('q') }}"
+                        autocomplete="off"
                     >
                     <button class="btn btn-fepade" type="submit">
                         <i class="fas fa-search me-1"></i> Buscar
@@ -319,8 +320,9 @@
 
             <div class="d-grid gap-2 mt-4">
                 <button class="btn btn-fepade" type="submit">
-                    <i class="fas fa-filter me-1"></i> Aplicar filtros
+                    <i class="fas fa-sync-alt me-1"></i> Actualizar resultados
                 </button>
+                <small class="text-muted text-center">Los filtros se aplican automáticamente al cambiar cualquier criterio.</small>
                 <a href="{{ route('fac.consultores.busqueda-avanzada') }}" class="btn btn-outline-secondary">
                     Limpiar
                 </a>
@@ -380,10 +382,25 @@
                                 </div>
                             </div>
 
-                            <div class="d-grid mt-auto">
-                                <a href="{{ route('fac.consultores.show', $consultor) }}" class="btn btn-primary">
-                                    Ver perfil
-                                </a>
+                            <div class="d-grid gap-2 mt-auto">
+                                <div class="btn-group" role="group" aria-label="Acciones del consultor">
+                                    <a href="{{ route('fac.consultores.show', $consultor) }}" class="btn btn-primary">
+                                        Ver perfil
+                                    </a>
+
+                                    @if(\Illuminate\Support\Facades\Route::has('fac.cv.preview'))
+                                        <a
+                                            href="{{ route('fac.cv.preview', ['consultor' => $consultor->id_consultor]) }}"
+                                            class="btn btn-outline-primary"
+                                        >
+                                            Exportar CV
+                                        </a>
+                                    @else
+                                        <button type="button" class="btn btn-outline-primary" disabled title="Módulo Exportar CV pendiente de conexión">
+                                            Exportar CV
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </article>
                     </div>
@@ -412,6 +429,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formBusquedaAvanzada');
     const pais = document.getElementById('pais');
     const departamento = document.getElementById('departamento');
     const municipioMh = document.getElementById('municipio_mh');
@@ -424,7 +442,22 @@ document.addEventListener('DOMContentLoaded', function () {
         ubicacion: @json(route('fac.ajax.ubicacion.distrito')),
     };
 
+    let temporizadorBusqueda = null;
+    let cargandoUbicacion = false;
+
+    function aplicarFiltros(delay = 450) {
+        if (!form || cargandoUbicacion) {
+            return;
+        }
+
+        window.clearTimeout(temporizadorBusqueda);
+        temporizadorBusqueda = window.setTimeout(() => {
+            form.requestSubmit();
+        }, delay);
+    }
+
     function resetSelect(select, label = 'Todos') {
+        if (!select) return;
         select.innerHTML = `<option value="">${label}</option>`;
     }
 
@@ -440,45 +473,83 @@ document.addEventListener('DOMContentLoaded', function () {
         select.appendChild(option);
     }
 
+    function cargarOpciones(url, select, mapCallback) {
+        return fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item => mapCallback(item, select));
+            });
+    }
+
     pais?.addEventListener('change', function () {
+        cargandoUbicacion = true;
         resetSelect(departamento);
         resetSelect(municipioMh);
         resetSelect(distrito);
 
-        if (!this.value) return;
+        const finalizar = () => {
+            cargandoUbicacion = false;
+            aplicarFiltros(120);
+        };
 
-        fetch(`${rutas.departamentos}?id_pais=${this.value}`)
-            .then(response => response.json())
-            .then(data => data.forEach(item => appendOption(departamento, item.id_departamento, item.nombre_departamento)));
+        if (!this.value) {
+            finalizar();
+            return;
+        }
+
+        cargarOpciones(`${rutas.departamentos}?id_pais=${this.value}`, departamento, (item, select) => {
+            appendOption(select, item.id_departamento, item.nombre_departamento);
+        }).finally(finalizar);
     });
 
     departamento?.addEventListener('change', function () {
+        cargandoUbicacion = true;
         resetSelect(municipioMh);
         resetSelect(distrito);
 
-        if (!this.value) return;
+        const finalizar = () => {
+            cargandoUbicacion = false;
+            aplicarFiltros(120);
+        };
 
-        fetch(`${rutas.municipios}?id_departamento=${this.value}`)
-            .then(response => response.json())
-            .then(data => data.forEach(item => appendOption(municipioMh, item.id_municipio_mh, item.municipio_mh_nombre)));
+        if (!this.value) {
+            finalizar();
+            return;
+        }
+
+        cargarOpciones(`${rutas.municipios}?id_departamento=${this.value}`, municipioMh, (item, select) => {
+            appendOption(select, item.id_municipio_mh, item.municipio_mh_nombre);
+        }).finally(finalizar);
     });
 
     municipioMh?.addEventListener('change', function () {
+        cargandoUbicacion = true;
         resetSelect(distrito);
 
-        if (!this.value) return;
+        const finalizar = () => {
+            cargandoUbicacion = false;
+            aplicarFiltros(120);
+        };
 
-        fetch(`${rutas.distritos}?id_municipio_mh=${this.value}`)
-            .then(response => response.json())
-            .then(data => data.forEach(item => appendOption(distrito, item.id_municipio, item.nombre_distrito, {
+        if (!this.value) {
+            finalizar();
+            return;
+        }
+
+        cargarOpciones(`${rutas.distritos}?id_municipio_mh=${this.value}`, distrito, (item, select) => {
+            appendOption(select, item.id_municipio, item.nombre_distrito, {
                 pais: item.id_pais,
                 departamento: item.id_departamento,
                 municipioMh: item.id_municipio_mh,
-            })));
+            });
+        }).finally(finalizar);
     });
 
     distrito?.addEventListener('change', function () {
-        if (!this.value) return;
+        if (!this.value) {
+            aplicarFiltros(120);
+            return;
+        }
 
         const option = distrito.options[distrito.selectedIndex];
 
@@ -486,16 +557,30 @@ document.addEventListener('DOMContentLoaded', function () {
             pais.value = option.dataset.pais;
             departamento.value = option.dataset.departamento;
             municipioMh.value = option.dataset.municipioMh;
+            aplicarFiltros(120);
             return;
         }
 
+        cargandoUbicacion = true;
         fetch(`${rutas.ubicacion}?id_municipio=${this.value}`)
             .then(response => response.json())
             .then(data => {
                 pais.value = data.pais;
                 departamento.value = data.departamento;
                 municipioMh.value = data.municipio_mh;
+            })
+            .finally(() => {
+                cargandoUbicacion = false;
+                aplicarFiltros(120);
             });
+    });
+
+    form?.querySelectorAll('select:not(#pais):not(#departamento):not(#municipio_mh):not(#distrito), input[type="checkbox"], input[type="date"]').forEach(element => {
+        element.addEventListener('change', () => aplicarFiltros(150));
+    });
+
+    form?.querySelectorAll('input[type="text"], input[type="number"]').forEach(element => {
+        element.addEventListener('input', () => aplicarFiltros(650));
     });
 });
 </script>
