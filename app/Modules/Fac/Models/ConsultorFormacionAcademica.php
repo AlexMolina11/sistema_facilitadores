@@ -33,4 +33,19 @@ class ConsultorFormacionAcademica extends Model
         'fecha_fin' => 'date',
         'activo' => 'boolean',
     ];
+
+    public function tipoAtestado()
+    {
+        return $this->belongsTo(TipoAtestado::class, 'id_tipo_atestado', 'id_tipo_atestado');
+    }
+
+    public function nivelAcademico()
+    {
+        return $this->belongsTo(NivelAcademico::class, 'id_nivel_academico', 'id_nivel_academico');
+    }
+
+    public function pais()
+    {
+        return $this->belongsTo(Pais::class, 'id_pais', 'id_pais');
+    }
 }

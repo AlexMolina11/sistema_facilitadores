@@ -24,4 +24,9 @@ class ConsultorHabilidad extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+
+    public function habilidad()
+    {
+        return $this->belongsTo(Habilidad::class, 'id_habilidad', 'id_habilidad');
+    }
 }
