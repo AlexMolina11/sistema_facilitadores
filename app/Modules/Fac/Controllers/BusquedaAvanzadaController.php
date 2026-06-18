@@ -14,7 +14,6 @@ use App\Modules\Fac\Models\Pais;
 use App\Modules\Fac\Models\Sexo;
 use App\Modules\Fac\Models\TipoAtestado;
 use App\Modules\Fac\Models\TipoDisponibilidad;
-use App\Modules\Fac\Models\TipoFormacion;
 use App\Modules\Fac\Requests\BuscarConsultoresRequest;
 use App\Modules\Fac\Services\BusquedaConsultorService;
 use Illuminate\Http\JsonResponse;
@@ -46,7 +45,6 @@ class BusquedaAvanzadaController extends Controller
             'distritos' => Municipio::where('activo', true)->orderBy('nombre_distrito')->get(),
             'idiomas' => Idioma::where('activo', true)->orderBy('nombre')->get(),
             'nivelesIdioma' => IdiomaNivel::where('activo', true)->orderBy('nombre')->get(),
-            'tiposFormacion' => TipoFormacion::where('activo', true)->orderBy('nombre')->get(),
             'nivelesAcademicos' => NivelAcademico::where('activo', true)->orderBy('nombre')->get(),
             'tiposAtestado' => TipoAtestado::where('activo', true)->orderBy('nombre')->get(),
             'tiposDisponibilidad' => TipoDisponibilidad::where('activo', true)->orderBy('nombre')->get(),
