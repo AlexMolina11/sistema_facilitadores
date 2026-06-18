@@ -73,7 +73,7 @@
                 <div class="fepade-card text-center py-5">
                     <h5 class="mb-2">No se encontraron consultores</h5>
                     <p class="text-muted mb-3">Prueba reduciendo la cantidad de filtros o limpia la búsqueda.</p>
-                    <a href="{{ route('fac.consultores.busqueda-avanzada') }}" class="btn btn-outline-secondary">Limpiar filtros</a>
+                    <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-secondary">Limpiar filtros</a>
                 </div>
             </div>
         @endforelse

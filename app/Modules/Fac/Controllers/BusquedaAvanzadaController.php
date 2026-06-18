@@ -41,7 +41,7 @@ class BusquedaAvanzadaController extends Controller
                     'totalConsultores' => $consultores->total(),
                 ])->render(),
                 'total' => $consultores->total(),
-                'url' => route('fac.consultores.busqueda-avanzada', array_filter([
+                'url' => route('fac.busqueda.index', array_filter([
                     's' => $tokenFiltros,
                     'page' => $request->integer('page') > 1 ? $request->integer('page') : null,
                 ])),
