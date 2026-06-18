@@ -1,12 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Formación consultor | Facilitadores FEPADE')
-@section('page-title', 'Títulos Académicos y atestados')
-@section('page-subtitle', 'Registra formación académica y educación continua')
+@section('title', 'Trayectoria consultor | Facilitadores FEPADE')
+@section('page-title', 'Trayectoria Académica y Profesional')
+@section('page-subtitle', 'Registra educación formal, educación continua, acreditaciones, capacitaciones y consultorías realizadas')
 
 @section('content')
 
 @include('fac.consultores.partials._wizard', ['step' => 4, 'consultor' => $consultor])
+
+<div class="alert alert-light border mb-4">
+    <strong>Actualización Fase 6:</strong>
+    esta sección ahora guarda los registros en <code>tbl_consultor_atestado</code>. Las consultorías realizadas se registran aquí como parte de la trayectoria profesional.
+</div>
 
 <div class="formacion-panel">
     @foreach($catalogos['tiposFormacion'] as $tipoFormacion)
@@ -16,14 +21,17 @@
 
         <section class="formacion-section">
             <div class="formacion-section-header">
-                <h4>{{ $tipoFormacion->nombre }}</h4>
+                <div>
+                    <h4>{{ $tipoFormacion->nombre }}</h4>
+                    <p class="text-muted mb-0">Registros asociados a {{ strtolower($tipoFormacion->nombre) }}.</p>
+                </div>
 
                 <button 
                     type="button" 
                     class="btn btn-fepade"
                     onclick="mostrarFormulario('crear-{{ $tipoFormacion->id_tipo_formacion }}')"
                 >
-                    + Añadir atestado
+                    + Añadir registro
                 </button>
             </div>
 
@@ -49,10 +57,15 @@
                     </div>
 
                     <div class="formacion-card-body">
-                        <div class="d-flex justify-content-between align-items-start">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
-                                <h5>{{ $formacion->descripcion }}</h5>
-                                <p class="text-muted mb-0">{{ $tipoAtestado->nombre ?? 'Atestado' }}</p>
+                                <h5>{{ $formacion->titulo }}</h5>
+                                <p class="text-muted mb-0">
+                                    {{ $tipoAtestado->nombre ?? 'Atestado' }}
+                                    @if($formacion->horas)
+                                        · {{ $formacion->horas }} horas
+                                    @endif
+                                </p>
                             </div>
 
                             <div class="d-flex gap-2">
@@ -67,8 +80,8 @@
 
                                 <form 
                                     method="POST" 
-                                    action="{{ route('fac.consultores.formacion.atestados.destroy', [$consultor, $formacion]) }}"
-                                    onsubmit="return confirm('¿Deseas eliminar este atestado?')"
+                                    action="{{ route('fac.consultores.trayectoria.atestados.destroy', [$consultor, $formacion]) }}"
+                                    onsubmit="return confirm('¿Deseas eliminar este registro de trayectoria?')"
                                 >
                                     @csrf
                                     @method('DELETE')
@@ -80,10 +93,14 @@
                             </div>
                         </div>
 
+                        @if($formacion->descripcion)
+                            <p class="mt-3 mb-0">{{ $formacion->descripcion }}</p>
+                        @endif
+
                         <div class="row g-3 mt-2">
                             <div class="col-md-4">
                                 <small class="text-muted d-block">Institución</small>
-                                <span>{{ $formacion->institucion }}</span>
+                                <span>{{ $formacion->institucion ?: 'No registrada' }}</span>
                             </div>
 
                             <div class="col-md-4">
@@ -97,23 +114,51 @@
                             </div>
 
                             <div class="col-md-4">
-                                <small class="text-muted d-block">Fecha inicio</small>
-                                <span>{{ $formacion->fecha_inicio ? $formacion->fecha_inicio->format('Y') : 'No registrada' }}</span>
+                                <small class="text-muted d-block">Entidad acreditadora</small>
+                                <span>{{ $formacion->entidad_acreditadora ?: 'No registrada' }}</span>
                             </div>
 
                             <div class="col-md-4">
+                                <small class="text-muted d-block">Cliente / institución</small>
+                                <span>{{ $formacion->cliente_institucion ?: 'No registrado' }}</span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Código acreditación</small>
+                                <span>{{ $formacion->codigo_acreditacion ?: 'No registrado' }}</span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Fecha inicio</small>
+                                <span>{{ $formacion->fecha_inicio ? $formacion->fecha_inicio->format('d/m/Y') : 'No registrada' }}</span>
+                            </div>
+
+                            <div class="col-md-3">
                                 <small class="text-muted d-block">Fecha fin</small>
-                                <span>{{ $formacion->fecha_fin ? $formacion->fecha_fin->format('Y') : 'No registrada' }}</span>
+                                <span>{{ $formacion->fecha_fin ? $formacion->fecha_fin->format('d/m/Y') : 'No registrada' }}</span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Fecha emisión</small>
+                                <span>{{ $formacion->fecha_emision ? $formacion->fecha_emision->format('d/m/Y') : 'No registrada' }}</span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Fecha vencimiento</small>
+                                <span>{{ $formacion->fecha_vencimiento ? $formacion->fecha_vencimiento->format('d/m/Y') : 'No registrada' }}</span>
                             </div>
                         </div>
 
                         <hr>
 
                         <div class="d-flex gap-3 align-items-center">
-                            @if($formacion->url)
-                                <a href="{{ \Illuminate\Support\Facades\Storage::url($formacion->url) }}" target="_blank" class="fw-semibold">
+                            @if($formacion->url_archivo)
+                                <a href="{{ \Illuminate\Support\Facades\Storage::url($formacion->url_archivo) }}" target="_blank" class="fw-semibold">
                                     Ver documento
                                 </a>
+                                @if($formacion->nombre_archivo_original)
+                                    <span class="text-muted small">{{ $formacion->nombre_archivo_original }}</span>
+                                @endif
                             @else
                                 <span class="text-muted">Sin documento adjunto</span>
                             @endif
@@ -131,7 +176,7 @@
                 </article>
             @empty
                 <div class="text-muted border rounded p-4 mb-4">
-                    No hay atestados registrados para {{ strtolower($tipoFormacion->nombre) }}.
+                    No hay registros para {{ strtolower($tipoFormacion->nombre) }}.
                 </div>
             @endforelse
         </section>

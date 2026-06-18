@@ -6,8 +6,8 @@
 <form 
     method="POST" 
     action="{{ $esEdicion 
-        ? route('fac.consultores.formacion.atestados.update', [$consultor, $formacion]) 
-        : route('fac.consultores.formacion.store', $consultor) 
+        ? route('fac.consultores.trayectoria.atestados.update', [$consultor, $formacion]) 
+        : route('fac.consultores.trayectoria.atestados.store', $consultor) 
     }}" 
     enctype="multipart/form-data"
     class="border rounded p-3 mb-3 bg-light"
@@ -37,9 +37,9 @@
         </div>
 
         <div class="col-md-4">
-            <label class="form-label">Nivel académico <span class="text-danger">*</span></label>
+            <label class="form-label">Nivel académico</label>
             <select name="id_nivel_academico" class="form-select">
-                <option value="">Seleccione</option>
+                <option value="">No aplica / no registrado</option>
                 @foreach($catalogos['nivelesAcademicos'] as $nivel)
                     <option 
                         value="{{ $nivel->id_nivel_academico }}"
@@ -66,8 +66,20 @@
             </select>
         </div>
 
-        <div class="col-md-4">
-            <label class="form-label">Institución <span class="text-danger">*</span></label>
+        <div class="col-md-6">
+            <label class="form-label">Título / nombre del registro <span class="text-danger">*</span></label>
+            <input 
+                type="text" 
+                name="titulo" 
+                value="{{ old('titulo', $formacion->titulo ?? '') }}" 
+                class="form-control"
+                maxlength="250"
+                placeholder="Ej. Maestría, Diplomado, acreditación, capacitación o consultoría realizada"
+            >
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Institución</label>
             <input 
                 type="text" 
                 name="institucion" 
@@ -77,14 +89,46 @@
             >
         </div>
 
+        <div class="col-md-12">
+            <label class="form-label">Descripción</label>
+            <textarea 
+                name="descripcion" 
+                class="form-control"
+                rows="3"
+                placeholder="Describe brevemente el alcance, contenido o resultado del registro."
+            >{{ old('descripcion', $formacion->descripcion ?? '') }}</textarea>
+        </div>
+
         <div class="col-md-4">
-            <label class="form-label">Descripción / título obtenido <span class="text-danger">*</span></label>
+            <label class="form-label">Entidad acreditadora</label>
             <input 
                 type="text" 
-                name="descripcion" 
-                value="{{ old('descripcion', $formacion->descripcion ?? '') }}" 
+                name="entidad_acreditadora" 
+                value="{{ old('entidad_acreditadora', $formacion->entidad_acreditadora ?? '') }}" 
                 class="form-control"
                 maxlength="250"
+            >
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Cliente / institución</label>
+            <input 
+                type="text" 
+                name="cliente_institucion" 
+                value="{{ old('cliente_institucion', $formacion->cliente_institucion ?? '') }}" 
+                class="form-control"
+                maxlength="250"
+            >
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Código de acreditación</label>
+            <input 
+                type="text" 
+                name="codigo_acreditacion" 
+                value="{{ old('codigo_acreditacion', $formacion->codigo_acreditacion ?? '') }}" 
+                class="form-control"
+                maxlength="100"
             >
         </div>
 
@@ -108,13 +152,40 @@
             >
         </div>
 
-        <div class="col-md-8">
-            <label class="form-label">
-                Comprobante / atestado 
-                @if(!$esEdicion)
-                    <span class="text-danger">*</span>
-                @endif
-            </label>
+        <div class="col-md-2">
+            <label class="form-label">Fecha emisión</label>
+            <input 
+                type="date" 
+                name="fecha_emision" 
+                value="{{ old('fecha_emision', isset($formacion) && $formacion->fecha_emision ? $formacion->fecha_emision->format('Y-m-d') : '') }}" 
+                class="form-control"
+            >
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Fecha vencimiento</label>
+            <input 
+                type="date" 
+                name="fecha_vencimiento" 
+                value="{{ old('fecha_vencimiento', isset($formacion) && $formacion->fecha_vencimiento ? $formacion->fecha_vencimiento->format('Y-m-d') : '') }}" 
+                class="form-control"
+            >
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Horas</label>
+            <input 
+                type="number" 
+                name="horas" 
+                value="{{ old('horas', $formacion->horas ?? '') }}" 
+                class="form-control"
+                min="0"
+                max="9999"
+            >
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label">Evidencia / archivo</label>
 
             <input 
                 type="file" 
@@ -127,22 +198,25 @@
                 Formatos permitidos: PDF, JPG, JPEG, PNG, WEBP. Máximo 5 MB.
             </div>
 
-            @if($esEdicion && $formacion->url)
+            @if($esEdicion && $formacion->url_archivo)
                 <div class="mt-2">
-                    <a href="{{ \Illuminate\Support\Facades\Storage::url($formacion->url) }}" target="_blank">
+                    <a href="{{ \Illuminate\Support\Facades\Storage::url($formacion->url_archivo) }}" target="_blank">
                         Ver archivo actual
                     </a>
+                    @if($formacion->nombre_archivo_original)
+                        <span class="text-muted small ms-2">{{ $formacion->nombre_archivo_original }}</span>
+                    @endif
                 </div>
             @endif
         </div>
 
-        <div class="col-md-4 d-flex align-items-end justify-content-end gap-2">
+        <div class="col-md-12 d-flex align-items-end justify-content-end gap-2">
             <button type="button" class="btn btn-outline-secondary" onclick="cerrarFormularios()">
                 Cancelar
             </button>
 
             <button type="submit" class="btn btn-fepade">
-                {{ $esEdicion ? 'Actualizar atestado' : 'Guardar atestado' }}
+                {{ $esEdicion ? 'Actualizar registro' : 'Guardar registro' }}
             </button>
         </div>
     </div>

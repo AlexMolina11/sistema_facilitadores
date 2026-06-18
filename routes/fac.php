@@ -6,6 +6,7 @@ use App\Modules\Fac\Controllers\Catalogo\IdiomaController;
 use App\Modules\Fac\Controllers\ConsultorController;
 use App\Modules\Fac\Controllers\ConsultorContactoController;
 use App\Modules\Fac\Controllers\ConsultorFormacionController;
+use App\Modules\Fac\Controllers\ConsultorAtestadoController;
 use App\Modules\Fac\Controllers\ConsultorExperienciaController;
 use App\Modules\Fac\Controllers\ConsultorDocumentoController;
 
@@ -97,6 +98,10 @@ Route::middleware(['auth'])->group(function () {
             Route::put('formacion/atestados/{formacion}', [ConsultorFormacionController::class, 'updateAtestado'])->name('formacion.atestados.update');
             Route::delete('formacion/atestados/{formacion}', [ConsultorFormacionController::class, 'destroyAtestado'])->name('formacion.atestados.destroy');
             Route::post('formacion/continuar', [ConsultorFormacionController::class, 'continuar'])->name('formacion.continuar');
+            Route::post('trayectoria/atestados', [ConsultorAtestadoController::class, 'store'])->name('trayectoria.atestados.store');
+            Route::put('trayectoria/atestados/{atestado}', [ConsultorAtestadoController::class, 'update'])->name('trayectoria.atestados.update');
+            Route::delete('trayectoria/atestados/{atestado}', [ConsultorAtestadoController::class, 'destroy'])->name('trayectoria.atestados.destroy');
+
 
             Route::get('experiencia', [ConsultorExperienciaController::class, 'editExperiencia'])->name('experiencia.edit');
             Route::post('experiencia/laboral', [ConsultorExperienciaController::class, 'storeExperiencia'])->name('experiencia.laboral.store');
