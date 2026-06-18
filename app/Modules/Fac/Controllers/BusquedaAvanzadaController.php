@@ -61,7 +61,7 @@ class BusquedaAvanzadaController extends Controller
             'municipiosMh' => MunicipioMh::where('activo', true)->orderBy('municipio_mh_nombre')->get(),
             'distritos' => Municipio::where('activo', true)->orderBy('nombre_distrito')->get(),
             'idiomas' => Idioma::where('activo', true)->orderBy('nombre')->get(),
-            'nivelesIdioma' => IdiomaNivel::where('activo', true)->orderBy('nombre')->get(),
+            'nivelesIdioma' => IdiomaNivel::where('activo', true)->orderBy('id_idioma_nivel')->get(),
             'nivelesAcademicos' => NivelAcademico::where('activo', true)->orderBy('nombre')->get(),
             'tiposAtestado' => TipoAtestado::where('activo', true)->orderBy('nombre')->get(),
             'tiposDisponibilidad' => TipoDisponibilidad::where('activo', true)->orderBy('nombre')->get(),
