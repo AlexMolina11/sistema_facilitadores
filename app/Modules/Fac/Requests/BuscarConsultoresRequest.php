@@ -30,12 +30,10 @@ class BuscarConsultoresRequest extends FormRequest
             'distrito' => ['nullable', 'integer', 'exists:tbl_municipio,id_municipio'],
             'disponibilidad' => ['nullable', 'integer', 'exists:tbl_tipo_disponibilidad,id_tipo_disponibilidad'],
 
-            'idioma' => ['nullable', 'integer', 'exists:tbl_idioma,id_idioma'],
-            'nivel_idioma' => ['nullable', 'integer', 'exists:tbl_idioma_nivel,id_idioma_nivel'],
-
-            'tipo_formacion' => ['nullable', 'integer', 'exists:tbl_tipo_formacion,id_tipo_formacion'],
-            'nivel_academico' => ['nullable', 'integer', 'exists:tbl_nivel_academico,id_nivel_academico'],
-            'tipo_atestado' => ['nullable', 'integer', 'exists:tbl_tipo_atestado,id_tipo_atestado'],
+            'idiomas' => ['nullable', 'array'],'idiomas.*' => ['nullable','integer','exists:tbl_idioma_nivel,id_idioma_nivel'],
+            
+            'nivel_academico' => ['nullable', 'array'],'nivel_academico.*' => ['integer','exists:tbl_nivel_academico,id_nivel_academico'],
+            'tipo_atestado' => ['nullable', 'array'],'tipo_atestado.*' => ['integer','exists:tbl_tipo_atestado,id_tipo_atestado'],
 
             'cargo' => ['nullable', 'string', 'max:120'],
             'empresa' => ['nullable', 'string', 'max:150'],

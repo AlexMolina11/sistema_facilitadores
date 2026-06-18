@@ -200,39 +200,89 @@ class BusquedaConsultorService
         }
     }
 
-    private function aplicarEducacion(Builder $query, array $filtros): void
-    {
-        $tipoFormacion = Arr::get($filtros, 'tipo_formacion');
-        $nivelAcademico = Arr::get($filtros, 'nivel_academico');
-        $tipoAtestado = Arr::get($filtros, 'tipo_atestado');
+private function aplicarEducacion(
+    Builder $query,
+    array $filtros
+): void
+{
+    $nivelesAcademicos =
+        array_filter(
+            (array) Arr::get(
+                $filtros,
+                'nivel_academico',
+                []
+            )
+        );
 
-        if (!$tipoFormacion && !$nivelAcademico && !$tipoAtestado) {
-            return;
-        }
+    $tiposAtestado =
+        array_filter(
+            (array) Arr::get(
+                $filtros,
+                'tipo_atestado',
+                []
+            )
+        );
 
-        $query->whereHas('formaciones', function (Builder $f) use ($tipoFormacion, $nivelAcademico, $tipoAtestado) {
-            $f->where('activo', true)
-                ->when($tipoFormacion, fn (Builder $q) => $q->where('id_tipo_formacion', $tipoFormacion))
-                ->when($nivelAcademico, fn (Builder $q) => $q->where('id_nivel_academico', $nivelAcademico))
-                ->when($tipoAtestado, fn (Builder $q) => $q->where('id_tipo_atestado', $tipoAtestado));
-        });
+    if (
+        empty($nivelesAcademicos)
+        &&
+        empty($tiposAtestado)
+    ) {
+        return;
     }
 
-    private function aplicarIdiomas(Builder $query, array $filtros): void
-    {
-        $idioma = Arr::get($filtros, 'idioma');
-        $nivel = Arr::get($filtros, 'nivel_idioma');
+    $query->whereHas(
+        'formaciones',
+        function (Builder $f)
+            use (
+                $nivelesAcademicos,
+                $tiposAtestado
+            ) {
 
-        if (!$idioma && !$nivel) {
-            return;
+            $f->where('activo', true);
+
+            if (!empty($nivelesAcademicos)) {
+
+                $f->whereIn(
+                    'id_nivel_academico',
+                    $nivelesAcademicos
+                );
+            }
+
+            if (!empty($tiposAtestado)) {
+
+                $f->whereIn(
+                    'id_tipo_atestado',
+                    $tiposAtestado
+                );
+            }
+        }
+    );
+}
+
+private function aplicarIdiomas(Builder $query, array $filtros): void
+{
+    $idiomas = Arr::get($filtros, 'idiomas', []);
+
+    if (empty($idiomas)) {
+        return;
+    }
+
+    foreach ($idiomas as $idIdioma => $idNivel) {
+
+        if (empty($idNivel)) {
+            continue;
         }
 
-        $query->whereHas('idiomas', function (Builder $i) use ($idioma, $nivel) {
+        $query->whereHas('idiomas', function (Builder $i) use ($idIdioma, $idNivel) {
+
             $i->where('activo', true)
-                ->when($idioma, fn (Builder $q) => $q->where('id_idioma', $idioma))
-                ->when($nivel, fn (Builder $q) => $q->where('id_idioma_nivel', '>=', $nivel));
+              ->where('id_idioma', $idIdioma)
+              ->where('id_idioma_nivel', '>=', $idNivel);
+
         });
     }
+}
 
     private function aplicarExperiencia(Builder $query, array $filtros): void
     {

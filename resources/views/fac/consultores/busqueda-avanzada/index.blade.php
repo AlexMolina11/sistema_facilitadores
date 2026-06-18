@@ -241,41 +241,104 @@
                             Educación y atestados
                         </button>
                     </h2>
-                    <div id="filtroEducacion" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
+            <div id="filtroEducacion" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
-                            <div class="mb-3">
-                                <label class="form-label">Tipo de formación</label>
-                                <select name="tipo_formacion" class="form-select">
-                                    <option value="">Todas</option>
-                                    @foreach($tiposFormacion as $tipo)
-                                        <option value="{{ $tipo->id_tipo_formacion }}" @selected(($filtros['tipo_formacion'] ?? null) == $tipo->id_tipo_formacion)>{{ $tipo->nombre }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Nivel académico</label>
-                                <select name="nivel_academico" class="form-select">
-                                    <option value="">Todos</option>
-                                    @foreach($nivelesAcademicos as $nivel)
-                                        <option value="{{ $nivel->id_nivel_academico }}" @selected(($filtros['nivel_academico'] ?? null) == $nivel->id_nivel_academico)>{{ $nivel->nombre }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+  {{-- NIVELES ACADÉMICOS --}}
+  <div class="mb-3">
 
-                            <div class="mb-0">
-                                <label class="form-label">Tipo de atestado</label>
-                                <select name="tipo_atestado" class="form-select">
-                                    <option value="">Todos</option>
-                                    @foreach($tiposAtestado as $atestado)
-                                        <option value="{{ $atestado->id_tipo_atestado }}" @selected(($filtros['tipo_atestado'] ?? null) == $atestado->id_tipo_atestado)>{{ $atestado->nombre }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <label class="form-label fw-bold">
+          Niveles Académicos
 
+          <span class="badge bg-primary">
+              {{ count($nivelesAcademicos ?? []) }}
+          </span>
+      </label>
+
+      <div
+          class="border rounded p-2"
+          style="max-height:250px; overflow-y:auto;"
+      >
+
+          @foreach($nivelesAcademicos ?? [] as $nivel)
+
+              <div class="form-check">
+
+                  <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="nivel_academico[]"
+                      value="{{ $nivel->id_nivel_academico }}"
+                      id="nivel{{ $nivel->id_nivel_academico }}"
+                      {{ in_array(
+                          $nivel->id_nivel_academico,
+                          request()->get('nivel_academico', [])
+                      ) ? 'checked' : '' }}
+                  >
+
+                  <label
+                      class="form-check-label"
+                      for="nivel{{ $nivel->id_nivel_academico }}"
+                  >
+                      {{ $nivel->nombre }}
+                  </label>
+
+              </div>
+
+          @endforeach
+
+      </div>
+
+  </div>
+
+  {{-- TIPOS DE ATESTADO --}}
+  <div class="mb-3">
+
+      <label class="form-label fw-bold">
+          Tipos de Atestados
+
+          <span class="badge bg-primary">
+           {{ $tiposAtestado->count() }}
+          </span>
+      </label>
+
+      <div
+          class="border rounded p-2"
+          style="max-height:250px; overflow-y:auto;"
+      >
+
+          @foreach($tiposAtestado ?? [] as $atestado)
+
+              <div class="form-check">
+
+                  <input
+                      class="form-check-input"
+                      type="checkbox"
+                      name="tipo_atestado[]"
+                      value="{{ $atestado->id_tipo_atestado }}"
+                      id="atestado{{ $atestado->id_tipo_atestado }}"
+                      {{ in_array(
+                          $atestado->id_tipo_atestado,
+                          request()->get('tipo_atestado', [])
+                      ) ? 'checked' : '' }}
+                  >
+
+                  <label
+                      class="form-check-label"
+                      for="atestado{{ $atestado->id_tipo_atestado }}"
+                  >
+                      {{ $atestado->nombre }}
+                  </label>
+
+              </div>
+
+          @endforeach
+
+      </div>
+  </div>
+  </div>
+  </div>
+  </div>  
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroIdiomas">
@@ -284,28 +347,98 @@
                     </h2>
                     <div id="filtroIdiomas" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
-                            <div class="mb-3">
-                                <label class="form-label">Idioma</label>
-                                <select name="idioma" class="form-select">
-                                    <option value="">Todos</option>
-                                    @foreach($idiomas as $idioma)
-                                        <option value="{{ $idioma->id_idioma }}" @selected(($filtros['idioma'] ?? null) == $idioma->id_idioma)>{{ $idioma->nombre }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
 
-                            <div class="mb-0">
-                                <label class="form-label">Nivel mínimo</label>
-                                <select name="nivel_idioma" class="form-select">
-                                    <option value="">Todos</option>
-                                    @foreach($nivelesIdioma as $nivel)
-                                        <option value="{{ $nivel->id_idioma_nivel }}" @selected(($filtros['nivel_idioma'] ?? null) == $nivel->id_idioma_nivel)>{{ $nivel->nombre }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+    <label class="form-label fw-bold">
+
+        Idiomas
+
+        <span class="badge bg-primary">
+            {{ count($idiomas ?? []) }}
+        </span>
+
+    </label>
+
+    <div
+        class="border rounded p-2"
+        style="max-height:350px; overflow-y:auto;"
+    >
+
+        @foreach($idiomas ?? [] as $idioma)
+
+            <div class="mb-2">
+
+                <div class="form-check">
+
+                    <input
+                        type="checkbox"
+                        class="form-check-input idioma-check"
+                        id="idioma{{ $idioma->id_idioma }}"
+                        data-target="nivel-container-{{ $idioma->id_idioma }}"
+                        {{ isset(request('idiomas')[$idioma->id_idioma]) ? 'checked' : '' }}
+                    >
+
+                    <label
+                        class="form-check-label"
+                        for="idioma{{ $idioma->id_idioma }}"
+                    >
+                        {{ $idioma->nombre }}
+                    </label>
+
                 </div>
+
+                <div
+                    id="nivel-container-{{ $idioma->id_idioma }}"
+                    class="ms-4 mt-2"
+                    style="
+                        display:
+                        {{ isset(request('idiomas')[$idioma->id_idioma]) ? 'block' : 'none' }};
+                    "
+                >
+
+                    <label class="form-label small">
+                        Nivel
+                    </label>
+
+                    <select
+                        class="form-select form-select-sm"
+                        name="idiomas[{{ $idioma->id_idioma }}]"
+                    >
+
+                        <option value="">
+                            Seleccione nivel
+                        </option>
+
+                        @foreach($nivelesIdioma as $nivel)
+
+                            <option
+                                value="{{ $nivel->id_idioma_nivel }}"
+                                {{
+                                    (request('idiomas')[$idioma->id_idioma] ?? null)
+                                    == $nivel->id_idioma_nivel
+                                    ? 'selected'
+                                    : ''
+                                }}
+                            >
+                                {{ $nivel->nombre }}
+                            </option>
+
+                        @endforeach
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        @endforeach
+
+    </div>
+
+</div>
+</div>
+</div>
+
+                        
 
                 <div class="accordion-item">
                     <h2 class="accordion-header">
@@ -554,4 +687,84 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    document
+        .querySelectorAll('.idioma-checkbox')
+        .forEach(function (checkbox) {
+
+            checkbox.addEventListener('change', function () {
+
+                const container =
+                    document.getElementById(
+                        'nivel-container-' + this.value
+                    );
+
+                if (this.checked) {
+
+                    container.classList.remove('d-none');
+
+                } else {
+
+                    container.classList.add('d-none');
+
+                    container
+                        .querySelector('select')
+                        .value = '';
+
+                }
+
+            });
+
+        });
+
+});
+
+</script>
+
+@push('scripts')
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    document.querySelectorAll('.idioma-check')
+        .forEach(function (checkbox) {
+
+            checkbox.addEventListener('change', function () {
+
+                const target =
+                    document.getElementById(
+                        this.dataset.target
+                    );
+
+                if (this.checked) {
+
+                    target.style.display = 'block';
+
+                } else {
+
+                    target.style.display = 'none';
+
+                    const select =
+                        target.querySelector('select');
+
+                    if (select) {
+                        select.value = '';
+                    }
+                }
+
+            });
+
+        });
+
+});
+
+</script>
+
+@endpush
+
 @endpush
