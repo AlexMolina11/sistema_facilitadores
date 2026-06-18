@@ -5,23 +5,35 @@ namespace App\Modules\Fac\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ConsultorFormacionAcademica extends Model
+class ConsultorAtestado extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'tbl_consultor_formacion_academica';
+    protected $table = 'tbl_consultor_atestado';
+
     protected $primaryKey = 'id_atestado';
+
+    public $timestamps = true;
 
     protected $fillable = [
         'id_consultor',
+        'id_tipo_formacion',
         'id_tipo_atestado',
         'id_nivel_academico',
         'id_pais',
+        'titulo',
         'descripcion',
         'institucion',
+        'entidad_acreditadora',
+        'cliente_institucion',
+        'codigo_acreditacion',
         'fecha_inicio',
         'fecha_fin',
-        'url',
+        'fecha_emision',
+        'fecha_vencimiento',
+        'horas',
+        'url_archivo',
+        'nombre_archivo_original',
         'activo',
         'usuario_crea',
         'usuario_mod',
@@ -31,8 +43,21 @@ class ConsultorFormacionAcademica extends Model
     protected $casts = [
         'fecha_inicio' => 'date',
         'fecha_fin' => 'date',
+        'fecha_emision' => 'date',
+        'fecha_vencimiento' => 'date',
+        'horas' => 'integer',
         'activo' => 'boolean',
     ];
+
+    public function consultor()
+    {
+        return $this->belongsTo(Consultor::class, 'id_consultor', 'id_consultor');
+    }
+
+    public function tipoFormacion()
+    {
+        return $this->belongsTo(TipoFormacion::class, 'id_tipo_formacion', 'id_tipo_formacion');
+    }
 
     public function tipoAtestado()
     {
@@ -47,5 +72,10 @@ class ConsultorFormacionAcademica extends Model
     public function pais()
     {
         return $this->belongsTo(Pais::class, 'id_pais', 'id_pais');
+    }
+
+    public function habilidadesAtestado()
+    {
+        return $this->hasMany(ConsultorHabilidadAtestado::class, 'id_atestado', 'id_atestado');
     }
 }

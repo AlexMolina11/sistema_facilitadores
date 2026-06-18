@@ -33,12 +33,6 @@
             'permission' => 'fac.consultores.ver',
             'active' => 'fac.revision.*',
         ],
-        [
-            'label' => 'Exportación CV',
-            'route' => 'fac.cv.preview',
-            'permission' => 'fac.consultores.ver',
-            'active' => 'fac.cv.*',
-        ],
     ])->filter(fn ($item) => $can($item['permission']) && $routeAvailable($item['route']))->values();
 
     $catalogoGroups = collect([
@@ -112,7 +106,7 @@
 
         <a href="{{ route('fac.dashboard') }}"
            class="sidebar-link {{ request()->routeIs('fac.dashboard') ? 'active' : '' }}">
-            <span class="sidebar-icon">⌂</span>
+            <span class="sidebar-icon"><i class="fa-solid fa-house"></i></span>
             <span class="sidebar-label">Dashboard</span>
         </a>
     @endif
@@ -126,26 +120,22 @@
                     data-bs-toggle="collapse"
                     data-bs-target="#menuConsultores"
                     aria-expanded="{{ request()->routeIs('fac.consultores.*', 'fac.busqueda.*', 'fac.revision.*', 'fac.cv.*') ? 'true' : 'false' }}">
-                <span class="sidebar-icon">◉</span>
+                <span class="sidebar-icon"><i class="fa-solid fa-users"></i></span>
                 <span class="sidebar-label">Consultores</span>
-                <span class="sidebar-caret">▾</span>
+                <span class="sidebar-caret"><i class="fa-solid fa-chevron-down"></i></span>
             </button>
 
             <div id="menuConsultores"
-                 class="collapse {{ request()->routeIs('fac.consultores.*', 'fac.busqueda.*', 'fac.revision.*', 'fac.cv.*') ? 'show' : '' }}">
+                class="collapse {{ request()->routeIs('fac.consultores.*', 'fac.busqueda.*', 'fac.revision.*', 'fac.cv.*') ? 'show' : '' }}">
                 <div class="sidebar-submenu">
                     @foreach($consultorItems as $item)
                         <a href="{{ route($item['route']) }}"
-                           class="sidebar-sublink {{ request()->routeIs($item['active']) ? 'active' : '' }}">
+                        class="sidebar-sublink {{ request()->routeIs($item['active']) ? 'active' : '' }}">
                             {{ $item['label'] }}
                         </a>
                     @endforeach
                 </div>
             </div>
-            <a href="{{ route('fac.consultores.busqueda-avanzada') }}"
-                class="sidebar-link {{ request()->routeIs('fac.consultores.busqueda-avanzada') ? 'active' : '' }}">
-                Búsqueda Avanzada
-            </a>
         </div>
     @endif
 
@@ -158,9 +148,9 @@
                     data-bs-toggle="collapse"
                     data-bs-target="#menuCatalogos"
                     aria-expanded="{{ request()->routeIs('fac.catalogos.*') ? 'true' : 'false' }}">
-                <span class="sidebar-icon">▦</span>
+                <span class="sidebar-icon"><i class="fa-solid fa-layer-group"></i></span>
                 <span class="sidebar-label">Catálogos</span>
-                <span class="sidebar-caret">▾</span>
+                <span class="sidebar-caret"><i class="fa-solid fa-chevron-down"></i></span>
             </button>
 
             <div id="menuCatalogos"

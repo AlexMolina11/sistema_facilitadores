@@ -54,7 +54,7 @@
                     name="icono"
                     value="{{ old('icono') }}"
                     class="form-control @error('icono') is-invalid @enderror"
-                    placeholder="Ej: bi bi-facebook"
+                    placeholder="Ej: fa-brands fa-facebook"
                 >
 
                 @error('icono')
@@ -64,7 +64,7 @@
                 @enderror
 
                 <small class="text-muted">
-                    Clase CSS del ícono. Ejemplo: bi bi-linkedin.
+                    Clase CSS del ícono de Font Awesome. Ejemplo: fa-brands fa-linkedin.
                 </small>
 
             </div>

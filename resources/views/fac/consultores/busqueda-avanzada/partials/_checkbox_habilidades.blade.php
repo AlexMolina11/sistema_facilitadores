@@ -1,5 +1,5 @@
 @php
-    $seleccionados = collect(request()->input($nombre, []))->map(fn ($id) => (int) $id)->toArray();
+    $seleccionados = collect($filtros[$nombre] ?? [])->map(fn ($id) => (int) $id)->toArray();
 @endphp
 
 <div class="busqueda-checkbox-group mb-3">

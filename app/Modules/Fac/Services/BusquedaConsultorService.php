@@ -42,20 +42,86 @@ class BusquedaConsultorService
 
     private function aplicarBusquedaGeneral(Builder $query, array $filtros): void
     {
-        $q = trim((string) Arr::get($filtros, 'q'));
+        $texto = trim((string) Arr::get($filtros, 'q'));
 
-        if ($q === '') {
+        if ($texto === '') {
             return;
         }
 
-        $query->where(function (Builder $sub) use ($q) {
-            $sub->where('nombres', 'like', "%{$q}%")
-                ->orWhere('apellidos', 'like', "%{$q}%")
-                ->orWhere('numero_identificacion', 'like', "%{$q}%")
-                ->orWhere('nit', 'like', "%{$q}%")
-                ->orWhere('nrc', 'like', "%{$q}%")
-                ->orWhereHas('emails', fn (Builder $email) => $email->where('email', 'like', "%{$q}%"));
-        });
+        /**
+         * Se separa la búsqueda por palabras para que una frase como
+         * "juan excel san salvador" funcione como búsqueda acumulativa.
+         * Cada palabra debe aparecer en algún campo aplicable del consultor
+         * o de sus relaciones.
+         */
+        $terminos = collect(preg_split('/\s+/', $texto, -1, PREG_SPLIT_NO_EMPTY))
+            ->map(fn ($termino) => trim($termino))
+            ->filter()
+            ->take(8)
+            ->values();
+
+        foreach ($terminos as $termino) {
+            $like = "%{$termino}%";
+
+            $query->where(function (Builder $sub) use ($like) {
+                $sub->where('nombres', 'like', $like)
+                    ->orWhere('apellidos', 'like', $like)
+                    ->orWhere(DB::raw("CONCAT(COALESCE(nombres, ''), ' ', COALESCE(apellidos, ''))"), 'like', $like)
+                    ->orWhere('apellido_casa', 'like', $like)
+                    ->orWhere('estado_civil', 'like', $like)
+                    ->orWhere('nacionalidad', 'like', $like)
+                    ->orWhere('tipo_identificacion', 'like', $like)
+                    ->orWhere('numero_identificacion', 'like', $like)
+                    ->orWhere('nit', 'like', $like)
+                    ->orWhere('nrc', 'like', $like)
+                    ->orWhere('direccion_residencia', 'like', $like)
+                    ->orWhereHas('emails', fn (Builder $email) => $email
+                        ->where('activo', true)
+                        ->where('email', 'like', $like))
+                    ->orWhereHas('telefonos', fn (Builder $telefono) => $telefono
+                        ->where('activo', true)
+                        ->where(function (Builder $t) use ($like) {
+                            $t->where('numero_telefono', 'like', $like)
+                                ->orWhere('extension', 'like', $like);
+                        }))
+                    ->orWhereHas('sexoCatalogo', fn (Builder $sexo) => $sexo->where('nombre', 'like', $like))
+                    ->orWhereHas('pais', fn (Builder $pais) => $pais->where('nombre_pais', 'like', $like))
+                    ->orWhereHas('municipio', function (Builder $municipio) use ($like) {
+                        $municipio->where('nombre_distrito', 'like', $like)
+                            ->orWhereHas('departamento', fn (Builder $depto) => $depto->where('nombre_departamento', 'like', $like))
+                            ->orWhereHas('municipioMh', fn (Builder $mun) => $mun->where('municipio_mh_nombre', 'like', $like));
+                    })
+                    ->orWhereHas('experienciasLaborales', fn (Builder $exp) => $exp
+                        ->where('activo', true)
+                        ->where(function (Builder $e) use ($like) {
+                            $e->where('empresa', 'like', $like)
+                                ->orWhere('cargo', 'like', $like)
+                                ->orWhere('descripcion', 'like', $like)
+                                ->orWhere('jefe_nombre', 'like', $like);
+                        }))
+                    ->orWhereHas('formaciones', fn (Builder $formacion) => $formacion
+                        ->where('activo', true)
+                        ->where(function (Builder $f) use ($like) {
+                            $f->where('descripcion', 'like', $like)
+                                ->orWhere('institucion', 'like', $like)
+                                ->orWhereHas('nivelAcademico', fn (Builder $nivel) => $nivel->where('nombre', 'like', $like))
+                                ->orWhereHas('tipoAtestado', fn (Builder $atestado) => $atestado->where('nombre', 'like', $like))
+                                ->orWhereHas('pais', fn (Builder $pais) => $pais->where('nombre_pais', 'like', $like));
+                        }))
+                    ->orWhereHas('habilidades', fn (Builder $habilidad) => $habilidad
+                        ->where('activo', true)
+                        ->whereHas('habilidad', fn (Builder $h) => $h->where('nombre', 'like', $like)))
+                    ->orWhereHas('idiomas', fn (Builder $idioma) => $idioma
+                        ->where('activo', true)
+                        ->where(function (Builder $i) use ($like) {
+                            $i->whereHas('idioma', fn (Builder $idiomaCatalogo) => $idiomaCatalogo->where('nombre', 'like', $like))
+                                ->orWhereHas('nivel', fn (Builder $nivel) => $nivel->where('nombre', 'like', $like));
+                        }))
+                    ->orWhereHas('disponibilidades', fn (Builder $disp) => $disp
+                        ->where('activo', true)
+                        ->whereHas('tipoDisponibilidad', fn (Builder $tipo) => $tipo->where('nombre', 'like', $like)));
+            });
+        }
     }
 
     private function aplicarFechas(Builder $query, array $filtros): void

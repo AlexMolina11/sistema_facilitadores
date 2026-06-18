@@ -81,6 +81,44 @@ class Consultor extends Model
         );
     }
 
+
+
+    public function atestados()
+    {
+        return $this->hasMany(
+            ConsultorAtestado::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function capacitacionesFepade()
+    {
+        return $this->hasMany(
+            ConsultorCapacitacionFepade::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function habilidadesAtestados()
+    {
+        return $this->hasMany(
+            ConsultorHabilidadAtestado::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function habilidadesCapacitaciones()
+    {
+        return $this->hasMany(
+            ConsultorHabilidadCapacitacion::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
     public function documentos()
     {
         return $this->hasMany(

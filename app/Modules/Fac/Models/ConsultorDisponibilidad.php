@@ -24,4 +24,9 @@ class ConsultorDisponibilidad extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+
+    public function tipoDisponibilidad()
+    {
+        return $this->belongsTo(TipoDisponibilidad::class, 'id_tipo_disponibilidad', 'id_tipo_disponibilidad');
+    }
 }

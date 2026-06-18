@@ -4,7 +4,7 @@ namespace App\Modules\Fac\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Fac\Models\Consultor;
-use App\Modules\Fac\Models\ConsultorFormacionAcademica;
+use App\Modules\Fac\Models\ConsultorAtestado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +15,11 @@ class ConsultorFormacionController extends Controller
     public function edit(Consultor $consultor)
     {
         $consultor->load([
-            'formaciones' => fn ($query) => $query->where('activo', true)->orderByDesc('fecha_fin'),
+            'atestados' => fn ($query) => $query
+                ->where('activo', true)
+                ->orderByDesc('fecha_fin')
+                ->orderByDesc('fecha_emision')
+                ->orderByDesc('created_at'),
         ]);
 
         $catalogos = [
@@ -40,85 +44,82 @@ class ConsultorFormacionController extends Controller
                 ->get(),
         ];
 
-        $formacionesPorTipo = $consultor->formaciones->groupBy(function ($formacion) use ($catalogos) {
-            $tipoAtestado = $catalogos['tiposAtestado']->firstWhere('id_tipo_atestado', $formacion->id_tipo_atestado);
-
-            return $tipoAtestado->id_tipo_formacion ?? 'sin_tipo';
-        });
+        $formacionesPorTipo = $consultor->atestados->groupBy('id_tipo_formacion');
 
         return view('fac.consultores.formacion', compact('consultor', 'catalogos', 'formacionesPorTipo'));
     }
 
+    /**
+     * Compatibilidad temporal con la ruta anterior fac.consultores.formacion.store.
+     * La vista nueva usa ConsultorAtestadoController, pero mantenemos este método
+     * para evitar errores si algún enlace anterior todavía apunta aquí.
+     */
     public function store(Request $request, Consultor $consultor)
     {
         $data = $this->validarAtestado($request, true);
-
         $this->validarRelacionTipoFormacionAtestado($data);
 
-        $rutaArchivo = $request->file('archivo_atestado')
-            ->store("consultores/{$consultor->id_consultor}/formacion", 'public');
+        $archivo = $request->file('archivo_atestado');
 
-        ConsultorFormacionAcademica::create([
+        if ($archivo) {
+            $data['url_archivo'] = $archivo->store("consultores/{$consultor->id_consultor}/atestados", 'public');
+            $data['nombre_archivo_original'] = $archivo->getClientOriginalName();
+        }
+
+        unset($data['archivo_atestado']);
+
+        ConsultorAtestado::create(array_merge($data, [
             'id_consultor' => $consultor->id_consultor,
-            'id_tipo_atestado' => $data['id_tipo_atestado'],
-            'id_nivel_academico' => $data['id_nivel_academico'],
-            'id_pais' => $data['id_pais'] ?? null,
-            'descripcion' => $data['descripcion'],
-            'institucion' => $data['institucion'],
-            'fecha_inicio' => $data['fecha_inicio'] ?? null,
-            'fecha_fin' => $data['fecha_fin'] ?? null,
-            'url' => $rutaArchivo,
             'activo' => true,
             'usuario_crea' => auth()->id(),
-        ]);
+        ]));
 
         return redirect()
             ->route('fac.consultores.formacion.edit', $consultor)
-            ->with('success', 'Atestado agregado correctamente.');
+            ->with('success', 'Registro de trayectoria agregado correctamente.');
     }
 
-    public function updateAtestado(Request $request, Consultor $consultor, ConsultorFormacionAcademica $formacion)
+    /**
+     * Compatibilidad temporal con la ruta anterior fac.consultores.formacion.atestados.update.
+     */
+    public function updateAtestado(Request $request, Consultor $consultor, ConsultorAtestado $formacion)
     {
         $this->validarPertenencia($consultor, $formacion);
 
         $data = $this->validarAtestado($request, false);
-
         $this->validarRelacionTipoFormacionAtestado($data);
 
-        $rutaArchivo = $formacion->url;
+        $archivo = $request->file('archivo_atestado');
 
-        if ($request->hasFile('archivo_atestado')) {
-            if ($formacion->url && Storage::disk('public')->exists($formacion->url)) {
-                Storage::disk('public')->delete($formacion->url);
+        if ($archivo) {
+            if ($formacion->url_archivo && Storage::disk('public')->exists($formacion->url_archivo)) {
+                Storage::disk('public')->delete($formacion->url_archivo);
             }
 
-            $rutaArchivo = $request->file('archivo_atestado')
-                ->store("consultores/{$consultor->id_consultor}/formacion", 'public');
+            $data['url_archivo'] = $archivo->store("consultores/{$consultor->id_consultor}/atestados", 'public');
+            $data['nombre_archivo_original'] = $archivo->getClientOriginalName();
         }
 
-        $formacion->update([
-            'id_tipo_atestado' => $data['id_tipo_atestado'],
-            'id_nivel_academico' => $data['id_nivel_academico'],
-            'id_pais' => $data['id_pais'] ?? null,
-            'descripcion' => $data['descripcion'],
-            'institucion' => $data['institucion'],
-            'fecha_inicio' => $data['fecha_inicio'] ?? null,
-            'fecha_fin' => $data['fecha_fin'] ?? null,
-            'url' => $rutaArchivo,
+        unset($data['archivo_atestado']);
+
+        $formacion->update(array_merge($data, [
             'usuario_mod' => auth()->id(),
-        ]);
+        ]));
 
         return redirect()
             ->route('fac.consultores.formacion.edit', $consultor)
-            ->with('success', 'Atestado actualizado correctamente.');
+            ->with('success', 'Registro de trayectoria actualizado correctamente.');
     }
 
-    public function destroyAtestado(Consultor $consultor, ConsultorFormacionAcademica $formacion)
+    /**
+     * Compatibilidad temporal con la ruta anterior fac.consultores.formacion.atestados.destroy.
+     */
+    public function destroyAtestado(Consultor $consultor, ConsultorAtestado $formacion)
     {
         $this->validarPertenencia($consultor, $formacion);
 
-        if ($formacion->url && Storage::disk('public')->exists($formacion->url)) {
-            Storage::disk('public')->delete($formacion->url);
+        if ($formacion->url_archivo && Storage::disk('public')->exists($formacion->url_archivo)) {
+            Storage::disk('public')->delete($formacion->url_archivo);
         }
 
         $formacion->update([
@@ -130,14 +131,14 @@ class ConsultorFormacionController extends Controller
 
         return redirect()
             ->route('fac.consultores.formacion.edit', $consultor)
-            ->with('success', 'Atestado eliminado correctamente.');
+            ->with('success', 'Registro de trayectoria eliminado correctamente.');
     }
 
     public function continuar(Consultor $consultor)
     {
         return redirect()
             ->route('fac.consultores.habilidades.edit', $consultor)
-            ->with('success', 'Títulos académicos guardados correctamente. Continúa con habilidades.');
+            ->with('success', 'Trayectoria académica y profesional guardada correctamente. Continúa con habilidades.');
     }
 
     private function validarAtestado(Request $request, bool $archivoRequerido): array
@@ -145,14 +146,21 @@ class ConsultorFormacionController extends Controller
         return $request->validate([
             'id_tipo_formacion' => ['required', 'integer', 'exists:tbl_tipo_formacion,id_tipo_formacion'],
             'id_tipo_atestado' => ['required', 'integer', 'exists:tbl_tipo_atestado,id_tipo_atestado'],
-            'id_nivel_academico' => ['required', 'integer', 'exists:tbl_nivel_academico,id_nivel_academico'],
+            'id_nivel_academico' => ['nullable', 'integer', 'exists:tbl_nivel_academico,id_nivel_academico'],
             'id_pais' => ['nullable', 'integer', 'exists:tbl_pais,id_pais'],
-            'institucion' => ['required', 'string', 'max:250'],
-            'descripcion' => ['required', 'string', 'max:250'],
+            'titulo' => ['required', 'string', 'max:250'],
+            'descripcion' => ['nullable', 'string'],
+            'institucion' => ['nullable', 'string', 'max:250'],
+            'entidad_acreditadora' => ['nullable', 'string', 'max:250'],
+            'cliente_institucion' => ['nullable', 'string', 'max:250'],
+            'codigo_acreditacion' => ['nullable', 'string', 'max:100'],
             'fecha_inicio' => ['nullable', 'date'],
             'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
+            'fecha_emision' => ['nullable', 'date'],
+            'fecha_vencimiento' => ['nullable', 'date', 'after_or_equal:fecha_emision'],
+            'horas' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'archivo_atestado' => [
-                $archivoRequerido ? 'required' : 'nullable',
+                $archivoRequerido ? 'nullable' : 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png,webp',
                 'max:5120',
@@ -160,11 +168,9 @@ class ConsultorFormacionController extends Controller
         ], [
             'id_tipo_formacion.required' => 'Debes seleccionar el tipo de formación.',
             'id_tipo_atestado.required' => 'Debes seleccionar el tipo de atestado.',
-            'id_nivel_academico.required' => 'Debes seleccionar el nivel académico.',
-            'institucion.required' => 'Debes ingresar la institución.',
-            'descripcion.required' => 'Debes ingresar la descripción o título obtenido.',
+            'titulo.required' => 'Debes ingresar el título o nombre del registro.',
             'fecha_fin.after_or_equal' => 'La fecha de fin no puede ser menor que la fecha de inicio.',
-            'archivo_atestado.required' => 'Debes adjuntar el comprobante del atestado.',
+            'fecha_vencimiento.after_or_equal' => 'La fecha de vencimiento no puede ser menor que la fecha de emisión.',
             'archivo_atestado.mimes' => 'El archivo debe ser PDF, JPG, JPEG, PNG o WEBP.',
             'archivo_atestado.max' => 'El archivo no debe superar los 5 MB.',
         ]);
@@ -185,10 +191,10 @@ class ConsultorFormacionController extends Controller
         }
     }
 
-    private function validarPertenencia(Consultor $consultor, ConsultorFormacionAcademica $formacion): void
+    private function validarPertenencia(Consultor $consultor, ConsultorAtestado $formacion): void
     {
         if ((int) $formacion->id_consultor !== (int) $consultor->id_consultor) {
-            abort(403, 'Este atestado no pertenece al consultor seleccionado.');
+            abort(403, 'Este registro no pertenece al consultor seleccionado.');
         }
     }
 }
