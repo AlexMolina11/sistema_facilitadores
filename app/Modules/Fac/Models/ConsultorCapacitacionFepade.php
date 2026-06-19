@@ -44,8 +44,8 @@ class ConsultorCapacitacionFepade extends Model
         return $this->belongsTo(Consultor::class, 'id_consultor', 'id_consultor');
     }
 
-    public function habilidadesCapacitacion()
+    public function areasEspecializacion()
     {
-        return $this->hasMany(ConsultorHabilidadCapacitacion::class, 'id_capacitacion_fepade', 'id_capacitacion_fepade');
+        return $this->hasMany(ConsultorAreaEspecializacion::class, 'id_capacitacion_fepade', 'id_capacitacion_fepade');
     }
 }

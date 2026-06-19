@@ -16,8 +16,8 @@
     $tiposDocumento = $catalogos['tiposDocumento'] ?? collect();
 
     $tiposDisponibilidad = $catalogos['tiposDisponibilidad'] ?? collect();
-    $habilidadesCatalogo = $catalogos['habilidades'] ?? collect();
-    $tiposHabilidad = $catalogos['tiposHabilidad'] ?? collect();
+    $areasCatalogo = $catalogos['areasEspecializacion'] ?? collect();
+    $habilidadesTecnicasCatalogo = $catalogos['habilidadesTecnicas'] ?? collect();
     $idiomasCatalogo = $catalogos['idiomas'] ?? collect();
     $nivelesIdioma = $catalogos['nivelesIdioma'] ?? collect();
     $tiposReferencia = $catalogos['tiposReferencia'] ?? collect();
@@ -58,7 +58,7 @@
     $experiencias = $consultor->experienciasLaborales ?? collect();
     $formaciones = $consultor->formaciones ?? collect();
     $disponibilidades = $consultor->disponibilidades ?? collect();
-    $habilidades = $consultor->habilidades ?? collect();
+    $areasPerfil = $consultor->areasEspecializacion ?? collect();
     $idiomas = $consultor->idiomas ?? collect();
     $referencias = $consultor->referencias ?? collect();
     $consultorias = $consultor->tiposConsultoria ?? collect();
@@ -152,8 +152,8 @@
         </div>
 
         <div class="expediente-summary-card">
-            <span>Habilidades</span>
-            <strong>{{ $habilidades->count() }}</strong>
+            <span>Áreas de especialización</span>
+            <strong>{{ $areasPerfil->count() }}</strong>
         </div>
     </section>
 
@@ -572,38 +572,44 @@
 
             <section class="expediente-panel">
                 <div class="expediente-panel-header compact">
-                    <h4>Habilidades</h4>
+                    <h4>Áreas de especialización</h4>
                 </div>
 
-                @php
-                    $habilidadesAgrupadas = $habilidades->groupBy(function ($consultorHabilidad) use ($habilidadesCatalogo) {
-                        $habilidad = $habilidadesCatalogo->get($consultorHabilidad->id_habilidad);
-                        return $habilidad->id_tipo_habilidad ?? 'sin_tipo';
-                    });
-                @endphp
-
-                @forelse($habilidadesAgrupadas as $idTipoHabilidad => $habilidadesGrupo)
+                @forelse($areasPerfil as $registroArea)
                     @php
-                        $tipoHabilidad = $tiposHabilidad->get($idTipoHabilidad);
+                        $area = $registroArea->areaEspecializacion ?? $areasCatalogo->get($registroArea->id_area_especializacion);
+                        $atestado = $registroArea->atestado;
+                        $capacitacion = $registroArea->capacitacionFepade;
                     @endphp
 
                     <div class="mb-3">
                         <h6 class="expediente-sidebar-title">
-                            {{ $tipoHabilidad->nombre ?? 'Habilidades sin clasificar' }}
+                            {{ $area->nombre ?? 'Área no registrada' }}
                         </h6>
 
-                        <div class="expediente-tag-row vertical">
-                            @foreach($habilidadesGrupo as $consultorHabilidad)
-                                @php
-                                    $habilidad = $habilidadesCatalogo->get($consultorHabilidad->id_habilidad);
-                                @endphp
+                        <div class="small text-muted mb-2">
+                            @if($atestado)
+                                Atestado: {{ $atestado->titulo ?? $atestado->descripcion ?? 'Atestado registrado' }}
+                            @elseif($capacitacion)
+                                Capacitación FEPADE: {{ $capacitacion->nombre_evento ?? 'Evento registrado' }}
+                            @else
+                                Sin evidencia vinculada.
+                            @endif
+                        </div>
 
-                                <span>{{ $habilidad->nombre ?? 'Habilidad no registrada' }}</span>
-                            @endforeach
+                        <div class="expediente-tag-row vertical">
+                            @forelse($registroArea->habilidades as $detalleHabilidad)
+                                @php
+                                    $habilidadTecnica = $detalleHabilidad->habilidadTecnica ?? $habilidadesTecnicasCatalogo->get($detalleHabilidad->id_habilidad_tecnica);
+                                @endphp
+                                <span>{{ $habilidadTecnica->nombre ?? 'Habilidad técnica no registrada' }}</span>
+                            @empty
+                                <span class="text-muted">Sin habilidades técnicas registradas.</span>
+                            @endforelse
                         </div>
                     </div>
                 @empty
-                    <div class="expediente-empty-state">Sin habilidades registradas.</div>
+                    <div class="expediente-empty-state">Sin áreas de especialización registradas.</div>
                 @endforelse
             </section>
 

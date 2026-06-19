@@ -102,13 +102,14 @@ class DashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
-        $experienciaPorNivel = DB::table('tbl_consultor_formacion_academica as fa')
-            ->join('tbl_consultor as c', 'c.id_consultor', '=', 'fa.id_consultor')
-            ->join('tbl_nivel_academico as na', 'na.id_nivel_academico', '=', 'fa.id_nivel_academico')
-            ->whereNull('fa.deleted_at')
+        $experienciaPorNivel = DB::table('tbl_consultor_atestado as ca')
+            ->join('tbl_consultor as c', 'c.id_consultor', '=', 'ca.id_consultor')
+            ->join('tbl_nivel_academico as na', 'na.id_nivel_academico', '=', 'ca.id_nivel_academico')
+            ->whereNull('ca.deleted_at')
             ->whereNull('c.deleted_at')
-            ->where('fa.activo', true)
-            ->selectRaw('na.nombre as nombre, COUNT(DISTINCT fa.id_consultor) as total')
+            ->where('ca.activo', true)
+            ->whereNotNull('ca.id_nivel_academico')
+            ->selectRaw('na.nombre as nombre, COUNT(DISTINCT ca.id_consultor) as total')
             ->groupBy('na.nombre')
             ->orderByDesc('total')
             ->get();

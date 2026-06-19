@@ -16,6 +16,78 @@
         opacity: .55;
         pointer-events: none;
     }
+
+
+    .busqueda-resultados-header {
+        border-bottom: 1px solid rgba(0, 0, 0, .06);
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .consultor-result-card {
+        border: 1px solid rgba(56, 85, 6, .12);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .04);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .consultor-result-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(119, 145, 35, .35);
+        box-shadow: 0 16px 30px rgba(0, 0, 0, .08);
+    }
+
+    .consultor-avatar {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #385506, #779123);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.05rem;
+        flex: 0 0 auto;
+    }
+
+    .consultor-result-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem .9rem;
+        color: #656264;
+        font-size: .875rem;
+    }
+
+    .consultor-result-section-title {
+        font-size: .76rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #656264;
+        font-weight: 700;
+        margin-bottom: .35rem;
+    }
+
+    .consultor-badge {
+        background: rgba(160, 197, 37, .12);
+        border: 1px solid rgba(119, 145, 35, .18);
+        color: #385506;
+        border-radius: 999px;
+        padding: .32rem .65rem;
+        font-size: .78rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .consultor-badge-muted {
+        background: #f8f9fa;
+        border-color: rgba(0,0,0,.08);
+        color: #656264;
+    }
 </style>
 @endpush
 
@@ -217,19 +289,13 @@
                             @include('fac.consultores.busqueda-avanzada.partials._checkbox_habilidades', [
                                 'titulo' => 'Áreas de especialización',
                                 'nombre' => 'area_especializacion',
-                                'items' => $areaEspecializacion,
+                                'items' => $areasEspecializacion,
                             ])
 
                             @include('fac.consultores.busqueda-avanzada.partials._checkbox_habilidades', [
                                 'titulo' => 'Habilidades técnicas',
                                 'nombre' => 'habilidades_tecnicas',
                                 'items' => $habilidadesTecnicas,
-                            ])
-
-                            @include('fac.consultores.busqueda-avanzada.partials._checkbox_habilidades', [
-                                'titulo' => 'Habilidades blandas',
-                                'nombre' => 'habilidades_blandas',
-                                'items' => $habilidadesBlandas,
                             ])
                         </div>
                     </div>
@@ -689,82 +755,36 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <script>
-
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.idioma-checkbox').forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            const container = document.getElementById('nivel-container-' + this.value);
+            if (!container) return;
 
-    document
-        .querySelectorAll('.idioma-checkbox')
-        .forEach(function (checkbox) {
-
-            checkbox.addEventListener('change', function () {
-
-                const container =
-                    document.getElementById(
-                        'nivel-container-' + this.value
-                    );
-
-                if (this.checked) {
-
-                    container.classList.remove('d-none');
-
-                } else {
-
-                    container.classList.add('d-none');
-
-                    container
-                        .querySelector('select')
-                        .value = '';
-
-                }
-
-            });
-
+            if (this.checked) {
+                container.classList.remove('d-none');
+            } else {
+                container.classList.add('d-none');
+                const select = container.querySelector('select');
+                if (select) select.value = '';
+            }
         });
+    });
 
-});
+    document.querySelectorAll('.idioma-check').forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            const target = document.getElementById(this.dataset.target);
+            if (!target) return;
 
-</script>
-
-@push('scripts')
-
-<script>
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    document.querySelectorAll('.idioma-check')
-        .forEach(function (checkbox) {
-
-            checkbox.addEventListener('change', function () {
-
-                const target =
-                    document.getElementById(
-                        this.dataset.target
-                    );
-
-                if (this.checked) {
-
-                    target.style.display = 'block';
-
-                } else {
-
-                    target.style.display = 'none';
-
-                    const select =
-                        target.querySelector('select');
-
-                    if (select) {
-                        select.value = '';
-                    }
-                }
-
-            });
-
+            if (this.checked) {
+                target.style.display = 'block';
+            } else {
+                target.style.display = 'none';
+                const select = target.querySelector('select');
+                if (select) select.value = '';
+            }
         });
-
+    });
 });
-
 </script>
-
-@endpush
-
 @endpush

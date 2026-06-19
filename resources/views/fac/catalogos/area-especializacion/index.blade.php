@@ -5,41 +5,72 @@
 @section('page-subtitle', 'Administración de áreas que podrán seleccionar los consultores')
 
 @section('content')
-<x-ui.page-header title="Áreas de especialización" subtitle="Catálogo de áreas temáticas del perfil profesional.">
-    <a href="{{ route('fac.catalogos.area-especializacion.create') }}" class="btn btn-fepade">Nueva área</a>
+
+<x-ui.page-header title="Áreas de especialización" subtitle="Listado de áreas temáticas disponibles para el perfil profesional.">
+    <a href="{{ route('fac.catalogos.area-especializacion.create') }}" class="btn btn-fepade">
+        Nueva área
+    </a>
 </x-ui.page-header>
 
-<form method="GET" class="card-fepade mb-3">
-    <div class="input-group">
-        <input type="text" name="buscar" class="form-control" value="{{ $buscar }}" placeholder="Buscar por nombre">
-        <button class="btn btn-outline-secondary">Buscar</button>
-    </div>
-</form>
+<div class="fepade-card mb-4">
+    <form method="GET" action="{{ route('fac.catalogos.area-especializacion.index') }}" class="row g-3 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">Buscar</label>
+            <input type="text" name="buscar" value="{{ $buscar }}" class="form-control" placeholder="Buscar por nombre o descripción">
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-navy w-100">Buscar</button>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ route('fac.catalogos.area-especializacion.index') }}" class="btn btn-outline-secondary w-100">Limpiar</a>
+        </div>
+    </form>
+</div>
 
-<div class="card-fepade">
+<div class="fepade-card">
     <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead><tr><th>Nombre</th><th>Descripción</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
             <tbody>
                 @forelse($areas as $area)
                     <tr>
-                        <td>{{ $area->nombre }}</td>
-                        <td>{{ $area->descripcion ?? '—' }}</td>
-                        <td><span class="badge {{ $area->activo ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $area->activo ? 'Activo' : 'Inactivo' }}</span></td>
+                        <td class="fw-semibold">{{ $area->nombre }}</td>
+                        <td>{{ $area->descripcion ?: '—' }}</td>
+                        <td>
+                            @if($area->activo)
+                                <span class="badge badge-success-soft">Activo</span>
+                            @else
+                                <span class="badge badge-warning-soft">Inactivo</span>
+                            @endif
+                        </td>
                         <td class="text-end">
-                            <a href="{{ route('fac.catalogos.area-especializacion.edit', $area) }}" class="btn btn-sm btn-outline-primary">Editar</a>
-                            <form action="{{ route('fac.catalogos.area-especializacion.destroy', $area) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta área?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            <a href="{{ route('fac.catalogos.area-especializacion.edit', $area) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                            <form action="{{ route('fac.catalogos.area-especializacion.destroy', $area) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Deseas eliminar esta área de especialización?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
                             </form>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="text-center text-muted py-4">No hay áreas registradas.</td></tr>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">No hay áreas de especialización registradas.</td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <div class="mt-3">{{ $areas->links() }}</div>
+
+    <div class="mt-4 pagination-wrapper">
+        {{ $areas->links('pagination::bootstrap-5') }}
+    </div>
 </div>
+
 @endsection

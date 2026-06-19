@@ -106,7 +106,9 @@ class ConsultorController extends Controller
 
             'disponibilidades' => fn ($query) => $query->where('activo', true),
 
-            'habilidades' => fn ($query) => $query->where('activo', true),
+            'areasEspecializacion' => fn ($query) => $query
+                ->where('activo', true)
+                ->with(['areaEspecializacion', 'atestado', 'capacitacionFepade', 'habilidades.habilidadTecnica']),
 
             'idiomas' => fn ($query) => $query->where('activo', true),
 
@@ -147,13 +149,15 @@ class ConsultorController extends Controller
                 ->get()
                 ->keyBy('id_tipo_disponibilidad'),
 
-            'habilidades' => DB::table('tbl_habilidad')
+            'areasEspecializacion' => DB::table('tbl_area_especializacion')
+                ->whereNull('deleted_at')
                 ->get()
-                ->keyBy('id_habilidad'),
+                ->keyBy('id_area_especializacion'),
 
-            'tiposHabilidad' => DB::table('tbl_tipo_habilidad')
+            'habilidadesTecnicas' => DB::table('tbl_habilidad_tecnica')
+                ->whereNull('deleted_at')
                 ->get()
-                ->keyBy('id_tipo_habilidad'),
+                ->keyBy('id_habilidad_tecnica'),
 
             'idiomas' => DB::table('tbl_idioma')
                 ->get()

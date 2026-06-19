@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Modules\Fac\Models\Consultor;
 use App\Modules\Fac\Models\ConsultorDisponibilidad;
 use App\Modules\Fac\Models\ConsultorExperienciaLaboral;
-use App\Modules\Fac\Models\ConsultorHabilidad;
 use App\Modules\Fac\Models\ConsultorIdioma;
 use App\Modules\Fac\Models\ConsultorReferencia;
 use App\Modules\Fac\Models\ConsultorTipoConsultoria;
@@ -184,6 +183,17 @@ class ConsultorExperienciaController extends Controller
 
         if (!empty($data['id_capacitacion_fepade']) && !$consultor->capacitacionesFepade()->where('id_capacitacion_fepade', $data['id_capacitacion_fepade'])->exists()) {
             abort(403, 'La capacitación FEPADE no pertenece al consultor.');
+        }
+
+        $habilidadesValidas = \App\Modules\Fac\Models\HabilidadTecnica::where('id_area_especializacion', $data['id_area_especializacion'])
+            ->where('activo', true)
+            ->whereIn('id_habilidad_tecnica', $data['habilidades_tecnicas'])
+            ->count();
+
+        if ($habilidadesValidas !== collect($data['habilidades_tecnicas'])->unique()->count()) {
+            return back()
+                ->withErrors(['habilidades_tecnicas' => 'Todas las habilidades técnicas deben pertenecer al área de especialización seleccionada.'])
+                ->withInput();
         }
 
         DB::transaction(function () use ($consultor, $data) {

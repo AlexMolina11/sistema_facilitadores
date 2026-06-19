@@ -101,23 +101,6 @@ class Consultor extends Model
         );
     }
 
-    public function habilidadesAtestados()
-    {
-        return $this->hasMany(
-            ConsultorHabilidadAtestado::class,
-            'id_consultor',
-            'id_consultor'
-        );
-    }
-
-    public function habilidadesCapacitaciones()
-    {
-        return $this->hasMany(
-            ConsultorHabilidadCapacitacion::class,
-            'id_consultor',
-            'id_consultor'
-        );
-    }
 
     public function documentos()
     {

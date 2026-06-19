@@ -74,8 +74,8 @@ class ConsultorAtestado extends Model
         return $this->belongsTo(Pais::class, 'id_pais', 'id_pais');
     }
 
-    public function habilidadesAtestado()
+    public function areasEspecializacion()
     {
-        return $this->hasMany(ConsultorHabilidadAtestado::class, 'id_atestado', 'id_atestado');
+        return $this->hasMany(ConsultorAreaEspecializacion::class, 'id_atestado', 'id_atestado');
     }
 }
