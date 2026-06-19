@@ -4,7 +4,8 @@ namespace App\Modules\Fac\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Fac\Models\Departamento;
-use App\Modules\Fac\Models\Habilidad;
+use App\Modules\Fac\Models\AreaEspecializacion;
+use App\Modules\Fac\Models\HabilidadTecnica;
 use App\Modules\Fac\Models\Idioma;
 use App\Modules\Fac\Models\IdiomaNivel;
 use App\Modules\Fac\Models\Municipio;
@@ -52,9 +53,8 @@ class BusquedaAvanzadaController extends Controller
             'totalConsultores' => $consultores->total(),
             'filtros' => $filtros,
             'tokenFiltros' => $tokenFiltros,
-            'areaEspecializacion' => $this->habilidadesPorTipo(1),
-            'habilidadesBlandas' => $this->habilidadesPorTipo(2),
-            'habilidadesTecnicas' => $this->habilidadesPorTipo(3),
+            'areaEspecializacion' => AreaEspecializacion::where('activo', true)->orderBy('nombre')->get(),
+            'habilidadesTecnicas' => HabilidadTecnica::where('activo', true)->orderBy('nombre')->get(),
             'sexos' => Sexo::where('activo', true)->orderBy('nombre')->get(),
             'paises' => Pais::where('activo', true)->orderBy('nombre_pais')->get(),
             'departamentos' => Departamento::where('activo', true)->orderBy('nombre_departamento')->get(),
@@ -160,13 +160,5 @@ class BusquedaAvanzadaController extends Controller
                 return is_array($value) ? array_values(array_filter($value, fn ($item) => $item !== null && $item !== '')) : $value;
             })
             ->all();
-    }
-
-    private function habilidadesPorTipo(int $tipo)
-    {
-        return Habilidad::where('activo', true)
-            ->where('id_tipo_habilidad', $tipo)
-            ->orderBy('nombre')
-            ->get();
     }
 }

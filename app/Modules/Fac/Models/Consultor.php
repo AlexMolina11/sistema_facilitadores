@@ -146,12 +146,24 @@ class Consultor extends Model
         );
     }
 
-    public function habilidades()
+    public function areasEspecializacion()
     {
         return $this->hasMany(
-            ConsultorHabilidad::class,
+            ConsultorAreaEspecializacion::class,
             'id_consultor',
             'id_consultor'
+        );
+    }
+
+    public function areasHabilidades()
+    {
+        return $this->hasManyThrough(
+            ConsultorAreaHabilidad::class,
+            ConsultorAreaEspecializacion::class,
+            'id_consultor',
+            'id_consultor_area',
+            'id_consultor',
+            'id_consultor_area'
         );
     }
 

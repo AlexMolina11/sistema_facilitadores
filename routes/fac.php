@@ -14,8 +14,9 @@ use App\Modules\Fac\Controllers\Catalogo\TipoReferenciaController;
 use App\Modules\Fac\Controllers\Catalogo\TipoFormacionController;
 use App\Modules\Fac\Controllers\Catalogo\TipoAtestadoController;
 use App\Modules\Fac\Controllers\Catalogo\TipoRedSocialController;
-use App\Modules\Fac\Controllers\Catalogo\TipoHabilidadController;
-use App\Modules\Fac\Controllers\Catalogo\HabilidadController;
+use App\Modules\Fac\Controllers\Catalogo\AreaEspecializacionController;
+use App\Modules\Fac\Controllers\Catalogo\HabilidadTecnicaController;
+use App\Modules\Fac\Models\ConsultorAreaEspecializacion;
 use App\Modules\Fac\Controllers\Catalogo\PaisController;
 use App\Modules\Fac\Controllers\Catalogo\DepartamentoController;
 use App\Modules\Fac\Controllers\Catalogo\MunicipioMhController;
@@ -110,7 +111,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('experiencia/continuar', [ConsultorExperienciaController::class, 'continuar'])->name('experiencia.continuar');
 
             Route::get('habilidades', [ConsultorExperienciaController::class, 'editHabilidades'])->name('habilidades.edit');
-            Route::post('habilidades', [ConsultorExperienciaController::class, 'updateCompetencias'])->name('habilidades.update');
+            Route::post('habilidades', [ConsultorExperienciaController::class, 'storeAreaEspecializacion'])->name('habilidades.update');
+            Route::delete('habilidades/{consultorArea}', [ConsultorExperienciaController::class, 'destroyAreaEspecializacion'])->name('habilidades.destroy');
             Route::post('habilidades/continuar', [ConsultorExperienciaController::class, 'continuarHabilidades'])->name('habilidades.continuar');
 
             Route::get('idiomas', [ConsultorExperienciaController::class, 'editIdiomas'])->name('idiomas.edit');
@@ -181,11 +183,11 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('tipo-red-social', TipoRedSocialController::class)
                 ->parameters(['tipo-red-social' => 'tipoRedSocial']);
 
-            Route::resource('tipo-habilidad', TipoHabilidadController::class)
-                ->parameters(['tipo-habilidad' => 'tipoHabilidad']);
+            Route::resource('area-especializacion', AreaEspecializacionController::class)
+                ->parameters(['area-especializacion' => 'areaEspecializacion']);
 
-            Route::resource('habilidad', HabilidadController::class)
-                ->parameters(['habilidad' => 'habilidad']);
+            Route::resource('habilidad-tecnica', HabilidadTecnicaController::class)
+                ->parameters(['habilidad-tecnica' => 'habilidadTecnica']);
 
             Route::resource('paises', PaisController::class);
             Route::resource('departamentos', DepartamentoController::class);

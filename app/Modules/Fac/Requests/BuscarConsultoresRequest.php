@@ -40,11 +40,9 @@ class BuscarConsultoresRequest extends FormRequest
             'anios_experiencia' => ['nullable', 'integer', 'min:0', 'max:60'],
 
             'area_especializacion' => ['nullable', 'array'],
-            'area_especializacion.*' => ['integer', 'exists:tbl_habilidad,id_habilidad'],
+            'area_especializacion.*' => ['integer', 'exists:tbl_area_especializacion,id_area_especializacion'],
             'habilidades_tecnicas' => ['nullable', 'array'],
-            'habilidades_tecnicas.*' => ['integer', 'exists:tbl_habilidad,id_habilidad'],
-            'habilidades_blandas' => ['nullable', 'array'],
-            'habilidades_blandas.*' => ['integer', 'exists:tbl_habilidad,id_habilidad'],
+            'habilidades_tecnicas.*' => ['integer', 'exists:tbl_habilidad_tecnica,id_habilidad_tecnica'],
         ];
     }
 

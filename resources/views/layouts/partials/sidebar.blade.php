@@ -74,8 +74,8 @@
             'title' => 'Consultoría',
             'items' => [
                 ['label' => 'Tipos de consultoría', 'route' => 'fac.catalogos.tipo-consultoria.index', 'active' => 'fac.catalogos.tipo-consultoria.*'],
-                ['label' => 'Tipos de habilidad', 'route' => 'fac.catalogos.tipo-habilidad.index', 'active' => 'fac.catalogos.tipo-habilidad.*'],
-                ['label' => 'Habilidades', 'route' => 'fac.catalogos.habilidad.index', 'active' => 'fac.catalogos.habilidad.*'],
+                ['label' => 'Áreas de especialización', 'route' => 'fac.catalogos.area-especializacion.index', 'active' => 'fac.catalogos.area-especializacion.*'],
+                ['label' => 'Habilidades técnicas', 'route' => 'fac.catalogos.habilidad-tecnica.index', 'active' => 'fac.catalogos.habilidad-tecnica.*'],
                 ['label' => 'Tipos de disponibilidad', 'route' => 'fac.catalogos.tipo-disponibilidad.index', 'active' => 'fac.catalogos.tipo-disponibilidad.*'],
             ],
         ],

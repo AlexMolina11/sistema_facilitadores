@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Database\Seeders\seg\SeguridadBaseSeeder;
-use Database\Seeders\fac\TipoHabilidadSeeder;
 use Database\Seeders\fac\PaisSeeder;
 use Database\Seeders\fac\DepartamentoSeeder;
 use Database\Seeders\fac\MunicipioMhSeeder;
@@ -20,7 +19,8 @@ use Database\Seeders\fac\TipoTelefonoSeeder;
 use Database\Seeders\fac\TipoDisponibilidadSeeder;
 use Database\Seeders\fac\TipoDocumentoSeeder;
 use Database\Seeders\fac\TipoRedSocialSeeder;
-use Database\Seeders\fac\HabilidadSeeder;
+use Database\Seeders\fac\AreaEspecializacionSeeder;
+use Database\Seeders\fac\HabilidadTecnicaSeeder;
 use Database\Seeders\fac\TipoRelacionSeeder;
 use Database\Seeders\fac\SexoSeeder;
 
@@ -33,7 +33,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SeguridadBaseSeeder::class,
 
-            TipoHabilidadSeeder::class,
             PaisSeeder::class,
             DepartamentoSeeder::class,
             MunicipioMhSeeder::class,
@@ -49,7 +48,8 @@ class DatabaseSeeder extends Seeder
             TipoDisponibilidadSeeder::class,
             TipoDocumentoSeeder::class,
             TipoRedSocialSeeder::class,
-            HabilidadSeeder::class,
+            AreaEspecializacionSeeder::class,
+            HabilidadTecnicaSeeder::class,
             SexoSeeder::class,
         ]);
     }

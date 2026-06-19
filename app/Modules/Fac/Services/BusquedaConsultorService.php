@@ -19,7 +19,7 @@ class BusquedaConsultorService
                 'telefonos' => fn ($q) => $q->where('activo', true),
                 'sexoCatalogo',
                 'disponibilidades' => fn ($q) => $q->where('activo', true),
-                'habilidades' => fn ($q) => $q->where('activo', true),
+                'areasEspecializacion' => fn ($q) => $q->where('activo', true)->with(['areaEspecializacion', 'habilidades.habilidadTecnica']),
                 'idiomas' => fn ($q) => $q->where('activo', true),
                 'experienciasLaborales' => fn ($q) => $q->where('activo', true),
             ])
@@ -108,9 +108,8 @@ class BusquedaConsultorService
                                 ->orWhereHas('tipoAtestado', fn (Builder $atestado) => $atestado->where('nombre', 'like', $like))
                                 ->orWhereHas('pais', fn (Builder $pais) => $pais->where('nombre_pais', 'like', $like));
                         }))
-                    ->orWhereHas('habilidades', fn (Builder $habilidad) => $habilidad
-                        ->where('activo', true)
-                        ->whereHas('habilidad', fn (Builder $h) => $h->where('nombre', 'like', $like)))
+                    ->orWhereHas('areasEspecializacion.areaEspecializacion', fn (Builder $area) => $area->where('nombre', 'like', $like))
+                    ->orWhereHas('areasEspecializacion.habilidades.habilidadTecnica', fn (Builder $h) => $h->where('nombre', 'like', $like))
                     ->orWhereHas('idiomas', fn (Builder $idioma) => $idioma
                         ->where('activo', true)
                         ->where(function (Builder $i) use ($like) {
@@ -187,15 +186,19 @@ class BusquedaConsultorService
 
     private function aplicarHabilidades(Builder $query, array $filtros): void
     {
-        foreach (['area_especializacion', 'habilidades_tecnicas', 'habilidades_blandas'] as $campo) {
-            $habilidades = array_filter((array) Arr::get($filtros, $campo, []));
+        $areas = array_filter((array) Arr::get($filtros, 'area_especializacion', []));
+        if ($areas !== []) {
+            $query->whereHas('areasEspecializacion', function (Builder $area) use ($areas) {
+                $area->where('activo', true)
+                    ->whereIn('id_area_especializacion', $areas);
+            });
+        }
 
-            if ($habilidades === []) {
-                continue;
-            }
-
-            $query->whereHas('habilidades', function (Builder $h) use ($habilidades) {
-                $h->where('activo', true)->whereIn('id_habilidad', $habilidades);
+        $habilidadesTecnicas = array_filter((array) Arr::get($filtros, 'habilidades_tecnicas', []));
+        if ($habilidadesTecnicas !== []) {
+            $query->whereHas('areasEspecializacion.habilidades', function (Builder $habilidad) use ($habilidadesTecnicas) {
+                $habilidad->where('activo', true)
+                    ->whereIn('id_habilidad_tecnica', $habilidadesTecnicas);
             });
         }
     }
