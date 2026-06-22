@@ -61,6 +61,7 @@
             value="{{ old('nombres', $consultor->nombres ?? '') }}" 
             class="form-control @error('nombres') is-invalid @enderror"
             maxlength="100"
+            required
         >
         @error('nombres') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
@@ -73,6 +74,7 @@
             value="{{ old('apellidos', $consultor->apellidos ?? '') }}" 
             class="form-control @error('apellidos') is-invalid @enderror"
             maxlength="100"
+            required
         >
         @error('apellidos') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
@@ -101,8 +103,8 @@
     </div>
 
     <div class="col-md-4">
-        <label class="form-label">Sexo</label>
-        <select name="id_sexo" class="form-select @error('id_sexo') is-invalid @enderror">
+        <label class="form-label">Sexo <span class="text-danger">*</span></label>
+        <select name="id_sexo" class="form-select @error('id_sexo') is-invalid @enderror" required>
             <option value="">Seleccione</option>
             @foreach(($catalogos['sexos'] ?? collect()) as $sexo)
                 <option value="{{ $sexo->id_sexo }}"
@@ -117,18 +119,19 @@
     </div>
 
     <div class="col-md-4">
-        <label class="form-label">Fecha de nacimiento</label>
+        <label class="form-label">Fecha de nacimiento <span class="text-danger">*</span></label>
         <input 
             type="date" 
             name="fecha_nacimiento" 
             value="{{ old('fecha_nacimiento', isset($consultor) && $consultor->fecha_nacimiento ? $consultor->fecha_nacimiento->format('Y-m-d') : '') }}" 
             class="form-control @error('fecha_nacimiento') is-invalid @enderror"
+            required
         >
         @error('fecha_nacimiento') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
     <div class="col-md-4">
-        <label class="form-label">Nacionalidad</label>
+        <label class="form-label">Nacionalidad <span class="text-danger">*</span></label>
         <input 
             type="text" 
             name="nacionalidad" 
@@ -136,7 +139,9 @@
             class="form-control"
             maxlength="50"
             placeholder="Ej: Salvadoreña"
+            required
         >
+        @error('nacionalidad') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
     <div class="col-12">

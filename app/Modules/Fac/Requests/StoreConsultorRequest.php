@@ -19,7 +19,7 @@ class StoreConsultorRequest extends FormRequest
             'apellidos' => ['required', 'string', 'max:100'],
             'apellido_casa' => ['nullable', 'string', 'max:100'],
             'estado_civil' => ['nullable', 'string', 'max:20'],
-            'nacionalidad' => ['nullable', 'string', 'max:50'],
+            'nacionalidad' => ['required', 'string', 'max:50'],
 
             'tipo_identificacion' => ['nullable', 'string', 'max:30'],
             'numero_identificacion' => [
@@ -43,8 +43,8 @@ class StoreConsultorRequest extends FormRequest
                 Rule::unique('tbl_consultor', 'nrc')->whereNull('deleted_at'),
             ],
 
-            'id_sexo' => ['nullable', 'integer', 'exists:tbl_sexo,id_sexo'],
-            'fecha_nacimiento' => ['nullable', 'date', 'before:today'],
+            'id_sexo' => ['required', 'integer', 'exists:tbl_sexo,id_sexo'],
+            'fecha_nacimiento' => ['required', 'date', 'before:today'],
 
             'id_pais' => ['nullable', 'integer', 'exists:tbl_pais,id_pais'],
             'id_departamento' => ['nullable', 'integer', 'exists:tbl_departamento,id_departamento'],
@@ -100,7 +100,7 @@ class StoreConsultorRequest extends FormRequest
             'numero_identificacion.unique' => 'Ya existe un consultor con este número de identificación.',
             'nit.unique' => 'Ya existe un consultor con este NIT.',
             'nrc.unique' => 'Ya existe un consultor con este NRC.',
-            'sexo.in' => 'El sexo seleccionado no es válido.',
+            'id_sexo.exists' => 'El sexo seleccionado no es válido.',
             'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a la fecha actual.',
             'foto.image' => 'La foto debe ser una imagen válida.',
             'foto.mimes' => 'La foto debe ser JPG, JPEG, PNG o WEBP.',
@@ -115,6 +115,11 @@ class StoreConsultorRequest extends FormRequest
             'documento_nrc.max' => 'El documento NRC no debe superar los 5 MB.',
 
             'actividad_giro.max' => 'La actividad o giro no debe superar los 255 caracteres.',
+            
+            'nacionalidad.required' => 'Debes ingresar la nacionalidad del consultor.',
+            'id_sexo.required' => 'Debes seleccionar el sexo del consultor.',
+            'id_sexo.exists' => 'El sexo seleccionado no es válido.',
+            'fecha_nacimiento.required' => 'Debes ingresar la fecha de nacimiento.',
         ];
     }
 

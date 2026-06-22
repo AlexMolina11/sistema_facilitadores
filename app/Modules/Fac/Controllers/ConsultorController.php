@@ -180,7 +180,9 @@ class ConsultorController extends Controller
                 ->keyBy('id_tipo_consultoria'),
         ];
 
-        return view('fac.consultores.show', compact('consultor', 'catalogos'));
+        $avancePerfil = $consultor->avancePerfil();
+
+        return view('fac.consultores.show', compact('consultor', 'catalogos', 'avancePerfil'));
     }
 
     public function edit(Consultor $consultor)

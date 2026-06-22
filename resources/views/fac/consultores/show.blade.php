@@ -62,6 +62,21 @@
     $idiomas = $consultor->idiomas ?? collect();
     $referencias = $consultor->referencias ?? collect();
     $consultorias = $consultor->tiposConsultoria ?? collect();
+
+    $avancePerfil = $avancePerfil ?? $consultor->avancePerfil();
+    $porcentajePerfil = $avancePerfil['porcentaje'] ?? 0;
+
+    $claseAvance = match (true) {
+        $porcentajePerfil >= 85 => 'bg-success',
+        $porcentajePerfil >= 60 => 'bg-warning',
+        default => 'bg-danger',
+    };
+
+    $textoAvance = match (true) {
+        $porcentajePerfil >= 85 => 'Perfil avanzado',
+        $porcentajePerfil >= 60 => 'Perfil en progreso',
+        default => 'Perfil incompleto',
+    };
 @endphp
 
 <x-ui.page-header title="Expediente del consultor" subtitle="Vista integral del perfil profesional registrado.">
@@ -123,6 +138,90 @@
                 Volver
             </a>
         </div>
+    </section>
+
+    <section class="fepade-card mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h4 class="mb-1">Completitud del perfil</h4>
+                <p class="text-muted mb-0">
+                    {{ $avancePerfil['obtenidos'] }} de {{ $avancePerfil['total'] }} criterios completados.
+                </p>
+            </div>
+
+            <div class="text-end">
+                <div class="display-6 fw-bold text-success">
+                    {{ $porcentajePerfil }}%
+                </div>
+                <span class="badge bg-light text-dark border">
+                    {{ $textoAvance }}
+                </span>
+            </div>
+        </div>
+
+        <div class="progress mt-3" style="height: 14px;">
+            <div
+                class="progress-bar {{ $claseAvance }}"
+                role="progressbar"
+                style="width: {{ $porcentajePerfil }}%;"
+                aria-valuenow="{{ $porcentajePerfil }}"
+                aria-valuemin="0"
+                aria-valuemax="100"
+            >
+                {{ $porcentajePerfil }}%
+            </div>
+        </div>
+
+        <div class="row g-2 mt-3">
+            @foreach($avancePerfil['puntos_fijos'] as $criterio => $completo)
+                <div class="col-md-6 col-lg-4">
+                    <div class="d-flex align-items-center gap-2 small">
+                        @if($completo)
+                            <i class="fa-solid fa-circle-check text-success"></i>
+                        @else
+                            <i class="fa-regular fa-circle text-muted"></i>
+                        @endif
+
+                        <span class="{{ $completo ? 'text-dark' : 'text-muted' }}">
+                            {{ $criterio }}
+                        </span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        @if(!empty($avancePerfil['puntos_dinamicos']))
+            <div class="mt-3">
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#criteriosDinamicosPerfil"
+                >
+                    Ver criterios por atestado y capacitación FEPADE
+                </button>
+
+                <div class="collapse mt-3" id="criteriosDinamicosPerfil">
+                    <div class="row g-2">
+                        @foreach($avancePerfil['puntos_dinamicos'] as $criterio => $completo)
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2 small">
+                                    @if($completo)
+                                        <i class="fa-solid fa-circle-check text-success"></i>
+                                    @else
+                                        <i class="fa-regular fa-circle text-muted"></i>
+                                    @endif
+
+                                    <span class="{{ $completo ? 'text-dark' : 'text-muted' }}">
+                                        {{ $criterio }}
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
     </section>
 
     <section class="expediente-summary-grid">
