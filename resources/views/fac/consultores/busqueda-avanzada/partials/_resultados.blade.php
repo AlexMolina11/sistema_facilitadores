@@ -13,6 +13,14 @@
                 $iniciales = strtoupper(mb_substr($consultor->nombres ?? 'C', 0, 1) . mb_substr($consultor->apellidos ?? 'F', 0, 1));
                 $telefonoPrincipal = optional($consultor->telefonos->first())->numero_telefono;
                 $emailPrincipal = optional($consultor->emails->firstWhere('principal', true))->email ?? optional($consultor->emails->first())->email;
+                $avancePerfil = $consultor->avancePerfil();
+                $porcentajePerfil = $avancePerfil['porcentaje'] ?? 0;
+
+                $claseAvance = match (true) {
+                    $porcentajePerfil >= 85 => 'bg-success',
+                    $porcentajePerfil >= 60 => 'bg-warning',
+                    default => 'bg-danger',
+                };
                 $areas = $consultor->areasEspecializacion
                     ->pluck('areaEspecializacion.nombre')
                     ->filter()
@@ -46,6 +54,24 @@
                     <div class="text-center mt-2">
                         <h5>{{ $nombreCompleto }}</h5>
                         <span class="badge badge-success-soft">Consultor FEPADE</span>
+                    </div>
+
+                    <div class="mt-3 px-2">
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="text-muted">Perfil completado</span>
+                            <strong>{{ $porcentajePerfil }}%</strong>
+                        </div>
+
+                        <div class="progress" style="height: 8px;">
+                            <div
+                                class="progress-bar {{ $claseAvance }}"
+                                role="progressbar"
+                                style="width: {{ $porcentajePerfil }}%;"
+                                aria-valuenow="{{ $porcentajePerfil }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                            ></div>
+                        </div>
                     </div>
 
                     <div class="busqueda-consultor-meta">

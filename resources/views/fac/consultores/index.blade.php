@@ -50,12 +50,23 @@
                     <th>Identificación</th>
                     <th>Nacionalidad</th>
                     <th>Estado</th>
+                    <th>Perfil completado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
 
             <tbody>
                 @forelse($consultores as $consultor)
+                    @php
+                        $avancePerfil = $consultor->avancePerfil();
+                        $porcentajePerfil = $avancePerfil['porcentaje'] ?? 0;
+
+                        $claseAvance = match (true) {
+                            $porcentajePerfil >= 85 => 'bg-success',
+                            $porcentajePerfil >= 60 => 'bg-warning',
+                            default => 'bg-danger',
+                        };
+                    @endphp
                     <tr>
                         <td>
                             <div class="fw-semibold">{{ $consultor->nombre_completo }}</div>
@@ -75,6 +86,26 @@
                             @else
                                 <span class="badge badge-warning-soft">Inactivo</span>
                             @endif
+                        </td>
+
+                        <td>
+                            <div class="mt-2" style="max-width: 260px;">
+                                <div class="d-flex justify-content-between align-items-center small mb-1">
+                                    <span class="text-muted">Perfil completado</span>
+                                    <strong>{{ $porcentajePerfil }}%</strong>
+                                </div>
+
+                                <div class="progress" style="height: 8px;">
+                                    <div
+                                        class="progress-bar {{ $claseAvance }}"
+                                        role="progressbar"
+                                        style="width: {{ $porcentajePerfil }}%;"
+                                        aria-valuenow="{{ $porcentajePerfil }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                    ></div>
+                                </div>
+                            </div>
                         </td>
 
                         <td class="text-end">
