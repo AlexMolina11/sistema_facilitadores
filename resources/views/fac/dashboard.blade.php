@@ -142,8 +142,8 @@
         <div class="dashboard-card">
             <div class="dashboard-card-header">
                 <div>
-                    <h5>Top 10 habilidades</h5>
-                    <p>Habilidades más frecuentes entre consultores.</p>
+                    <h5>Top 10 habilidades técnicas</h5>
+                    <p>Habilidades técnicas más frecuentes entre consultores.</p>
                 </div>
             </div>
 

@@ -19,7 +19,14 @@ class BusquedaConsultorService
                 'telefonos' => fn ($q) => $q->where('activo', true),
                 'sexoCatalogo',
                 'disponibilidades' => fn ($q) => $q->where('activo', true),
-                'areasEspecializacion' => fn ($q) => $q->where('activo', true)->with(['areaEspecializacion', 'habilidades.habilidadTecnica']),
+                'areasEspecializacion' => fn ($q) => $q
+                    ->where('activo', true)
+                    ->with([
+                        'areaEspecializacion',
+                        'habilidades' => fn ($h) => $h
+                            ->where('activo', true)
+                            ->with('habilidadTecnica'),
+                    ]),
                 'idiomas' => fn ($q) => $q->where('activo', true),
                 'experienciasLaborales' => fn ($q) => $q->where('activo', true),
             ])
@@ -108,8 +115,13 @@ class BusquedaConsultorService
                                 ->orWhereHas('tipoAtestado', fn (Builder $atestado) => $atestado->where('nombre', 'like', $like))
                                 ->orWhereHas('pais', fn (Builder $pais) => $pais->where('nombre_pais', 'like', $like));
                         }))
-                    ->orWhereHas('areasEspecializacion.areaEspecializacion', fn (Builder $area) => $area->where('nombre', 'like', $like))
-                    ->orWhereHas('areasEspecializacion.habilidades.habilidadTecnica', fn (Builder $h) => $h->where('nombre', 'like', $like))
+                    ->orWhereHas('areasEspecializacion', function (Builder $area) use ($like) {
+                            $area->where('activo', true)
+                                ->where(function (Builder $a) use ($like) {
+                                    $a->whereHas('areaEspecializacion', fn (Builder $catalogo) => $catalogo->where('nombre', 'like', $like))
+                                    ->orWhereHas('habilidades.habilidadTecnica', fn (Builder $hab) => $hab->where('nombre', 'like', $like));
+                                });
+                        })
                     ->orWhereHas('idiomas', fn (Builder $idioma) => $idioma
                         ->where('activo', true)
                         ->where(function (Builder $i) use ($like) {
@@ -187,17 +199,20 @@ class BusquedaConsultorService
     private function aplicarHabilidades(Builder $query, array $filtros): void
     {
         $areas = array_filter((array) Arr::get($filtros, 'area_especializacion', []));
-        if ($areas !== []) {
+        $habilidadesTecnicas = array_filter((array) Arr::get($filtros, 'habilidades_tecnicas', []));
+
+        if (!empty($areas)) {
             $query->whereHas('areasEspecializacion', function (Builder $area) use ($areas) {
                 $area->where('activo', true)
+                    ->whereNull('deleted_at')
                     ->whereIn('id_area_especializacion', $areas);
             });
         }
 
-        $habilidadesTecnicas = array_filter((array) Arr::get($filtros, 'habilidades_tecnicas', []));
-        if ($habilidadesTecnicas !== []) {
+        if (!empty($habilidadesTecnicas)) {
             $query->whereHas('areasEspecializacion.habilidades', function (Builder $habilidad) use ($habilidadesTecnicas) {
                 $habilidad->where('activo', true)
+                    ->whereNull('deleted_at')
                     ->whereIn('id_habilidad_tecnica', $habilidadesTecnicas);
             });
         }

@@ -151,14 +151,26 @@ class BusquedaAvanzadaController extends Controller
         return collect($filtros)
             ->filter(function ($value) {
                 if (is_array($value)) {
-                    return collect($value)->filter(fn ($item) => $item !== null && $item !== '')->isNotEmpty();
+                    return collect($value)
+                        ->filter(fn ($item) => $item !== null && $item !== '')
+                        ->isNotEmpty();
                 }
 
                 return $value !== null && $value !== '';
             })
-            ->map(function ($value) {
-                return is_array($value) ? array_values(array_filter($value, fn ($item) => $item !== null && $item !== '')) : $value;
+            ->map(function ($value, $key) {
+                if (!is_array($value)) {
+                    return $value;
+                }
+
+                $filtrado = array_filter($value, fn ($item) => $item !== null && $item !== '');
+
+                if ($key === 'idiomas') {
+                    return $filtrado;
+                }
+
+                return array_values($filtrado);
             })
-            ->all();
+            ->toArray();
     }
 }

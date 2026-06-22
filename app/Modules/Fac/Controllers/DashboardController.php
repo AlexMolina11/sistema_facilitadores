@@ -79,6 +79,20 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $topAreasEspecializacion = DB::table('tbl_consultor_area_especializacion as cae')
+            ->join('tbl_consultor as c', 'c.id_consultor', '=', 'cae.id_consultor')
+            ->join('tbl_area_especializacion as ae', 'ae.id_area_especializacion', '=', 'cae.id_area_especializacion')
+            ->whereNull('cae.deleted_at')
+            ->whereNull('c.deleted_at')
+            ->whereNull('ae.deleted_at')
+            ->where('cae.activo', true)
+            ->where('ae.activo', true)
+            ->selectRaw('ae.nombre as nombre, COUNT(DISTINCT cae.id_consultor) as total')
+            ->groupBy('ae.nombre')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
         $idiomasFrecuentes = DB::table('tbl_consultor_idioma as ci')
             ->join('tbl_consultor as c', 'c.id_consultor', '=', 'ci.id_consultor')
             ->join('tbl_idioma as i', 'i.id_idioma', '=', 'ci.id_idioma')
@@ -128,6 +142,7 @@ class DashboardController extends Controller
             'invitacionesUsadas',
             'distribucionPais',
             'topHabilidades',
+            'topAreasEspecializacion',
             'idiomasFrecuentes',
             'disponibilidad',
             'experienciaPorNivel'

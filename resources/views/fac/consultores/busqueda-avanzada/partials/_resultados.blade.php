@@ -13,6 +13,18 @@
                 $iniciales = strtoupper(mb_substr($consultor->nombres ?? 'C', 0, 1) . mb_substr($consultor->apellidos ?? 'F', 0, 1));
                 $telefonoPrincipal = optional($consultor->telefonos->first())->numero_telefono;
                 $emailPrincipal = optional($consultor->emails->firstWhere('principal', true))->email ?? optional($consultor->emails->first())->email;
+                $areas = $consultor->areasEspecializacion
+                    ->pluck('areaEspecializacion.nombre')
+                    ->filter()
+                    ->unique()
+                    ->take(3);
+
+                $habilidadesTecnicas = $consultor->areasEspecializacion
+                    ->flatMap(fn ($area) => $area->habilidades)
+                    ->pluck('habilidadTecnica.nombre')
+                    ->filter()
+                    ->unique()
+                    ->take(4);
             @endphp
 
             <div class="col">
@@ -48,6 +60,28 @@
                         <div>
                             <i class="fas fa-envelope"></i>
                             <span>{{ $emailPrincipal ?: 'Correo no registrado' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="small fw-bold text-muted mb-1">Áreas de especialización</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            @forelse($areas as $area)
+                                <span class="badge bg-light text-dark border">{{ $area }}</span>
+                            @empty
+                                <span class="text-muted small">Sin áreas registradas</span>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="small fw-bold text-muted mb-1">Habilidades técnicas</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            @forelse($habilidadesTecnicas as $habilidad)
+                                <span class="badge badge-success-soft">{{ $habilidad }}</span>
+                            @empty
+                                <span class="text-muted small">Sin habilidades registradas</span>
+                            @endforelse
                         </div>
                     </div>
 

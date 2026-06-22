@@ -413,6 +413,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const municipioMh = document.getElementById('municipio_mh');
     const distrito = document.getElementById('distrito');
 
+    const departamentoOriginalOptions = departamento ? departamento.innerHTML : '';
+    const municipioMhOriginalOptions = municipioMh ? municipioMh.innerHTML : '';
+    const distritoOriginalOptions = distrito ? distrito.innerHTML : '';
+
     let filtroTimer = null;
     let controller = null;
     let cargandoUbicacion = false;
@@ -428,6 +432,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetSelect(select, label = 'Todos') {
         if (!select) return;
         select.innerHTML = `<option value="">${label}</option>`;
+    }
+
+    function restaurarUbicacionCompleta() {
+        if (departamento && !pais.value) {
+            departamento.innerHTML = departamentoOriginalOptions;
+        }
+
+        if (municipioMh && !departamento.value) {
+            municipioMh.innerHTML = municipioMhOriginalOptions;
+        }
+
+        if (distrito && !pais.value && !departamento.value && !municipioMh.value) {
+            distrito.innerHTML = distritoOriginalOptions;
+        }
     }
 
     function appendOption(select, value, text, data = {}) {
@@ -499,6 +517,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resetSelect(distrito);
 
         if (!this.value) {
+            restaurarUbicacionCompleta();
             buscar();
             return;
         }
@@ -519,6 +538,14 @@ document.addEventListener('DOMContentLoaded', function () {
         resetSelect(distrito);
 
         if (!this.value) {
+            if (municipioMh) {
+                municipioMh.innerHTML = municipioMhOriginalOptions;
+            }
+
+            if (distrito) {
+                distrito.innerHTML = distritoOriginalOptions;
+            }
+
             buscar();
             return;
         }
@@ -538,6 +565,10 @@ document.addEventListener('DOMContentLoaded', function () {
         resetSelect(distrito);
 
         if (!this.value) {
+            if (distrito) {
+                distrito.innerHTML = distritoOriginalOptions;
+            }
+
             buscar();
             return;
         }
