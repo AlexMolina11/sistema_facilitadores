@@ -35,10 +35,25 @@ class ConsultorExperienciaController extends Controller
     public function editHabilidades(Consultor $consultor)
     {
         $consultor->load([
-            'atestados' => fn ($query) => $query->where('activo', true)->orderByDesc('fecha_fin'),
-            'capacitacionesFepade' => fn ($query) => $query->where('activo', true)->orderByDesc('fecha_fin'),
-            'areasEspecializacion' => fn ($query) => $query->where('activo', true)
-                ->with(['areaEspecializacion', 'atestado', 'capacitacionFepade', 'habilidades.habilidadTecnica']),
+            'atestados' => fn ($query) => $query
+                ->where('activo', true)
+                ->orderByDesc('fecha_fin')
+                ->orderByDesc('created_at'),
+
+            'capacitacionesFepade' => fn ($query) => $query
+                ->where('activo', true)
+                ->orderByDesc('fecha_fin')
+                ->orderByDesc('created_at'),
+
+            'areasEspecializacion' => fn ($query) => $query
+                ->where('activo', true)
+                ->with([
+                    'areaEspecializacion',
+                    'atestado',
+                    'capacitacionFepade',
+                    'habilidades.habilidadTecnica.areaEspecializacion',
+                ])
+                ->orderByDesc('created_at'),
         ]);
 
         $catalogos = $this->catalogos();
@@ -159,44 +174,86 @@ class ConsultorExperienciaController extends Controller
     public function storeAreaEspecializacion(Request $request, Consultor $consultor)
     {
         $data = $request->validate([
-            'id_area_especializacion' => ['required', 'integer', 'exists:tbl_area_especializacion,id_area_especializacion'],
-            'id_atestado' => ['nullable', 'integer', 'exists:tbl_consultor_atestado,id_atestado'],
-            'id_capacitacion_fepade' => ['nullable', 'integer', 'exists:tbl_consultor_capacitacion_fepade,id_capacitacion_fepade'],
-            'habilidades_tecnicas' => ['required', 'array', 'min:1'],
-            'habilidades_tecnicas.*' => ['integer', 'exists:tbl_habilidad_tecnica,id_habilidad_tecnica'],
+            'id_area_especializacion' => [
+                'required',
+                'integer',
+                'exists:tbl_area_especializacion,id_area_especializacion',
+            ],
+            'id_atestado' => [
+                'nullable',
+                'integer',
+                'exists:tbl_consultor_atestado,id_atestado',
+            ],
+            'id_capacitacion_fepade' => [
+                'nullable',
+                'integer',
+                'exists:tbl_consultor_capacitacion_fepade,id_capacitacion_fepade',
+            ],
+            'habilidades_tecnicas' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+            'habilidades_tecnicas.*' => [
+                'integer',
+                'exists:tbl_habilidad_tecnica,id_habilidad_tecnica',
+            ],
         ], [
+            'id_area_especializacion.required' => 'Debes seleccionar un área de especialización.',
             'habilidades_tecnicas.required' => 'Debes seleccionar al menos una habilidad técnica aprendida.',
             'habilidades_tecnicas.min' => 'Debes seleccionar al menos una habilidad técnica aprendida.',
         ]);
 
         if (empty($data['id_atestado']) && empty($data['id_capacitacion_fepade'])) {
-            return back()->withErrors(['id_atestado' => 'Debes seleccionar un atestado o una capacitación FEPADE.'])->withInput();
+            return back()
+                ->withErrors(['id_atestado' => 'Debes seleccionar un atestado o una capacitación FEPADE como evidencia.'])
+                ->withInput();
         }
 
         if (!empty($data['id_atestado']) && !empty($data['id_capacitacion_fepade'])) {
-            return back()->withErrors(['id_capacitacion_fepade' => 'Selecciona solo una evidencia: atestado o capacitación FEPADE.'])->withInput();
+            return back()
+                ->withErrors(['id_capacitacion_fepade' => 'Selecciona solo una evidencia: atestado o capacitación FEPADE.'])
+                ->withInput();
         }
 
-        if (!empty($data['id_atestado']) && !$consultor->atestados()->where('id_atestado', $data['id_atestado'])->exists()) {
-            abort(403, 'El atestado no pertenece al consultor.');
+        if (!empty($data['id_atestado'])) {
+            $atestadoPertenece = $consultor->atestados()
+                ->where('id_atestado', $data['id_atestado'])
+                ->where('activo', true)
+                ->exists();
+
+            if (!$atestadoPertenece) {
+                abort(403, 'El atestado seleccionado no pertenece al consultor.');
+            }
         }
 
-        if (!empty($data['id_capacitacion_fepade']) && !$consultor->capacitacionesFepade()->where('id_capacitacion_fepade', $data['id_capacitacion_fepade'])->exists()) {
-            abort(403, 'La capacitación FEPADE no pertenece al consultor.');
+        if (!empty($data['id_capacitacion_fepade'])) {
+            $capacitacionPertenece = $consultor->capacitacionesFepade()
+                ->where('id_capacitacion_fepade', $data['id_capacitacion_fepade'])
+                ->where('activo', true)
+                ->exists();
+
+            if (!$capacitacionPertenece) {
+                abort(403, 'La capacitación FEPADE seleccionada no pertenece al consultor.');
+            }
         }
 
-        $habilidadesValidas = \App\Modules\Fac\Models\HabilidadTecnica::where('id_area_especializacion', $data['id_area_especializacion'])
+        $habilidadesValidas = DB::table('tbl_habilidad_tecnica')
+            ->where('id_area_especializacion', $data['id_area_especializacion'])
             ->where('activo', true)
+            ->whereNull('deleted_at')
             ->whereIn('id_habilidad_tecnica', $data['habilidades_tecnicas'])
-            ->count();
+            ->pluck('id_habilidad_tecnica')
+            ->map(fn ($id) => (int) $id)
+            ->values();
 
-        if ($habilidadesValidas !== collect($data['habilidades_tecnicas'])->unique()->count()) {
+        if ($habilidadesValidas->count() !== collect($data['habilidades_tecnicas'])->unique()->count()) {
             return back()
                 ->withErrors(['habilidades_tecnicas' => 'Todas las habilidades técnicas deben pertenecer al área de especialización seleccionada.'])
                 ->withInput();
         }
 
-        DB::transaction(function () use ($consultor, $data) {
+        DB::transaction(function () use ($consultor, $data, $habilidadesValidas) {
             $registro = ConsultorAreaEspecializacion::withTrashed()->updateOrCreate(
                 [
                     'id_consultor' => $consultor->id_consultor,
@@ -213,7 +270,15 @@ class ConsultorExperienciaController extends Controller
                 ]
             );
 
-            foreach (collect($data['habilidades_tecnicas'])->unique() as $idHabilidadTecnica) {
+            $registro->habilidades()
+                ->whereNotIn('id_habilidad_tecnica', $habilidadesValidas)
+                ->update([
+                    'activo' => false,
+                    'usuario_elim' => auth()->id(),
+                    'deleted_at' => now(),
+                ]);
+
+            foreach ($habilidadesValidas as $idHabilidadTecnica) {
                 ConsultorAreaHabilidad::withTrashed()->updateOrCreate(
                     [
                         'id_consultor_area' => $registro->id_consultor_area,
@@ -230,7 +295,8 @@ class ConsultorExperienciaController extends Controller
             }
         });
 
-        return redirect()->route('fac.consultores.habilidades.edit', $consultor)
+        return redirect()
+            ->route('fac.consultores.habilidades.edit', $consultor)
             ->with('success', 'Área de especialización registrada correctamente.');
     }
 
@@ -238,20 +304,23 @@ class ConsultorExperienciaController extends Controller
     {
         $this->validarPertenencia($consultor, $consultorArea->id_consultor);
 
-        $consultorArea->habilidades()->update([
-            'activo' => false,
-            'usuario_elim' => auth()->id(),
-            'deleted_at' => now(),
-        ]);
+        DB::transaction(function () use ($consultorArea) {
+            $consultorArea->habilidades()->update([
+                'activo' => false,
+                'usuario_elim' => auth()->id(),
+                'deleted_at' => now(),
+            ]);
 
-        $consultorArea->update([
-            'activo' => false,
-            'usuario_elim' => auth()->id(),
-        ]);
+            $consultorArea->update([
+                'activo' => false,
+                'usuario_elim' => auth()->id(),
+            ]);
 
-        $consultorArea->delete();
+            $consultorArea->delete();
+        });
 
-        return redirect()->route('fac.consultores.habilidades.edit', $consultor)
+        return redirect()
+            ->route('fac.consultores.habilidades.edit', $consultor)
             ->with('success', 'Área de especialización eliminada correctamente.');
     }
 

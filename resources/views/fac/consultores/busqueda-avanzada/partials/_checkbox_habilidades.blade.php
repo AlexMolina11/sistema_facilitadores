@@ -1,40 +1,41 @@
 @php
-    $items = $items ?? collect();
-    $seleccionados = collect((array) request()->input($nombre, $filtros[$nombre] ?? []))->map(fn ($id) => (string) $id)->all();
+    $seleccionados = collect($filtros[$nombre] ?? [])->map(fn ($id) => (int) $id)->toArray();
+
+    $idCampo = match ($nombre) {
+        'area_especializacion' => 'id_area_especializacion',
+        'areas_especializacion' => 'id_area_especializacion',
+        'habilidades_tecnicas' => 'id_habilidad_tecnica',
+        default => 'id_habilidad',
+    };
 @endphp
 
-<div class="mb-3">
+<div class="busqueda-checkbox-group mb-3">
     <div class="d-flex justify-content-between align-items-center mb-2">
-        <label class="form-label fw-bold mb-0">{{ $titulo }}</label>
-        <span class="badge bg-light text-dark border">{{ $items->count() }}</span>
+        <label class="form-label mb-0">{{ $titulo }}</label>
+        <span class="badge badge-primary-soft">{{ $items->count() }}</span>
     </div>
 
-    <div class="border rounded p-2 bg-white" style="max-height: 230px; overflow-y: auto;">
+    <div class="busqueda-checkbox-scroll">
         @forelse($items as $item)
             @php
-                $id = $item->id_area_especializacion ?? $item->id_habilidad_tecnica ?? $item->id ?? null;
-                $nombreItem = $item->nombre ?? 'Sin nombre';
-                $areaNombre = $item->areaEspecializacion?->nombre ?? null;
+                $valor = (int) $item->{$idCampo};
             @endphp
 
-            <div class="form-check mb-2">
+            <div class="form-check">
                 <input
                     class="form-check-input"
                     type="checkbox"
                     name="{{ $nombre }}[]"
-                    id="{{ $nombre }}_{{ $id }}"
-                    value="{{ $id }}"
-                    @checked(in_array((string) $id, $seleccionados, true))
+                    value="{{ $valor }}"
+                    id="{{ $nombre }}_{{ $valor }}"
+                    @checked(in_array($valor, $seleccionados, true))
                 >
-                <label class="form-check-label small" for="{{ $nombre }}_{{ $id }}">
-                    {{ $nombreItem }}
-                    @if($areaNombre)
-                        <span class="d-block text-muted">{{ $areaNombre }}</span>
-                    @endif
+                <label class="form-check-label" for="{{ $nombre }}_{{ $valor }}">
+                    {{ $item->nombre }}
                 </label>
             </div>
         @empty
-            <p class="text-muted small mb-0">No hay registros disponibles.</p>
+            <div class="text-muted small">No hay opciones activas.</div>
         @endforelse
     </div>
 </div>

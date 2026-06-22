@@ -5,10 +5,16 @@
 @section('page-subtitle', 'Registra referencias personales y profesionales.')
 
 @section('content')
+
+<x-ui.page-header
+    title="Referencias"
+    subtitle="Registra tus referencias profesionales y personales."
+/>
+
 @include('fac.consultores.partials._wizard', ['step' => 7, 'consultor' => $consultor])
 
-<div class="perfil-panel mb-4">
-    @foreach($catalogos['tiposReferencia'] as $tipoReferencia)
+ @foreach($catalogos['tiposReferencia'] as $tipoReferencia)
+    <div class="perfil-panel mb-4">
         @php $items = $referenciasPorTipo->get($tipoReferencia->id_tipo_referencia, collect()); @endphp
         <section class="mb-5">
             <div class="perfil-section-header">
@@ -55,8 +61,8 @@
                 <div class="text-muted border rounded p-4 mb-3">No hay referencias registradas para este tipo.</div>
             @endforelse
         </section>
-    @endforeach
-</div>
+    </div>
+@endforeach
 
 <form method="POST" action="{{ route('fac.consultores.referencias.continuar', $consultor) }}" class="mb-5">@csrf
     <div class="d-flex justify-content-between">

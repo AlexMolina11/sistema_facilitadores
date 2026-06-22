@@ -5,6 +5,12 @@
 @section('page-subtitle', 'Completa y actualiza tu experiencia laboral.')
 
 @section('content')
+
+<x-ui.page-header
+    title="Experiencia"
+    subtitle="Registra toda tu experiencia laboral."
+/>
+
 @include('fac.consultores.partials._wizard', ['step' => 3, 'consultor' => $consultor])
 
 <div class="perfil-panel mb-4">

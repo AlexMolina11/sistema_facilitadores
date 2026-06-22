@@ -5,6 +5,12 @@
 @section('page-subtitle', 'Selecciona la disponibilidad del consultor.')
 
 @section('content')
+
+<x-ui.page-header
+    title="Disponibilidd"
+    subtitle="Cuentanos sobre tu disponibilidad a considerar."
+/>
+
 @include('fac.consultores.partials._wizard', ['step' => 8, 'consultor' => $consultor])
 
 <form method="POST" action="{{ route('fac.consultores.disponibilidad.continuar', $consultor) }}">

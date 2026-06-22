@@ -2,9 +2,9 @@
     $steps = [
         1 => ['label' => 'Perfil Personal', 'route' => isset($consultor) ? route('fac.consultores.edit', $consultor) : null],
         2 => ['label' => 'Contacto', 'route' => isset($consultor) ? route('fac.consultores.contacto.edit', $consultor) : null],
-        3 => ['label' => 'Experiencia', 'route' => isset($consultor) ? route('fac.consultores.experiencia.edit', $consultor) : null],
-        4 => ['label' => 'Trayectoria', 'route' => isset($consultor) ? route('fac.consultores.formacion.edit', $consultor) : null],
-        5 => ['label' => 'Habilidades', 'route' => isset($consultor) ? route('fac.consultores.habilidades.edit', $consultor) : null],
+        3 => ['label' => 'Experiencia Profesional', 'route' => isset($consultor) ? route('fac.consultores.experiencia.edit', $consultor) : null],
+        4 => ['label' => 'Trayectoria Educativa', 'route' => isset($consultor) ? route('fac.consultores.formacion.edit', $consultor) : null],
+        5 => ['label' => 'Especialización y habilidades', 'route' => isset($consultor) ? route('fac.consultores.habilidades.edit', $consultor) : null],
         6 => ['label' => 'Idiomas', 'route' => isset($consultor) ? route('fac.consultores.idiomas.edit', $consultor) : null],
         7 => ['label' => 'Referencias', 'route' => isset($consultor) ? route('fac.consultores.referencias.edit', $consultor) : null],
         8 => ['label' => 'Disponibilidad', 'route' => isset($consultor) ? route('fac.consultores.disponibilidad.edit', $consultor) : null],

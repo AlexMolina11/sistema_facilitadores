@@ -5,6 +5,12 @@
 @section('page-subtitle', 'Registra los idiomas que domina el consultor.')
 
 @section('content')
+
+<x-ui.page-header
+    title="Idiomas"
+    subtitle="Cuentanos sobre los idiomas que manejas."
+/>
+
 @include('fac.consultores.partials._wizard', ['step' => 6, 'consultor' => $consultor])
 
 <div class="perfil-panel mb-4">

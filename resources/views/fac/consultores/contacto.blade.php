@@ -5,6 +5,12 @@
 @section('page-subtitle', 'Completa y actualiza tu información para que las organizaciones puedan encontrarte.')
 
 @section('content')
+
+<x-ui.page-header
+    title="Contacto"
+    subtitle="Actualiza los datos de contacto, correos, teléfonos, contacto de emergencia."
+/>
+
 @include('fac.consultores.partials._wizard', ['step' => 2, 'consultor' => $consultor])
 
 <div class="perfil-panel mb-4">

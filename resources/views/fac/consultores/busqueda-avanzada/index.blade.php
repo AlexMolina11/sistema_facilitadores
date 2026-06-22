@@ -4,93 +4,6 @@
 @section('page-title', 'Búsqueda avanzada')
 @section('page-subtitle', 'Filtra consultores por perfil profesional, experiencia, ubicación, formación, idiomas y disponibilidad.')
 
-
-@push('styles')
-<style>
-    #resultadosConsultores {
-        position: relative;
-        transition: opacity .2s ease;
-    }
-
-    #resultadosConsultores.busqueda-resultados-loading {
-        opacity: .55;
-        pointer-events: none;
-    }
-
-
-    .busqueda-resultados-header {
-        border-bottom: 1px solid rgba(0, 0, 0, .06);
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .consultor-result-card {
-        border: 1px solid rgba(56, 85, 6, .12);
-        border-radius: 18px;
-        background: #fff;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, .04);
-        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    }
-
-    .consultor-result-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(119, 145, 35, .35);
-        box-shadow: 0 16px 30px rgba(0, 0, 0, .08);
-    }
-
-    .consultor-avatar {
-        width: 58px;
-        height: 58px;
-        border-radius: 18px;
-        object-fit: cover;
-        background: linear-gradient(135deg, #385506, #779123);
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 1.05rem;
-        flex: 0 0 auto;
-    }
-
-    .consultor-result-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .45rem .9rem;
-        color: #656264;
-        font-size: .875rem;
-    }
-
-    .consultor-result-section-title {
-        font-size: .76rem;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        color: #656264;
-        font-weight: 700;
-        margin-bottom: .35rem;
-    }
-
-    .consultor-badge {
-        background: rgba(160, 197, 37, .12);
-        border: 1px solid rgba(119, 145, 35, .18);
-        color: #385506;
-        border-radius: 999px;
-        padding: .32rem .65rem;
-        font-size: .78rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-    }
-
-    .consultor-badge-muted {
-        background: #f8f9fa;
-        border-color: rgba(0,0,0,.08);
-        color: #656264;
-    }
-</style>
-@endpush
-
 @section('content')
 
 <x-ui.page-header
@@ -116,6 +29,7 @@
                     </button>
                 </div>
             </div>
+
             <div class="col-lg-4 text-lg-end">
                 <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-secondary w-100 w-lg-auto">
                     <i class="fas fa-eraser me-1"></i> Limpiar filtros
@@ -126,20 +40,21 @@
 
     <div class="busqueda-layout">
         <aside class="busqueda-filtros fepade-card">
-            <div class="busqueda-filtros-header">
-                <div>
-                    <h5>Filtros avanzados</h5>
-                    <p>Combina filtros para encontrar perfiles específicos.</p>
-                </div>
+            <div class="busqueda-filtros-header mb-3">
+                <h5>Filtros avanzados</h5>
+                <p>Combina filtros para encontrar perfiles específicos.</p>
             </div>
 
             <div class="accordion accordion-flush" id="accordionFiltros">
+
+                {{-- FECHAS --}}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#filtroFechas">
                             Fechas
                         </button>
                     </h2>
+
                     <div id="filtroFechas" class="accordion-collapse collapse show" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
                             <div class="mb-3">
@@ -177,12 +92,14 @@
                     </div>
                 </div>
 
+                {{-- PERFIL --}}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroPerfil">
                             Información general
                         </button>
                     </h2>
+
                     <div id="filtroPerfil" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
                             <div class="mb-3">
@@ -190,7 +107,9 @@
                                 <select name="sexo" class="form-select">
                                     <option value="">Todos</option>
                                     @foreach($sexos as $sexo)
-                                        <option value="{{ $sexo->id_sexo }}" @selected(($filtros['sexo'] ?? null) == $sexo->id_sexo)>{{ $sexo->nombre }}</option>
+                                        <option value="{{ $sexo->id_sexo }}" @selected(($filtros['sexo'] ?? null) == $sexo->id_sexo)>
+                                            {{ $sexo->nombre }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -209,12 +128,14 @@
                     </div>
                 </div>
 
+                {{-- UBICACIÓN --}}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroUbicacion">
                             Ubicación y disponibilidad
                         </button>
                     </h2>
+
                     <div id="filtroUbicacion" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
                             <div class="mb-3">
@@ -222,7 +143,9 @@
                                 <select id="pais" name="pais" class="form-select">
                                     <option value="">Todos</option>
                                     @foreach($paises as $pais)
-                                        <option value="{{ $pais->id_pais }}" @selected(($filtros['pais'] ?? null) == $pais->id_pais)>{{ $pais->nombre_pais }}</option>
+                                        <option value="{{ $pais->id_pais }}" @selected(($filtros['pais'] ?? null) == $pais->id_pais)>
+                                            {{ $pais->nombre_pais }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -232,7 +155,9 @@
                                 <select id="departamento" name="departamento" class="form-select">
                                     <option value="">Todos</option>
                                     @foreach($departamentos as $departamento)
-                                        <option value="{{ $departamento->id_departamento }}" @selected(($filtros['departamento'] ?? null) == $departamento->id_departamento)>{{ $departamento->nombre_departamento }}</option>
+                                        <option value="{{ $departamento->id_departamento }}" @selected(($filtros['departamento'] ?? null) == $departamento->id_departamento)>
+                                            {{ $departamento->nombre_departamento }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -242,7 +167,9 @@
                                 <select id="municipio_mh" name="municipio_mh" class="form-select">
                                     <option value="">Todos</option>
                                     @foreach($municipiosMh as $municipio)
-                                        <option value="{{ $municipio->id_municipio_mh }}" @selected(($filtros['municipio_mh'] ?? null) == $municipio->id_municipio_mh)>{{ $municipio->municipio_mh_nombre }}</option>
+                                        <option value="{{ $municipio->id_municipio_mh }}" @selected(($filtros['municipio_mh'] ?? null) == $municipio->id_municipio_mh)>
+                                            {{ $municipio->municipio_mh_nombre }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -270,7 +197,9 @@
                                 <select name="disponibilidad" class="form-select">
                                     <option value="">Todas</option>
                                     @foreach($tiposDisponibilidad as $tipo)
-                                        <option value="{{ $tipo->id_tipo_disponibilidad }}" @selected(($filtros['disponibilidad'] ?? null) == $tipo->id_tipo_disponibilidad)>{{ $tipo->nombre }}</option>
+                                        <option value="{{ $tipo->id_tipo_disponibilidad }}" @selected(($filtros['disponibilidad'] ?? null) == $tipo->id_tipo_disponibilidad)>
+                                            {{ $tipo->nombre }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -278,12 +207,14 @@
                     </div>
                 </div>
 
+                {{-- ÁREAS Y HABILIDADES --}}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroHabilidades">
-                            Habilidades y áreas
+                            Áreas y habilidades técnicas
                         </button>
                     </h2>
+
                     <div id="filtroHabilidades" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
                             @include('fac.consultores.busqueda-avanzada.partials._checkbox_habilidades', [
@@ -301,227 +232,149 @@
                     </div>
                 </div>
 
+                {{-- EDUCACIÓN --}}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroEducacion">
                             Educación y atestados
                         </button>
                     </h2>
-            <div id="filtroEducacion" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
+
+                    <div id="filtroEducacion" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
+                            <div class="busqueda-checkbox-group mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">Niveles académicos</label>
+                                    <span class="badge badge-primary-soft">{{ count($nivelesAcademicos ?? []) }}</span>
+                                </div>
 
-  {{-- NIVELES ACADÉMICOS --}}
-  <div class="mb-3">
+                                <div class="busqueda-checkbox-scroll">
+                                    @foreach($nivelesAcademicos ?? [] as $nivel)
+                                        <div class="form-check">
+                                            <input
+                                                class="form-check-input"
+                                                type="checkbox"
+                                                name="nivel_academico[]"
+                                                value="{{ $nivel->id_nivel_academico }}"
+                                                id="nivel{{ $nivel->id_nivel_academico }}"
+                                                @checked(in_array($nivel->id_nivel_academico, request()->get('nivel_academico', [])))
+                                            >
+                                            <label class="form-check-label" for="nivel{{ $nivel->id_nivel_academico }}">
+                                                {{ $nivel->nombre }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
 
-      <label class="form-label fw-bold">
-          Niveles Académicos
+                            <div class="busqueda-checkbox-group mb-0">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">Tipos de atestado</label>
+                                    <span class="badge badge-primary-soft">{{ $tiposAtestado->count() }}</span>
+                                </div>
 
-          <span class="badge bg-primary">
-              {{ count($nivelesAcademicos ?? []) }}
-          </span>
-      </label>
+                                <div class="busqueda-checkbox-scroll">
+                                    @foreach($tiposAtestado ?? [] as $atestado)
+                                        <div class="form-check">
+                                            <input
+                                                class="form-check-input"
+                                                type="checkbox"
+                                                name="tipo_atestado[]"
+                                                value="{{ $atestado->id_tipo_atestado }}"
+                                                id="atestado{{ $atestado->id_tipo_atestado }}"
+                                                @checked(in_array($atestado->id_tipo_atestado, request()->get('tipo_atestado', [])))
+                                            >
+                                            <label class="form-check-label" for="atestado{{ $atestado->id_tipo_atestado }}">
+                                                {{ $atestado->nombre }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-      <div
-          class="border rounded p-2"
-          style="max-height:250px; overflow-y:auto;"
-      >
-
-          @foreach($nivelesAcademicos ?? [] as $nivel)
-
-              <div class="form-check">
-
-                  <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="nivel_academico[]"
-                      value="{{ $nivel->id_nivel_academico }}"
-                      id="nivel{{ $nivel->id_nivel_academico }}"
-                      {{ in_array(
-                          $nivel->id_nivel_academico,
-                          request()->get('nivel_academico', [])
-                      ) ? 'checked' : '' }}
-                  >
-
-                  <label
-                      class="form-check-label"
-                      for="nivel{{ $nivel->id_nivel_academico }}"
-                  >
-                      {{ $nivel->nombre }}
-                  </label>
-
-              </div>
-
-          @endforeach
-
-      </div>
-
-  </div>
-
-  {{-- TIPOS DE ATESTADO --}}
-  <div class="mb-3">
-
-      <label class="form-label fw-bold">
-          Tipos de Atestados
-
-          <span class="badge bg-primary">
-           {{ $tiposAtestado->count() }}
-          </span>
-      </label>
-
-      <div
-          class="border rounded p-2"
-          style="max-height:250px; overflow-y:auto;"
-      >
-
-          @foreach($tiposAtestado ?? [] as $atestado)
-
-              <div class="form-check">
-
-                  <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="tipo_atestado[]"
-                      value="{{ $atestado->id_tipo_atestado }}"
-                      id="atestado{{ $atestado->id_tipo_atestado }}"
-                      {{ in_array(
-                          $atestado->id_tipo_atestado,
-                          request()->get('tipo_atestado', [])
-                      ) ? 'checked' : '' }}
-                  >
-
-                  <label
-                      class="form-check-label"
-                      for="atestado{{ $atestado->id_tipo_atestado }}"
-                  >
-                      {{ $atestado->nombre }}
-                  </label>
-
-              </div>
-
-          @endforeach
-
-      </div>
-  </div>
-  </div>
-  </div>
-  </div>  
+                {{-- IDIOMAS --}}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroIdiomas">
                             Idiomas
                         </button>
                     </h2>
+
                     <div id="filtroIdiomas" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
+                            @php
+                                $idiomasSeleccionados = (array) request()->input('idiomas', []);
+                            @endphp
 
-    <label class="form-label fw-bold">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">Idiomas</label>
+                                <span class="badge badge-primary-soft">{{ count($idiomas ?? []) }}</span>
+                            </div>
 
-        Idiomas
+                            <div class="busqueda-checkbox-scroll" style="max-height: 350px;">
+                                @foreach($idiomas ?? [] as $idioma)
+                                    <div class="mb-2">
+                                        <div class="form-check">
+                                            <input
+                                                type="checkbox"
+                                                class="form-check-input idioma-check"
+                                                id="idioma{{ $idioma->id_idioma }}"
+                                                data-target="nivel-container-{{ $idioma->id_idioma }}"
+                                                @checked(isset($idiomasSeleccionados[$idioma->id_idioma]))
+                                            >
+                                            <label class="form-check-label" for="idioma{{ $idioma->id_idioma }}">
+                                                {{ $idioma->nombre }}
+                                            </label>
+                                        </div>
 
-        <span class="badge bg-primary">
-            {{ count($idiomas ?? []) }}
-        </span>
-
-    </label>
-
-    <div
-        class="border rounded p-2"
-        style="max-height:350px; overflow-y:auto;"
-    >
-
-        @foreach($idiomas ?? [] as $idioma)
-
-            <div class="mb-2">
-
-                <div class="form-check">
-
-                    <input
-                        type="checkbox"
-                        class="form-check-input idioma-check"
-                        id="idioma{{ $idioma->id_idioma }}"
-                        data-target="nivel-container-{{ $idioma->id_idioma }}"
-                        {{ isset(request('idiomas')[$idioma->id_idioma]) ? 'checked' : '' }}
-                    >
-
-                    <label
-                        class="form-check-label"
-                        for="idioma{{ $idioma->id_idioma }}"
-                    >
-                        {{ $idioma->nombre }}
-                    </label>
-
+                                        <div
+                                            id="nivel-container-{{ $idioma->id_idioma }}"
+                                            class="ms-4 mt-2"
+                                            style="display: {{ isset($idiomasSeleccionados[$idioma->id_idioma]) ? 'block' : 'none' }};"
+                                        >
+                                            <label class="form-label small">Nivel</label>
+                                            <select class="form-select form-select-sm" name="idiomas[{{ $idioma->id_idioma }}]">
+                                                <option value="">Seleccione nivel</option>
+                                                @foreach($nivelesIdioma as $nivel)
+                                                    <option
+                                                        value="{{ $nivel->id_idioma_nivel }}"
+                                                        @selected(($idiomasSeleccionados[$idioma->id_idioma] ?? null) == $nivel->id_idioma_nivel)
+                                                    >
+                                                        {{ $nivel->nombre }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div
-                    id="nivel-container-{{ $idioma->id_idioma }}"
-                    class="ms-4 mt-2"
-                    style="
-                        display:
-                        {{ isset(request('idiomas')[$idioma->id_idioma]) ? 'block' : 'none' }};
-                    "
-                >
-
-                    <label class="form-label small">
-                        Nivel
-                    </label>
-
-                    <select
-                        class="form-select form-select-sm"
-                        name="idiomas[{{ $idioma->id_idioma }}]"
-                    >
-
-                        <option value="">
-                            Seleccione nivel
-                        </option>
-
-                        @foreach($nivelesIdioma as $nivel)
-
-                            <option
-                                value="{{ $nivel->id_idioma_nivel }}"
-                                {{
-                                    (request('idiomas')[$idioma->id_idioma] ?? null)
-                                    == $nivel->id_idioma_nivel
-                                    ? 'selected'
-                                    : ''
-                                }}
-                            >
-                                {{ $nivel->nombre }}
-                            </option>
-
-                        @endforeach
-
-                    </select>
-
-                </div>
-
-            </div>
-
-        @endforeach
-
-    </div>
-
-</div>
-</div>
-</div>
-
-                        
-
+                {{-- EXPERIENCIA --}}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroExperiencia">
                             Experiencia profesional
                         </button>
                     </h2>
+
                     <div id="filtroExperiencia" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
                             <div class="mb-3">
                                 <label class="form-label">Cargo</label>
                                 <input type="text" class="form-control" name="cargo" value="{{ $filtros['cargo'] ?? '' }}" placeholder="Ej. Facilitador, consultor, gerente...">
                             </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Empresa</label>
                                 <input type="text" class="form-control" name="empresa" value="{{ $filtros['empresa'] ?? '' }}" placeholder="Nombre de empresa o institución">
                             </div>
+
                             <div class="mb-0">
                                 <label class="form-label">Años mínimos de experiencia</label>
                                 <input type="number" min="0" max="60" class="form-control" name="anios_experiencia" value="{{ $filtros['anios_experiencia'] ?? '' }}">
@@ -535,6 +388,7 @@
                 <button class="btn btn-fepade" type="submit">
                     <i class="fas fa-filter me-1"></i> Aplicar ahora
                 </button>
+
                 <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-secondary">
                     Limpiar
                 </a>
@@ -544,7 +398,6 @@
         <div id="resultadosConsultores">
             @include('fac.consultores.busqueda-avanzada.partials._resultados')
         </div>
-
     </div>
 </form>
 
@@ -578,6 +431,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function appendOption(select, value, text, data = {}) {
+        if (!select) return;
+
         const option = document.createElement('option');
         option.value = value;
         option.textContent = text;
@@ -649,6 +504,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         cargandoUbicacion = true;
+
         fetch(`${rutas.departamentos}?id_pais=${this.value}`)
             .then(response => response.json())
             .then(data => data.forEach(item => appendOption(departamento, item.id_departamento, item.nombre_departamento)))
@@ -668,6 +524,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         cargandoUbicacion = true;
+
         fetch(`${rutas.municipios}?id_departamento=${this.value}`)
             .then(response => response.json())
             .then(data => data.forEach(item => appendOption(municipioMh, item.id_municipio_mh, item.municipio_mh_nombre)))
@@ -686,6 +543,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         cargandoUbicacion = true;
+
         fetch(`${rutas.distritos}?id_municipio_mh=${this.value}`)
             .then(response => response.json())
             .then(data => data.forEach(item => appendOption(distrito, item.id_municipio, item.nombre_distrito, {
@@ -716,6 +574,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         cargandoUbicacion = true;
+
         fetch(`${rutas.ubicacion}?id_municipio=${this.value}`)
             .then(response => response.json())
             .then(data => {
@@ -737,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function () {
     form?.querySelectorAll('input, select').forEach(element => {
         if (['pais', 'departamento', 'municipio_mh', 'distrito'].includes(element.id)) return;
 
-        const eventName = element.type === 'text' || element.type === 'number' || element.type === 'date' ? 'input' : 'change';
+        const eventName = ['text', 'number', 'date', 'search'].includes(element.type) ? 'input' : 'change';
 
         element.addEventListener(eventName, function () {
             if (!cargandoUbicacion) buscar();
@@ -746,40 +605,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     resultados?.addEventListener('click', function (event) {
         const link = event.target.closest('.pagination a');
+
         if (!link) return;
 
         event.preventDefault();
         buscar(link.href, 0);
     });
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.idioma-checkbox').forEach(function (checkbox) {
-        checkbox.addEventListener('change', function () {
-            const container = document.getElementById('nivel-container-' + this.value);
-            if (!container) return;
-
-            if (this.checked) {
-                container.classList.remove('d-none');
-            } else {
-                container.classList.add('d-none');
-                const select = container.querySelector('select');
-                if (select) select.value = '';
-            }
-        });
-    });
 
     document.querySelectorAll('.idioma-check').forEach(function (checkbox) {
         checkbox.addEventListener('change', function () {
             const target = document.getElementById(this.dataset.target);
+
             if (!target) return;
 
             if (this.checked) {
                 target.style.display = 'block';
             } else {
                 target.style.display = 'none';
+
                 const select = target.querySelector('select');
                 if (select) select.value = '';
             }
