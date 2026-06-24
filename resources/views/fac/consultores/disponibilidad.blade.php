@@ -7,8 +7,8 @@
 @section('content')
 
 <x-ui.page-header
-    title="Disponibilidd"
-    subtitle="Cuentanos sobre tu disponibilidad a considerar."
+    title="Disponibilidad"
+    subtitle="Cuéntanos sobre tu disponibilidad."
 />
 
 @include('fac.consultores.partials._wizard', ['step' => 8, 'consultor' => $consultor])

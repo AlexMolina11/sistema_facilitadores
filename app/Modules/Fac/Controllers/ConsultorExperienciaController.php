@@ -463,6 +463,8 @@ class ConsultorExperienciaController extends Controller
 
         $data = $this->normalizarReferencia($data);
 
+        $this->validarReferenciaDuplicada($consultor, $data);
+
         $data['id_consultor'] = $consultor->id_consultor;
         $data['activo'] = true;
         $data['usuario_crea'] = auth()->id();
@@ -488,6 +490,8 @@ class ConsultorExperienciaController extends Controller
         );
 
         $data = $this->normalizarReferencia($data);
+
+        $this->validarReferenciaDuplicada($consultor, $data, $referencia->id_referencia);
 
         $data['activo'] = true;
         $data['usuario_mod'] = auth()->id();
@@ -550,21 +554,46 @@ class ConsultorExperienciaController extends Controller
             'disponibilidades.*' => ['integer', 'exists:tbl_tipo_disponibilidad,id_tipo_disponibilidad'],
         ]);
 
-        $disponibilidades = collect($request->input('disponibilidades', []))->filter()->unique()->values();
+        $idsSeleccionados = collect($request->input('disponibilidades', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
 
-        DB::transaction(function () use ($consultor, $disponibilidades) {
-            $this->sincronizarRelacionSimple(
-                ConsultorDisponibilidad::class,
-                'id_tipo_disponibilidad',
-                $consultor,
-                $disponibilidades,
-                auth()->id()
-            );
+        DB::transaction(function () use ($consultor, $idsSeleccionados) {
+            ConsultorDisponibilidad::where('id_consultor', $consultor->id_consultor)
+                ->whereNotIn('id_tipo_disponibilidad', $idsSeleccionados->all())
+                ->whereNull('deleted_at')
+                ->get()
+                ->each(function ($disponibilidad) {
+                    $disponibilidad->update([
+                        'activo' => false,
+                        'usuario_elim' => auth()->id(),
+                    ]);
+
+                    $disponibilidad->delete();
+                });
+
+            foreach ($idsSeleccionados as $idTipoDisponibilidad) {
+                ConsultorDisponibilidad::withTrashed()->updateOrCreate(
+                    [
+                        'id_consultor' => $consultor->id_consultor,
+                        'id_tipo_disponibilidad' => $idTipoDisponibilidad,
+                    ],
+                    [
+                        'activo' => true,
+                        'deleted_at' => null,
+                        'usuario_crea' => auth()->id(),
+                        'usuario_mod' => auth()->id(),
+                        'usuario_elim' => null,
+                    ]
+                );
+            }
         });
 
         return redirect()
-            ->route('fac.consultores.show', $consultor)
-            ->with('success', 'Perfil del consultor actualizado correctamente.');
+            ->route('fac.consultores.disponibilidad.edit', $consultor)
+            ->with('success', 'Disponibilidad actualizada correctamente.');
     }
 
     private function catalogos(): array
@@ -713,6 +742,38 @@ class ConsultorExperienciaController extends Controller
 
             throw ValidationException::withMessages([
                 'id_tipo_referencia' => "Ya alcanzaste el máximo permitido: 3 referencias para {$nombreTipo}.",
+            ]);
+        }
+    }
+
+    private function validarReferenciaDuplicada(Consultor $consultor, array $data, ?int $idReferenciaIgnorar = null): void
+    {
+        $query = ConsultorReferencia::where('id_consultor', $consultor->id_consultor)
+            ->where('activo', true)
+            ->where(function ($q) use ($data) {
+                $q->whereRaw('LOWER(TRIM(nombre)) = ?', [strtolower(trim($data['nombre']))]);
+
+                if (!empty($data['telefono'])) {
+                    $telefonoNormalizado = preg_replace('/[^0-9]/', '', $data['telefono']);
+
+                    $q->orWhereRaw(
+                        "REPLACE(REPLACE(REPLACE(REPLACE(telefono, '-', ''), ' ', ''), '+', ''), '.', '') = ?",
+                        [$telefonoNormalizado]
+                    );
+                }
+
+                if (!empty($data['correo'])) {
+                    $q->orWhereRaw('LOWER(TRIM(correo)) = ?', [strtolower(trim($data['correo']))]);
+                }
+            });
+
+        if ($idReferenciaIgnorar) {
+            $query->where('id_referencia', '!=', $idReferenciaIgnorar);
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'nombre' => 'Ya existe una referencia registrada con el mismo nombre, teléfono o correo electrónico.',
             ]);
         }
     }
