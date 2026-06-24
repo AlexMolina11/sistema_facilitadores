@@ -354,12 +354,13 @@
     </div>
 
     <div class="col-12">
-        <label class="form-label">Dirección de residencia</label>
+        <label class="form-label">Dirección de residencia <span class="text-danger">*</span></label>
         <textarea 
             name="direccion_residencia" 
             rows="3" 
             class="form-control"
             maxlength="200"
+            required
         >{{ old('direccion_residencia', $consultor->direccion_residencia ?? '') }}</textarea>
     </div>
 
