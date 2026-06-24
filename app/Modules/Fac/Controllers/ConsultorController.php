@@ -97,7 +97,14 @@ class ConsultorController extends Controller
 
             'documentos' => fn ($query) => $query->where('activo', true),
 
-            'formaciones' => fn ($query) => $query->where('activo', true)->orderByDesc('fecha_fin'),
+            'atestados' => fn ($query) => $query
+                ->where('activo', true)
+                ->with(['tipoFormacion', 'tipoAtestado', 'nivelAcademico', 'pais'])
+                ->orderByDesc('fecha_fin'),
+
+            'capacitacionesFepade' => fn ($query) => $query
+                ->where('activo', true)
+                ->orderByDesc('fecha_fin'),
 
             'experienciasLaborales' => fn ($query) => $query
                 ->where('activo', true)
