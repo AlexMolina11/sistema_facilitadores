@@ -43,9 +43,9 @@
             {{ $slot }}
         </div>
 
-        @if($items && method_exists($items, 'links'))
-            <div class="mt-3">
-                {{ $items->links() }}
+        @if($items && method_exists($items, 'links') && $items->hasPages())
+            <div class="mt-4 pagination-wrapper">
+                {{ $items->links('pagination::bootstrap-5') }}
             </div>
         @endif
     @endif
