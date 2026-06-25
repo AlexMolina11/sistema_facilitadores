@@ -282,7 +282,7 @@
                                     @foreach($tiposFormacion ?? [] as $tipoFormacion)
                                         <div class="form-check">
                                             <input
-                                                class="form-check-input"
+                                                class="form-check-input js-tipo-formacion-filtro"
                                                 type="checkbox"
                                                 name="tipo_formacion[]"
                                                 value="{{ $tipoFormacion->id_tipo_formacion }}"
@@ -300,14 +300,18 @@
                             <div class="busqueda-checkbox-group mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <label class="form-label mb-0">Tipo de atestado</label>
-                                    <span class="badge badge-primary-soft">{{ $tiposAtestado->count() }}</span>
+                                    <span class="badge badge-primary-soft" id="contadorTiposAtestado">{{ $tiposAtestado->count() }}</span>
                                 </div>
 
-                                <div class="busqueda-checkbox-scroll">
+                                <div class="alert alert-light border small py-2 mb-2" id="ayudaTipoAtestado">
+                                    Selecciona un tipo de formación para ver únicamente los atestados relacionados.
+                                </div>
+
+                                <div class="busqueda-checkbox-scroll" id="contenedorTiposAtestado">
                                     @foreach($tiposAtestado ?? [] as $atestado)
-                                        <div class="form-check">
+                                        <div class="form-check" data-id-tipo-formacion="{{ $atestado->id_tipo_formacion }}">
                                             <input
-                                                class="form-check-input"
+                                                class="form-check-input js-tipo-atestado-filtro"
                                                 type="checkbox"
                                                 name="tipo_atestado[]"
                                                 value="{{ $atestado->id_tipo_atestado }}"
@@ -716,6 +720,66 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    /* =====================================================
+    CASCADA TIPO FORMACIÓN -> TIPO ATESTADO
+    ===================================================== */
+
+    const checksTipoFormacion = document.querySelectorAll('.js-tipo-formacion-filtro');
+    const contenedorTiposAtestado = document.getElementById('contenedorTiposAtestado');
+    const contadorTiposAtestado = document.getElementById('contadorTiposAtestado');
+    const ayudaTipoAtestado = document.getElementById('ayudaTipoAtestado');
+
+    if (checksTipoFormacion.length && contenedorTiposAtestado) {
+
+        function obtenerTiposFormacionSeleccionados() {
+            return Array.from(checksTipoFormacion)
+                .filter(c => c.checked)
+                .map(c => c.value);
+        }
+
+        function filtrarTiposAtestado() {
+
+            const seleccionados = obtenerTiposFormacionSeleccionados();
+            const mostrarTodos = seleccionados.length === 0;
+
+            let visibles = 0;
+
+            contenedorTiposAtestado
+                .querySelectorAll('.form-check[data-id-tipo-formacion]')
+                .forEach(function (item) {
+
+                    const idTipo = item.dataset.idTipoFormacion;
+                    const check = item.querySelector('input');
+
+                    const mostrar = mostrarTodos || seleccionados.includes(idTipo);
+
+                    item.classList.toggle('d-none', !mostrar);
+
+                    if (!mostrar && check) {
+                        check.checked = false;
+                    }
+
+                    if (mostrar) {
+                        visibles++;
+                    }
+
+                });
+
+            contadorTiposAtestado.textContent = visibles;
+
+            ayudaTipoAtestado.textContent = mostrarTodos
+                ? 'Selecciona un tipo de formación para filtrar los tipos de atestado.'
+                : 'Mostrando únicamente los tipos de atestado relacionados.';
+        }
+
+        checksTipoFormacion.forEach(function (check) {
+            check.addEventListener('change', filtrarTiposAtestado);
+        });
+
+        filtrarTiposAtestado();
+    }
+
 });
 </script>
 @endpush
