@@ -56,7 +56,8 @@
     });
 
     $experiencias = $consultor->experienciasLaborales ?? collect();
-    $formaciones = $consultor->formaciones ?? collect();
+    $atestados = $consultor->atestados ?? collect();
+    $capacitacionesFepade = $consultor->capacitacionesFepade ?? collect();
     $disponibilidades = $consultor->disponibilidades ?? collect();
     $areasPerfil = $consultor->areasEspecializacion ?? collect();
     $idiomas = $consultor->idiomas ?? collect();
@@ -241,8 +242,13 @@
         </div>
 
         <div class="expediente-summary-card">
-            <span>Formaciones</span>
-            <strong>{{ $formaciones->count() }}</strong>
+            <span>Atestados</span>
+            <strong>{{ $atestados->count() }}</strong>
+        </div>
+
+        <div class="expediente-summary-card">
+            <span>Capacitaciones FEPADE</span>
+            <strong>{{ $capacitacionesFepade->count() }}</strong>
         </div>
 
         <div class="expediente-summary-card">
@@ -452,51 +458,93 @@
             <section class="expediente-panel">
                 <div class="expediente-panel-header">
                     <div>
-                        <h4>Formación académica</h4>
-                        <p>Estudios, atestados, instituciones y evidencias.</p>
+                        <h4>Trayectoria educativa</h4>
+                        <p>Atestados, formación académica, educación continua y evidencias.</p>
                     </div>
 
                     @if(\Illuminate\Support\Facades\Route::has('fac.consultores.formacion.edit'))
                         <a href="{{ route('fac.consultores.formacion.edit', $consultor) }}" class="btn btn-sm btn-outline-secondary">
-                            Editar formación
+                            Editar trayectoria
                         </a>
                     @endif
                 </div>
 
-                @forelse($formaciones as $formacion)
-                    @php
-                        $tipoAtestado = $tiposAtestado->get($formacion->id_tipo_atestado);
-                        $tipoFormacion = $tipoAtestado ? $tiposFormacion->get($tipoAtestado->id_tipo_formacion) : null;
-                        $nivel = $nivelesAcademicos->get($formacion->id_nivel_academico);
-                        $pais = $paises->get($formacion->id_pais);
-                    @endphp
-
+                @forelse($atestados as $atestado)
                     <article class="expediente-timeline-card">
-                        <h5>{{ $formacion->descripcion ?? 'Formación no registrada' }}</h5>
-                        <p>{{ $formacion->institucion ?? 'Institución no registrada' }}</p>
+                        <h5>{{ $atestado->titulo ?? $atestado->descripcion ?? 'Atestado no registrado' }}</h5>
+                        <p>{{ $atestado->institucion ?? 'Institución no registrada' }}</p>
 
                         <div class="expediente-tag-row">
-                            <span>{{ $tipoFormacion->nombre ?? 'Formación no registrada' }}</span>
-                            <span>{{ $tipoAtestado->nombre ?? 'Atestado no registrado' }}</span>
-                            <span>{{ $nivel->nombre ?? 'Nivel no registrado' }}</span>
-                            <span>{{ $pais->nombre_pais ?? 'País no registrado' }}</span>
+                            <span>{{ $atestado->tipoFormacion?->nombre ?? 'Tipo de formación no registrado' }}</span>
+                            <span>{{ $atestado->tipoAtestado?->nombre ?? 'Tipo de atestado no registrado' }}</span>
+                            <span>{{ $atestado->nivelAcademico?->nombre ?? 'Nivel no registrado' }}</span>
+                            <span>{{ $atestado->pais?->nombre_pais ?? 'País no registrado' }}</span>
+
+                            @if($atestado->horas)
+                                <span>{{ $atestado->horas }} horas</span>
+                            @endif
                         </div>
 
                         <span class="expediente-date">
-                            {{ $formacion->fecha_inicio ? $formacion->fecha_inicio->format('d/m/Y') : 'S/F' }}
+                            {{ $atestado->fecha_inicio ? $atestado->fecha_inicio->format('d/m/Y') : 'S/F' }}
                             -
-                            {{ $formacion->fecha_fin ? $formacion->fecha_fin->format('d/m/Y') : 'S/F' }}
+                            {{ $atestado->fecha_fin ? $atestado->fecha_fin->format('d/m/Y') : 'S/F' }}
                         </span>
 
-                        @if($formacion->url)
-                            <br>
-                            <a href="{{ \Illuminate\Support\Facades\Storage::url($formacion->url) }}" target="_blank" class="expediente-file-link">
+                        @if($atestado->descripcion)
+                            <p class="expediente-description">{{ $atestado->descripcion }}</p>
+                        @endif
+
+                        @if($atestado->url_archivo)
+                            <a href="{{ \Illuminate\Support\Facades\Storage::url($atestado->url_archivo) }}" target="_blank" class="expediente-file-link">
                                 Ver archivo
                             </a>
                         @endif
                     </article>
                 @empty
-                    <div class="expediente-empty-state">No hay formación académica registrada.</div>
+                    <div class="expediente-empty-state">No hay atestados registrados.</div>
+                @endforelse
+            </section>
+
+            <section class="expediente-panel">
+                <div class="expediente-panel-header">
+                    <div>
+                        <h4>Capacitaciones FEPADE</h4>
+                        <p>Capacitaciones impartidas o registradas desde FEPADE.</p>
+                    </div>
+                </div>
+
+                @forelse($capacitacionesFepade as $capacitacion)
+                    <article class="expediente-timeline-card">
+                        <h5>{{ $capacitacion->nombre_evento ?? 'Capacitación no registrada' }}</h5>
+
+                        <p>
+                            {{ $capacitacion->tema ?? 'Tema no registrado' }}
+                            @if($capacitacion->institucion)
+                                · {{ $capacitacion->institucion }}
+                            @endif
+                        </p>
+
+                        <div class="expediente-tag-row">
+                            <span>{{ $capacitacion->modalidad ?? 'Modalidad no registrada' }}</span>
+
+                            @if($capacitacion->horas)
+                                <span>{{ $capacitacion->horas }} horas</span>
+                            @endif
+
+                            @if($capacitacion->fuente)
+                                <span>{{ $capacitacion->fuente }}</span>
+                            @endif
+                        </div>
+
+                        <span class="expediente-date">
+                            {{ $capacitacion->fecha_inicio ? $capacitacion->fecha_inicio->format('d/m/Y') : 'S/F' }}
+                            -
+                            {{ $capacitacion->fecha_fin ? $capacitacion->fecha_fin->format('d/m/Y') : 'S/F' }}
+                        </span>
+                    </article>
+                @empty
+                    <div class="expediente-empty-state">No hay capacitaciones FEPADE registradas.</div>
                 @endforelse
             </section>
 

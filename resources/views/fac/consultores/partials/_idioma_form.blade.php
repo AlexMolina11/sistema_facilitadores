@@ -4,11 +4,11 @@
 
 <form
     method="POST"
+    enctype="multipart/form-data"
     action="{{ $esEdicion
         ? route('fac.consultores.idiomas.update', [$consultor, $idiomaConsultor])
         : route('fac.consultores.idiomas.store', $consultor)
     }}"
-    enctype="multipart/form-data"
     class="border rounded p-3 mb-3 bg-light"
 >
     @csrf

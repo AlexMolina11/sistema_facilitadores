@@ -29,6 +29,9 @@ class BusquedaConsultorService
                     ]),
                 'idiomas' => fn ($q) => $q->where('activo', true),
                 'experienciasLaborales' => fn ($q) => $q->where('activo', true),
+                'atestados' => fn ($q) => $q
+                    ->where('activo', true)
+                    ->with(['tipoFormacion', 'tipoAtestado', 'nivelAcademico', 'pais']),
             ])
             ->where('activo', true);
 
@@ -106,11 +109,15 @@ class BusquedaConsultorService
                                 ->orWhere('descripcion', 'like', $like)
                                 ->orWhere('jefe_nombre', 'like', $like);
                         }))
-                    ->orWhereHas('formaciones', fn (Builder $formacion) => $formacion
+                    ->orWhereHas('atestados', fn (Builder $formacion) => $formacion
                         ->where('activo', true)
                         ->where(function (Builder $f) use ($like) {
-                            $f->where('descripcion', 'like', $like)
+                            $f->where('titulo', 'like', $like)
+                                ->orWhere('descripcion', 'like', $like)
                                 ->orWhere('institucion', 'like', $like)
+                                ->orWhere('entidad_acreditadora', 'like', $like)
+                                ->orWhere('cliente_institucion', 'like', $like)
+                                ->orWhereHas('tipoFormacion', fn (Builder $tipo) => $tipo->where('nombre', 'like', $like))
                                 ->orWhereHas('nivelAcademico', fn (Builder $nivel) => $nivel->where('nombre', 'like', $like))
                                 ->orWhereHas('tipoAtestado', fn (Builder $atestado) => $atestado->where('nombre', 'like', $like))
                                 ->orWhereHas('pais', fn (Builder $pais) => $pais->where('nombre_pais', 'like', $like));
@@ -218,89 +225,83 @@ class BusquedaConsultorService
         }
     }
 
-private function aplicarEducacion(
-    Builder $query,
-    array $filtros
-): void
-{
-    $nivelesAcademicos =
-        array_filter(
-            (array) Arr::get(
-                $filtros,
-                'nivel_academico',
-                []
-            )
-        );
+    private function aplicarEducacion(Builder $query, array $filtros): void
+    {
+        $nivelesAcademicos = array_filter((array) Arr::get($filtros, 'nivel_academico', []));
+        $tiposFormacion = array_filter((array) Arr::get($filtros, 'tipo_formacion', []));
+        $tiposAtestado = array_filter((array) Arr::get($filtros, 'tipo_atestado', []));
+        $paisEducacion = Arr::get($filtros, 'educacion_pais');
+        $institucion = trim((string) Arr::get($filtros, 'educacion_institucion'));
 
-    $tiposAtestado =
-        array_filter(
-            (array) Arr::get(
-                $filtros,
-                'tipo_atestado',
-                []
-            )
-        );
+        if (
+            empty($nivelesAcademicos)
+            && empty($tiposFormacion)
+            && empty($tiposAtestado)
+            && empty($paisEducacion)
+            && $institucion === ''
+        ) {
+            return;
+        }
 
-    if (
-        empty($nivelesAcademicos)
-        &&
-        empty($tiposAtestado)
-    ) {
-        return;
-    }
-
-    $query->whereHas(
-        'formaciones',
-        function (Builder $f)
-            use (
-                $nivelesAcademicos,
-                $tiposAtestado
-            ) {
-
-            $f->where('activo', true);
+        $query->whereHas('atestados', function (Builder $f) use (
+            $nivelesAcademicos,
+            $tiposFormacion,
+            $tiposAtestado,
+            $paisEducacion,
+            $institucion
+        ) {
+            $f->where('activo', true)
+                ->whereNull('deleted_at');
 
             if (!empty($nivelesAcademicos)) {
+                $f->whereIn('id_nivel_academico', $nivelesAcademicos);
+            }
 
-                $f->whereIn(
-                    'id_nivel_academico',
-                    $nivelesAcademicos
-                );
+            if (!empty($tiposFormacion)) {
+                $f->whereIn('id_tipo_formacion', $tiposFormacion);
             }
 
             if (!empty($tiposAtestado)) {
-
-                $f->whereIn(
-                    'id_tipo_atestado',
-                    $tiposAtestado
-                );
+                $f->whereIn('id_tipo_atestado', $tiposAtestado);
             }
-        }
-    );
-}
 
-private function aplicarIdiomas(Builder $query, array $filtros): void
-{
-    $idiomas = Arr::get($filtros, 'idiomas', []);
+            if (!empty($paisEducacion)) {
+                $f->where('id_pais', $paisEducacion);
+            }
 
-    if (empty($idiomas)) {
-        return;
-    }
-
-    foreach ($idiomas as $idIdioma => $idNivel) {
-
-        if (empty($idNivel)) {
-            continue;
-        }
-
-        $query->whereHas('idiomas', function (Builder $i) use ($idIdioma, $idNivel) {
-
-            $i->where('activo', true)
-              ->where('id_idioma', $idIdioma)
-              ->where('id_idioma_nivel', '>=', $idNivel);
-
+            if ($institucion !== '') {
+                $f->where(function (Builder $i) use ($institucion) {
+                    $i->where('institucion', 'like', "%{$institucion}%")
+                        ->orWhere('entidad_acreditadora', 'like', "%{$institucion}%")
+                        ->orWhere('cliente_institucion', 'like', "%{$institucion}%");
+                });
+            }
         });
     }
-}
+
+    private function aplicarIdiomas(Builder $query, array $filtros): void
+    {
+        $idiomas = Arr::get($filtros, 'idiomas', []);
+
+        if (empty($idiomas)) {
+            return;
+        }
+
+        foreach ($idiomas as $idIdioma => $idNivel) {
+
+            if (empty($idNivel)) {
+                continue;
+            }
+
+            $query->whereHas('idiomas', function (Builder $i) use ($idIdioma, $idNivel) {
+
+                $i->where('activo', true)
+                ->where('id_idioma', $idIdioma)
+                ->where('id_idioma_nivel', '>=', $idNivel);
+
+            });
+        }
+    }
 
     private function aplicarExperiencia(Builder $query, array $filtros): void
     {

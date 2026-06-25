@@ -242,9 +242,14 @@
 
                     <div id="filtroEducacion" class="accordion-collapse collapse" data-bs-parent="#accordionFiltros">
                         <div class="accordion-body">
+
+                            <div class="alert alert-light border small mb-3">
+                                Filtra consultores según los atestados registrados en su trayectoria educativa.
+                            </div>
+
                             <div class="busqueda-checkbox-group mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label mb-0">Niveles académicos</label>
+                                    <label class="form-label mb-0">Nivel académico</label>
                                     <span class="badge badge-primary-soft">{{ count($nivelesAcademicos ?? []) }}</span>
                                 </div>
 
@@ -257,7 +262,7 @@
                                                 name="nivel_academico[]"
                                                 value="{{ $nivel->id_nivel_academico }}"
                                                 id="nivel{{ $nivel->id_nivel_academico }}"
-                                                @checked(in_array($nivel->id_nivel_academico, request()->get('nivel_academico', [])))
+                                                @checked(in_array($nivel->id_nivel_academico, $filtros['nivel_academico'] ?? []))
                                             >
                                             <label class="form-check-label" for="nivel{{ $nivel->id_nivel_academico }}">
                                                 {{ $nivel->nombre }}
@@ -267,22 +272,51 @@
                                 </div>
                             </div>
 
-                            <div class="busqueda-checkbox-group mb-0">
+                            <div class="busqueda-checkbox-group mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label mb-0">Tipos de atestado</label>
-                                    <span class="badge badge-primary-soft">{{ $tiposAtestado->count() }}</span>
+                                    <label class="form-label mb-0">Tipo de formación</label>
+                                    <span class="badge badge-primary-soft">{{ count($tiposFormacion ?? []) }}</span>
                                 </div>
 
                                 <div class="busqueda-checkbox-scroll">
-                                    @foreach($tiposAtestado ?? [] as $atestado)
+                                    @foreach($tiposFormacion ?? [] as $tipoFormacion)
                                         <div class="form-check">
                                             <input
-                                                class="form-check-input"
+                                                class="form-check-input js-tipo-formacion-filtro"
+                                                type="checkbox"
+                                                name="tipo_formacion[]"
+                                                value="{{ $tipoFormacion->id_tipo_formacion }}"
+                                                id="tipoFormacion{{ $tipoFormacion->id_tipo_formacion }}"
+                                                @checked(in_array($tipoFormacion->id_tipo_formacion, $filtros['tipo_formacion'] ?? []))
+                                            >
+                                            <label class="form-check-label" for="tipoFormacion{{ $tipoFormacion->id_tipo_formacion }}">
+                                                {{ $tipoFormacion->nombre }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="busqueda-checkbox-group mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">Tipo de atestado</label>
+                                    <span class="badge badge-primary-soft" id="contadorTiposAtestado">{{ $tiposAtestado->count() }}</span>
+                                </div>
+
+                                <div class="alert alert-light border small py-2 mb-2" id="ayudaTipoAtestado">
+                                    Selecciona un tipo de formación para ver únicamente los atestados relacionados.
+                                </div>
+
+                                <div class="busqueda-checkbox-scroll" id="contenedorTiposAtestado">
+                                    @foreach($tiposAtestado ?? [] as $atestado)
+                                        <div class="form-check" data-id-tipo-formacion="{{ $atestado->id_tipo_formacion }}">
+                                            <input
+                                                class="form-check-input js-tipo-atestado-filtro"
                                                 type="checkbox"
                                                 name="tipo_atestado[]"
                                                 value="{{ $atestado->id_tipo_atestado }}"
                                                 id="atestado{{ $atestado->id_tipo_atestado }}"
-                                                @checked(in_array($atestado->id_tipo_atestado, request()->get('tipo_atestado', [])))
+                                                @checked(in_array($atestado->id_tipo_atestado, $filtros['tipo_atestado'] ?? []))
                                             >
                                             <label class="form-check-label" for="atestado{{ $atestado->id_tipo_atestado }}">
                                                 {{ $atestado->nombre }}
@@ -291,6 +325,33 @@
                                     @endforeach
                                 </div>
                             </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Institución / entidad</label>
+                                <input
+                                    type="text"
+                                    name="educacion_institucion"
+                                    class="form-control"
+                                    value="{{ $filtros['educacion_institucion'] ?? '' }}"
+                                    placeholder="Ej. FEPADE, Universidad, Instituto..."
+                                >
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label">País del atestado</label>
+                                <select name="educacion_pais" class="form-select">
+                                    <option value="">Todos</option>
+                                    @foreach($paises ?? [] as $pais)
+                                        <option
+                                            value="{{ $pais->id_pais }}"
+                                            @selected(($filtros['educacion_pais'] ?? '') == $pais->id_pais)
+                                        >
+                                            {{ $pais->nombre_pais }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -659,6 +720,66 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    /* =====================================================
+    CASCADA TIPO FORMACIÓN -> TIPO ATESTADO
+    ===================================================== */
+
+    const checksTipoFormacion = document.querySelectorAll('.js-tipo-formacion-filtro');
+    const contenedorTiposAtestado = document.getElementById('contenedorTiposAtestado');
+    const contadorTiposAtestado = document.getElementById('contadorTiposAtestado');
+    const ayudaTipoAtestado = document.getElementById('ayudaTipoAtestado');
+
+    if (checksTipoFormacion.length && contenedorTiposAtestado) {
+
+        function obtenerTiposFormacionSeleccionados() {
+            return Array.from(checksTipoFormacion)
+                .filter(c => c.checked)
+                .map(c => c.value);
+        }
+
+        function filtrarTiposAtestado() {
+
+            const seleccionados = obtenerTiposFormacionSeleccionados();
+            const mostrarTodos = seleccionados.length === 0;
+
+            let visibles = 0;
+
+            contenedorTiposAtestado
+                .querySelectorAll('.form-check[data-id-tipo-formacion]')
+                .forEach(function (item) {
+
+                    const idTipo = item.dataset.idTipoFormacion;
+                    const check = item.querySelector('input');
+
+                    const mostrar = mostrarTodos || seleccionados.includes(idTipo);
+
+                    item.classList.toggle('d-none', !mostrar);
+
+                    if (!mostrar && check) {
+                        check.checked = false;
+                    }
+
+                    if (mostrar) {
+                        visibles++;
+                    }
+
+                });
+
+            contadorTiposAtestado.textContent = visibles;
+
+            ayudaTipoAtestado.textContent = mostrarTodos
+                ? 'Selecciona un tipo de formación para filtrar los tipos de atestado.'
+                : 'Mostrando únicamente los tipos de atestado relacionados.';
+        }
+
+        checksTipoFormacion.forEach(function (check) {
+            check.addEventListener('change', filtrarTiposAtestado);
+        });
+
+        filtrarTiposAtestado();
+    }
+
 });
 </script>
 @endpush

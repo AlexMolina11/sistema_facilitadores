@@ -33,6 +33,8 @@ class BuscarConsultoresRequest extends FormRequest
             'idiomas' => ['nullable', 'array'],'idiomas.*' => ['nullable','integer','exists:tbl_idioma_nivel,id_idioma_nivel'],
             
             'nivel_academico' => ['nullable', 'array'],'nivel_academico.*' => ['integer','exists:tbl_nivel_academico,id_nivel_academico'],
+            'tipo_formacion' => ['nullable', 'array'],'tipo_formacion.*' => ['integer', 'exists:tbl_tipo_formacion,id_tipo_formacion'],
+            'educacion_pais' => ['nullable', 'integer','exists:tbl_pais,id_pais'], 'educacion_institucion' => ['nullable', 'string', 'max:150'],
             'tipo_atestado' => ['nullable', 'array'],'tipo_atestado.*' => ['integer','exists:tbl_tipo_atestado,id_tipo_atestado'],
 
             'cargo' => ['nullable', 'string', 'max:120'],
