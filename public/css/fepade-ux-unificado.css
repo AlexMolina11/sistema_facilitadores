@@ -4,16 +4,16 @@
    ========================================================== */
 
 :root {
-    --fepade-navy: #0f1b2d;
-    --fepade-navy-soft: #17263d;
-    --fepade-green: #779123;
-    --fepade-green-dark: #385506;
-    --fepade-green-soft: #eef5d7;
-    --fepade-border: #d8dee4;
-    --fepade-muted: #64748b;
-    --fepade-bg-soft: #f8fafc;
-    --fepade-danger-soft: #fde8e8;
-    --fepade-warning-soft: #fff4db;
+    --fepade-navy: var(--navy);
+    --fepade-navy-soft: var(--navy2);
+    --fepade-accent: var(--accent);
+    --fepade-accent-hover: var(--accent-hover);
+    --fepade-blue: var(--blue);
+    --fepade-border: var(--border);
+    --fepade-muted: var(--muted);
+    --fepade-bg-soft: var(--surface);
+    --fepade-danger: var(--danger);
+    --fepade-warning: var(--warning);
 }
 
 /* Tarjetas homogéneas */
@@ -54,7 +54,7 @@
 
 .form-control:focus,
 .form-select:focus {
-    border-color: var(--fepade-green);
+    border-color: var(--fepade-accent);
     box-shadow: 0 0 0 .2rem rgba(119, 145, 35, .14);
 }
 
@@ -78,16 +78,16 @@
 }
 
 .btn-success {
-    background-color: var(--fepade-green);
-    border-color: var(--fepade-green);
+    background-color: var(--fepade-accent);
+    border-color: var(--fepade-accent);
     color: #ffffff;
     border-radius: .8rem;
     font-weight: 600;
 }
 
 .btn-success:hover {
-    background-color: var(--fepade-green-dark);
-    border-color: var(--fepade-green-dark);
+    background-color: var(--fepade-accent-hover);
+    border-color: var(--fepade-accent-hover);
 }
 
 .btn-outline-primary,
@@ -167,7 +167,7 @@
 
 .badge-module-soft {
     background-color: #eef5d7;
-    color: var(--fepade-green-dark);
+    color: var(--fepade-accent-hover);
     border: 1px solid #d9e7a8;
 }
 
