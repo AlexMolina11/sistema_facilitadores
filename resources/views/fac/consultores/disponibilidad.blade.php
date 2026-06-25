@@ -18,11 +18,19 @@
     <div class="perfil-panel mb-4">
         <div class="habilidad-panel">
             <h4>Disponibilidad</h4>
-            <p class="text-muted">Selecciona las opciones aplicables.</p>
+            <p class="text-muted">Selecciona una única situación de disponibilidad.</p>
             <div class="habilidad-grid">
                 @foreach($catalogos['tiposDisponibilidad'] as $tipo)
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="disponibilidades[]" value="{{ $tipo->id_tipo_disponibilidad }}" id="disp_{{ $tipo->id_tipo_disponibilidad }}" {{ $consultor->disponibilidades->contains('id_tipo_disponibilidad', $tipo->id_tipo_disponibilidad) ? 'checked' : '' }}>
+                        <input 
+                            class="form-check-input" 
+                            type="radio" 
+                            name="id_tipo_disponibilidad" 
+                            value="{{ $tipo->id_tipo_disponibilidad }}" 
+                            id="disp_{{ $tipo->id_tipo_disponibilidad }}" 
+                            {{ $consultor->disponibilidades->contains('id_tipo_disponibilidad', $tipo->id_tipo_disponibilidad) ? 'checked' : '' }}
+                            required
+                        >
                         <label class="form-check-label" for="disp_{{ $tipo->id_tipo_disponibilidad }}">{{ $tipo->nombre }}</label>
                     </div>
                 @endforeach

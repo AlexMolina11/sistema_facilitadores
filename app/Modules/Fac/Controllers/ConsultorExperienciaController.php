@@ -549,20 +549,18 @@ class ConsultorExperienciaController extends Controller
 
     public function continuarDisponibilidad(Request $request, Consultor $consultor)
     {
-        $request->validate([
-            'disponibilidades' => ['nullable', 'array'],
-            'disponibilidades.*' => ['integer', 'exists:tbl_tipo_disponibilidad,id_tipo_disponibilidad'],
+        $data = $request->validate([
+            'id_tipo_disponibilidad' => [
+                'required',
+                'integer',
+                'exists:tbl_tipo_disponibilidad,id_tipo_disponibilidad',
+            ],
+        ], [
+            'id_tipo_disponibilidad.required' => 'Debes seleccionar una situación de disponibilidad.',
         ]);
 
-        $idsSeleccionados = collect($request->input('disponibilidades', []))
-            ->map(fn ($id) => (int) $id)
-            ->filter()
-            ->unique()
-            ->values();
-
-        DB::transaction(function () use ($consultor, $idsSeleccionados) {
+        DB::transaction(function () use ($consultor, $data) {
             ConsultorDisponibilidad::where('id_consultor', $consultor->id_consultor)
-                ->whereNotIn('id_tipo_disponibilidad', $idsSeleccionados->all())
                 ->whereNull('deleted_at')
                 ->get()
                 ->each(function ($disponibilidad) {
@@ -574,25 +572,23 @@ class ConsultorExperienciaController extends Controller
                     $disponibilidad->delete();
                 });
 
-            foreach ($idsSeleccionados as $idTipoDisponibilidad) {
-                ConsultorDisponibilidad::withTrashed()->updateOrCreate(
-                    [
-                        'id_consultor' => $consultor->id_consultor,
-                        'id_tipo_disponibilidad' => $idTipoDisponibilidad,
-                    ],
-                    [
-                        'activo' => true,
-                        'deleted_at' => null,
-                        'usuario_crea' => auth()->id(),
-                        'usuario_mod' => auth()->id(),
-                        'usuario_elim' => null,
-                    ]
-                );
-            }
+            ConsultorDisponibilidad::withTrashed()->updateOrCreate(
+                [
+                    'id_consultor' => $consultor->id_consultor,
+                    'id_tipo_disponibilidad' => $data['id_tipo_disponibilidad'],
+                ],
+                [
+                    'activo' => true,
+                    'deleted_at' => null,
+                    'usuario_crea' => auth()->id(),
+                    'usuario_mod' => auth()->id(),
+                    'usuario_elim' => null,
+                ]
+            );
         });
 
         return redirect()
-            ->route('fac.consultores.disponibilidad.edit', $consultor)
+            ->route('fac.consultores.show', $consultor)
             ->with('success', 'Disponibilidad actualizada correctamente.');
     }
 

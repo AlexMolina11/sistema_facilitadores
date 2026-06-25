@@ -21,6 +21,7 @@ class ConsultorIdioma extends Model
         'usuario_crea',
         'usuario_mod',
         'usuario_elim',
+        'deleted_at',
     ];
 
     protected $casts = [
