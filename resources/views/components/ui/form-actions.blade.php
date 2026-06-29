@@ -4,7 +4,7 @@
     'backText' => 'Volver',
 ])
 
-<div {{ $attributes->merge(['class' => 'd-flex justify-content-end gap-2 mt-4']) }}>
+<div {{ $attributes->merge(['class' => 'fepade-form-actions']) }}>
     @if($backUrl)
         <a href="{{ $backUrl }}" class="btn btn-outline-secondary">
             {{ $backText }}

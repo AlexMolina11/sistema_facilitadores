@@ -8,7 +8,7 @@
 
 <div {{ $attributes->merge(['class' => 'fepade-card']) }}>
     @if($title || $subtitle || isset($actions))
-        <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="fepade-card-header">
             <div>
                 @if($title)
                     <h5 class="mb-1">{{ $title }}</h5>
@@ -39,12 +39,12 @@
             :message="$emptyMessage"
         />
     @else
-        <div class="table-responsive">
+        <div class="table-responsive fepade-table-wrapper">
             {{ $slot }}
         </div>
 
         @if($items && method_exists($items, 'links') && $items->hasPages())
-            <div class="mt-4 pagination-wrapper">
+            <div class="pagination-wrapper">
                 {{ $items->links('pagination::bootstrap-5') }}
             </div>
         @endif

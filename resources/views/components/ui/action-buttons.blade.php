@@ -5,15 +5,15 @@
     'deleteMessage' => '¿Seguro que deseas eliminar este registro?',
 ])
 
-<div {{ $attributes->merge(['class' => 'd-flex justify-content-end gap-1']) }}>
+<div {{ $attributes->merge(['class' => 'fepade-actions']) }}>
     @if($showUrl)
-        <a href="{{ $showUrl }}" class="btn btn-sm btn-outline-primary">
+        <a href="{{ $showUrl }}" class="btn btn-sm btn-outline-primary" title="Ver">
             <i class="fa-solid fa-eye"></i>
         </a>
     @endif
 
     @if($editUrl)
-        <a href="{{ $editUrl }}" class="btn btn-sm btn-outline-warning">
+        <a href="{{ $editUrl }}" class="btn btn-sm btn-outline-warning" title="Editar">
             <i class="fa-solid fa-pen-to-square"></i>
         </a>
     @endif
@@ -23,7 +23,7 @@
             @csrf
             @method('DELETE')
 
-            <button type="submit" class="btn btn-sm btn-outline-danger">
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
                 <i class="fa-solid fa-trash"></i>
             </button>
         </form>

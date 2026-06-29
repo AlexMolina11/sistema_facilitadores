@@ -217,3 +217,64 @@ code.fepade-code,
         justify-content: center;
     }
 }
+
+/* ==========================================================
+   PAGE CARD / TABLE CARD
+========================================================== */
+
+.fepade-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.fepade-table-wrapper {
+    overflow-x: auto;
+}
+
+/* ==========================================================
+   FORM ACTIONS
+========================================================== */
+
+.fepade-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .75rem;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .fepade-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .fepade-form-actions .btn {
+        width: 100%;
+    }
+}
+
+/* ==========================================================
+   ACTION BUTTONS
+========================================================== */
+
+.fepade-actions {
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: .35rem;
+    flex-wrap: wrap;
+}
+
+.fepade-actions .btn {
+    min-width: 34px;
+}
+
+/* ==========================================================
+   PAGINATION
+========================================================== */
+
+.pagination-wrapper {
+    margin-top: 1.5rem;
+}

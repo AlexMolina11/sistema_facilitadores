@@ -6,7 +6,7 @@
 
 <div {{ $attributes->merge(['class' => 'fepade-card ' . $class]) }}>
     @if($title || $subtitle || isset($actions))
-        <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="fepade-card-header">
             <div>
                 @if($title)
                     <h5 class="mb-1">{{ $title }}</h5>
