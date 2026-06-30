@@ -278,3 +278,198 @@ code.fepade-code,
 .pagination-wrapper {
     margin-top: 1.5rem;
 }
+
+/* ==========================================================
+   FEPADE WIZARD PROGRESS
+========================================================== */
+
+.fepade-wizard {
+    background: #ffffff;
+    border: 1px solid var(--fepade-border);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    box-shadow: 0 10px 24px rgba(15, 27, 45, 0.06);
+}
+
+.fepade-wizard-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.fepade-wizard-title {
+    margin: 0;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+}
+
+.fepade-wizard-description {
+    margin: .35rem 0 0;
+    color: var(--muted);
+    font-size: .9rem;
+}
+
+.fepade-wizard-completion {
+    text-align: right;
+    min-width: 110px;
+}
+
+.fepade-wizard-completion strong {
+    display: block;
+    color: var(--fepade-navy);
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.fepade-wizard-completion span {
+    color: var(--muted);
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.fepade-wizard-progress-wrap {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--fepade-bg-soft);
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.fepade-wizard-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--fepade-accent);
+}
+
+.fepade-wizard-missing {
+    background: #fbfcf7;
+    border: 1px solid #d9e7a8;
+    color: #385506;
+    border-radius: .9rem;
+    padding: .75rem 1rem;
+    font-size: .9rem;
+    margin-bottom: 1rem;
+}
+
+.fepade-wizard-missing strong {
+    margin-right: .35rem;
+}
+
+.fepade-wizard-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: .75rem;
+}
+
+.fepade-wizard-step {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .85rem .9rem;
+    border-radius: .95rem;
+    border: 1px solid var(--fepade-border);
+    background: var(--fepade-bg-soft);
+    color: var(--text);
+    text-decoration: none;
+    transition: .15s ease;
+}
+
+.fepade-wizard-step:hover {
+    color: var(--text);
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(15, 27, 45, .06);
+    transform: translateY(-1px);
+}
+
+.fepade-wizard-step.active {
+    background: #ffffff;
+    border-color: var(--fepade-accent);
+    box-shadow: 0 10px 22px rgba(15, 27, 45, .08);
+}
+
+.fepade-wizard-step.completed {
+    background: #f4f9eb;
+    border-color: #cfe7a6;
+}
+
+.fepade-wizard-step-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid var(--fepade-border);
+    color: var(--fepade-navy);
+    flex: 0 0 34px;
+}
+
+.fepade-wizard-step.active .fepade-wizard-step-icon {
+    background: var(--fepade-navy);
+    color: #ffffff;
+    border-color: var(--fepade-navy);
+}
+
+.fepade-wizard-step.completed .fepade-wizard-step-icon {
+    background: var(--fepade-accent);
+    color: #ffffff;
+    border-color: var(--fepade-accent);
+}
+
+.fepade-wizard-step-text {
+    font-weight: 700;
+    font-size: .9rem;
+}
+
+@media (max-width: 767.98px) {
+    .fepade-wizard-hero {
+        flex-direction: column;
+    }
+
+    .fepade-wizard-completion {
+        text-align: left;
+    }
+
+    .fepade-wizard-steps {
+        grid-template-columns: 1fr;
+    }
+}
+
+.fepade-wizard-criteria {
+    background: #ffffff;
+    border: 1px solid var(--fepade-border);
+    border-radius: 1rem;
+    padding: 1rem;
+}
+
+.fepade-wizard-criteria-item {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .88rem;
+}
+
+.fepade-wizard-criteria-item.completed {
+    color: #385506;
+}
+
+.fepade-wizard-criteria-item.pending {
+    color: var(--fepade-muted);
+}
+
+.fepade-wizard-complete-message {
+    background: #f4f9eb;
+    border: 1px solid #cfe7a6;
+    color: #385506;
+    border-radius: .9rem;
+    padding: .75rem 1rem;
+    font-size: .9rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
