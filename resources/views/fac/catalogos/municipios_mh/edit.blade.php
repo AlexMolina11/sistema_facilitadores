@@ -5,17 +5,18 @@
 @section('page-subtitle', 'Actualizar información del catálogo de municipios MH')
 
 @section('content')
+
 <x-ui.page-header
     title="Editar municipio MH"
     subtitle="Actualiza los datos del municipio seleccionado."
 />
 
-<div class="fepade-card">
+<x-ui.page-card title="Datos del municipio MH" subtitle="Modifica el departamento, nombre, código MH o estado.">
     <form method="POST" action="{{ route('fac.catalogos.municipios_mh.update', $municipio->id_municipio_mh) }}">
         @csrf
         @method('PUT')
-        <div class="row g-4">
 
+        <div class="row g-4">
             <div class="col-md-5">
                 <label class="form-label">Departamento <span class="text-danger">*</span></label>
                 <select
@@ -24,12 +25,15 @@
                 >
                     <option value="">— Seleccione —</option>
                     @foreach($departamentos as $departamento)
-                        <option value="{{ $departamento->id_departamento }}"
-                            {{ old('id_departamento', $municipio->id_departamento) == $departamento->id_departamento ? 'selected' : '' }}>
+                        <option value="{{ $departamento->id_departamento }}" @selected(old('id_departamento', $municipio->id_departamento) == $departamento->id_departamento)>
                             {{ $departamento->nombre_departamento }}
+                            @if($departamento->pais)
+                                — {{ $departamento->pais->nombre_pais }}
+                            @endif
                         </option>
                     @endforeach
                 </select>
+
                 @error('id_departamento')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -44,6 +48,7 @@
                     class="form-control @error('municipio_mh_nombre') is-invalid @enderror"
                     placeholder="Ej: San Salvador"
                 >
+
                 @error('municipio_mh_nombre')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -73,23 +78,19 @@
                     class="form-control @error('mh_codigo_municipio') is-invalid @enderror"
                     placeholder="Ej: 0601"
                 >
+
                 @error('mh_codigo_municipio')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-
         </div>
 
-        <hr class="my-4">
-
-        <div class="d-flex justify-content-end gap-2">
-            <a href="{{ route('fac.catalogos.municipios_mh.index') }}" class="btn btn-outline-secondary">
-                Cancelar
-            </a>
-            <button type="submit" class="btn btn-fepade">
-                Actualizar municipio
-            </button>
-        </div>
+        <x-ui.form-actions
+            :backUrl="route('fac.catalogos.municipios_mh.index')"
+            submitText="Actualizar municipio"
+            backText="Cancelar"
+        />
     </form>
-</div>
+</x-ui.page-card>
+
 @endsection

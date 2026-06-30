@@ -5,16 +5,17 @@
 @section('page-subtitle', 'Registrar un nuevo departamento en el sistema')
 
 @section('content')
+
 <x-ui.page-header
     title="Nuevo departamento"
     subtitle="Completa la información del departamento."
 />
 
-<div class="fepade-card">
+<x-ui.page-card title="Datos del departamento" subtitle="Registra el país, nombre, código y estado del departamento.">
     <form method="POST" action="{{ route('fac.catalogos.departamentos.store') }}">
         @csrf
-        <div class="row g-4">
 
+        <div class="row g-4">
             <div class="col-md-4">
                 <label class="form-label">País <span class="text-danger">*</span></label>
                 <select
@@ -23,12 +24,12 @@
                 >
                     <option value="">— Seleccione —</option>
                     @foreach($paises as $pais)
-                        <option value="{{ $pais->id_pais }}"
-                            {{ old('id_pais') == $pais->id_pais ? 'selected' : '' }}>
+                        <option value="{{ $pais->id_pais }}" @selected(old('id_pais') == $pais->id_pais)>
                             {{ $pais->nombre_pais }}
                         </option>
                     @endforeach
                 </select>
+
                 @error('id_pais')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -43,6 +44,7 @@
                     class="form-control @error('nombre_departamento') is-invalid @enderror"
                     placeholder="Ej: San Salvador"
                 >
+
                 @error('nombre_departamento')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -72,6 +74,7 @@
                     class="form-control @error('mh_codigo_depto') is-invalid @enderror"
                     placeholder="Ej: 06"
                 >
+
                 @error('mh_codigo_depto')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -86,23 +89,19 @@
                     class="form-control @error('georeferencia') is-invalid @enderror"
                     placeholder="Ej: 13.6929,-89.2182"
                 >
+
                 @error('georeferencia')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-
         </div>
 
-        <hr class="my-4">
-
-        <div class="d-flex justify-content-end gap-2">
-            <a href="{{ route('fac.catalogos.departamentos.index') }}" class="btn btn-outline-secondary">
-                Cancelar
-            </a>
-            <button type="submit" class="btn btn-fepade">
-                Guardar departamento
-            </button>
-        </div>
+        <x-ui.form-actions
+            :backUrl="route('fac.catalogos.departamentos.index')"
+            submitText="Guardar departamento"
+            backText="Cancelar"
+        />
     </form>
-</div>
+</x-ui.page-card>
+
 @endsection
