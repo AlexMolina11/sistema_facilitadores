@@ -5,8 +5,8 @@ namespace App\Modules\Seg\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Seg\Models\BitacoraAcceso;
 use App\Modules\Seg\Models\Usuario;
-use App\Modules\Seg\Services\BitacoraAccesoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class BitacoraAccesoController extends Controller
@@ -15,19 +15,23 @@ class BitacoraAccesoController extends Controller
     {
         $bitacoras = BitacoraAcceso::with('usuario')
             ->when($request->filled('tipo'), function ($q) use ($request) {
-                $q->where('evento', 'like', $request->tipo . ':%');
+                $q->where('evento', 'like', trim($request->tipo) . ':%');
             })
-            ->when($request->filled('evento'), fn ($q) => $q->where('evento', $request->evento))
+            ->when($request->filled('evento'), function ($q) use ($request) {
+                $q->whereRaw('TRIM(evento) = ?', [trim($request->evento)]);
+            })
             ->when($request->filled('id_usuario'), fn ($q) => $q->where('id_usuario', $request->integer('id_usuario')))
-            ->when($request->filled('ip'), fn ($q) => $q->where('ip', 'like', "%{$request->ip}%"))
+            ->when($request->filled('ip'), fn ($q) => $q->where('ip', 'like', '%' . trim($request->ip) . '%'))
             ->when($request->filled('q'), fn ($q) => $q->where(function ($sub) use ($request) {
-                $sub->where('evento', 'like', "%{$request->q}%")
-                    ->orWhere('ip', 'like', "%{$request->q}%")
-                    ->orWhere('user_agent', 'like', "%{$request->q}%")
-                    ->orWhereHas('usuario', function ($usuarioQuery) use ($request) {
-                        $usuarioQuery->where('nombres', 'like', "%{$request->q}%")
-                            ->orWhere('apellidos', 'like', "%{$request->q}%")
-                            ->orWhere('email', 'like', "%{$request->q}%");
+                $buscar = trim($request->q);
+
+                $sub->where('evento', 'like', "%{$buscar}%")
+                    ->orWhere('ip', 'like', "%{$buscar}%")
+                    ->orWhere('user_agent', 'like', "%{$buscar}%")
+                    ->orWhereHas('usuario', function ($usuarioQuery) use ($buscar) {
+                        $usuarioQuery->where('nombres', 'like', "%{$buscar}%")
+                            ->orWhere('apellidos', 'like', "%{$buscar}%")
+                            ->orWhere('email', 'like', "%{$buscar}%");
                     });
             }))
             ->when($request->filled('desde'), fn ($q) => $q->whereDate('fecha_evento', '>=', $request->desde))
@@ -36,16 +40,15 @@ class BitacoraAccesoController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $eventos = collect(BitacoraAccesoService::eventosBase())
-            ->merge(BitacoraAcceso::query()->select('evento')->distinct()->pluck('evento'))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
+        $eventos = BitacoraAcceso::query()
+            ->whereNotNull('evento')
+            ->selectRaw('TRIM(evento) as evento')
+            ->distinct()
+            ->orderBy('evento')
+            ->pluck('evento');
 
         $tipos = $eventos
-            ->map(fn ($evento) => str_contains($evento, ':') ? trim(str($evento)->before(':')->toString()) : null)
-            ->filter()
+            ->map(fn ($evento) => str_contains($evento, ':') ? trim(Str::before($evento, ':')) : 'General')
             ->unique()
             ->sort()
             ->values();

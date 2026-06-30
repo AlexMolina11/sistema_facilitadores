@@ -8,10 +8,10 @@
 
 <x-ui.page-header
     title="Bitácora"
-    subtitle="Consulta de inicios de sesión, usuarios, roles, permisos y acciones críticas."
+    subtitle="Consulta de accesos, usuarios, roles, permisos y acciones críticas del sistema."
 />
 
-<div class="fepade-card mb-4">
+<x-ui.page-card class="mb-4">
     <form method="GET" action="{{ route('seg.bitacora.index') }}" class="row g-3 align-items-end">
         <div class="col-lg-3 col-md-6">
             <label class="form-label">Búsqueda general</label>
@@ -56,7 +56,11 @@
                     @php
                         $nombreUsuario = trim(($usuario->nombres ?? '') . ' ' . ($usuario->apellidos ?? '')) ?: $usuario->email;
                     @endphp
-                    <option value="{{ $usuario->id_usuario }}" @selected((string) request('id_usuario') === (string) $usuario->id_usuario)>
+
+                    <option
+                        value="{{ $usuario->id_usuario }}"
+                        @selected((string) request('id_usuario') === (string) $usuario->id_usuario)
+                    >
                         {{ $nombreUsuario }}
                     </option>
                 @endforeach
@@ -65,105 +69,133 @@
 
         <div class="col-lg-2 col-md-6">
             <label class="form-label">IP</label>
-            <input type="text" name="ip" value="{{ request('ip') }}" class="form-control" placeholder="127.0.0.1">
+            <input
+                type="text"
+                name="ip"
+                value="{{ request('ip') }}"
+                class="form-control"
+                placeholder="127.0.0.1"
+            >
         </div>
 
         <div class="col-lg-2 col-md-6">
             <label class="form-label">Desde</label>
-            <input type="date" name="desde" value="{{ request('desde') }}" class="form-control">
+            <input
+                type="date"
+                name="desde"
+                value="{{ request('desde') }}"
+                class="form-control"
+            >
         </div>
 
         <div class="col-lg-2 col-md-6">
             <label class="form-label">Hasta</label>
-            <input type="date" name="hasta" value="{{ request('hasta') }}" class="form-control">
+            <input
+                type="date"
+                name="hasta"
+                value="{{ request('hasta') }}"
+                class="form-control"
+            >
         </div>
 
         <div class="col-lg-3 col-md-6 fepade-filter-actions">
-            <button class="btn btn-navy w-100">Filtrar</button>
-            <a href="{{ route('seg.bitacora.index') }}" class="btn btn-outline-secondary w-100">Limpiar</a>
+            <button class="btn btn-navy w-100">
+                <i class="fa-solid fa-filter me-1"></i>
+                Filtrar
+            </button>
+
+            <a href="{{ route('seg.bitacora.index') }}" class="btn btn-outline-secondary w-100">
+                Limpiar
+            </a>
         </div>
     </form>
-</div>
+</x-ui.page-card>
 
-<div class="fepade-card">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h5 class="mb-0">Eventos registrados</h5>
-            <div class="text-muted small">
-                {{ $bitacoras->total() }} registro(s) encontrado(s)
-            </div>
-        </div>
-    </div>
+<x-ui.table-card
+    title="Eventos registrados"
+    subtitle="{{ $bitacoras->total() }} registro(s) encontrado(s)"
+    :items="$bitacoras"
+    empty-title="No hay registros de bitácora."
+    empty-message="Todavía no se han registrado eventos con los criterios seleccionados."
+>
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Fecha y hora</th>
+                <th>Usuario</th>
+                <th>Tipo</th>
+                <th>Evento</th>
+                <th>IP</th>
+                <th>Navegador</th>
+            </tr>
+        </thead>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead>
+        <tbody>
+            @foreach($bitacoras as $bitacora)
+                @php
+                    $tipoEvento = str_contains($bitacora->evento, ':')
+                        ? trim(Str::before($bitacora->evento, ':'))
+                        : 'General';
+                @endphp
+
                 <tr>
-                    <th>Fecha y hora</th>
-                    <th>Usuario</th>
-                    <th>Tipo</th>
-                    <th>Evento</th>
-                    <th>IP</th>
-                    <th>Navegador</th>
-                </tr>
-            </thead>
+                    <td class="text-nowrap">
+                        <div class="fw-semibold">
+                            {{ optional($bitacora->fecha_evento)->format('d/m/Y') }}
+                        </div>
+                        <div class="text-muted small">
+                            {{ optional($bitacora->fecha_evento)->format('h:i A') }}
+                        </div>
+                    </td>
 
-            <tbody>
-                @forelse($bitacoras as $bitacora)
-                    @php
-                        $tipoEvento = str_contains($bitacora->evento, ':')
-                            ? trim(Str::before($bitacora->evento, ':'))
-                            : 'General';
-                    @endphp
-                    <tr>
-                        <td class="text-nowrap">
-                            <div class="fw-semibold">{{ optional($bitacora->fecha_evento)->format('d/m/Y') }}</div>
-                            <div class="text-muted small">{{ optional($bitacora->fecha_evento)->format('h:i A') }}</div>
-                        </td>
+                    <td>
+                        @if($bitacora->usuario)
+                            <div class="fw-semibold">
+                                {{ trim(($bitacora->usuario->nombres ?? '') . ' ' . ($bitacora->usuario->apellidos ?? '')) ?: 'Usuario registrado' }}
+                            </div>
+                            <div class="text-muted small">
+                                {{ $bitacora->usuario->email }}
+                            </div>
+                        @else
+                            <span class="badge badge-muted-soft">
+                                Sin usuario
+                            </span>
+                        @endif
+                    </td>
 
-                        <td>
-                            @if($bitacora->usuario)
-                                <div class="fw-semibold">
-                                    {{ trim(($bitacora->usuario->nombres ?? '') . ' ' . ($bitacora->usuario->apellidos ?? '')) ?: 'Usuario registrado' }}
-                                </div>
-                                <div class="text-muted small">{{ $bitacora->usuario->email }}</div>
-                            @else
-                                <span class="badge badge-muted-soft">Sin usuario</span>
-                            @endif
-                        </td>
-
-                        <td>
+                    <td>
+                        @if($tipoEvento === 'Seguridad')
                             <span class="badge badge-primary-soft">{{ $tipoEvento }}</span>
-                        </td>
+                        @elseif($tipoEvento === 'Usuarios')
+                            <span class="badge badge-module-soft">{{ $tipoEvento }}</span>
+                        @elseif($tipoEvento === 'Roles')
+                            <span class="badge badge-success-soft">{{ $tipoEvento }}</span>
+                        @elseif($tipoEvento === 'Permisos')
+                            <span class="badge badge-warning-soft">{{ $tipoEvento }}</span>
+                        @else
+                            <span class="badge badge-muted-soft">{{ $tipoEvento }}</span>
+                        @endif
+                    </td>
 
-                        <td>
-                            <span class="fw-semibold">{{ $bitacora->evento }}</span>
-                        </td>
+                    <td>
+                        <div class="fw-semibold">
+                            {{ $bitacora->evento }}
+                        </div>
+                    </td>
 
-                        <td>
-                            <span class="fepade-code">{{ $bitacora->ip ?? 'No registrada' }}</span>
-                        </td>
+                    <td>
+                        <code class="fepade-code">
+                            {{ $bitacora->ip ?? 'No registrada' }}
+                        </code>
+                    </td>
 
-                        <td class="small text-muted">
-                            {{ Str::limit($bitacora->user_agent, 90) }}
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            No hay registros de bitácora.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    @if($bitacoras->hasPages())
-        <div class="mt-4 pagination-wrapper">
-            {{ $bitacoras->links('pagination::bootstrap-5') }}
-        </div>
-    @endif
-</div>
+                    <td class="small text-muted">
+                        {{ Str::limit($bitacora->user_agent, 90) }}
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</x-ui.table-card>
 
 @endsection

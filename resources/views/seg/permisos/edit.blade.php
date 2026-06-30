@@ -6,21 +6,24 @@
 
 @section('content')
 
-<x-ui.page-header title="Editar permiso" subtitle="Actualiza los datos del permiso seleccionado." />
+<x-ui.page-header
+    title="Editar permiso"
+    subtitle="Actualiza el código, nombre, módulo y estado del permiso seleccionado."
+/>
 
 <form method="POST" action="{{ route('seg.permisos.update', $permiso) }}">
     @csrf
     @method('PUT')
 
-    <div class="fepade-card">
-        <div>
-            @include('seg.permisos.partials.form')
-        </div>
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <a href="{{ route('seg.permisos.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-            <button class="btn btn-navy">Actualizar</button>
-        </div>
-    </div>
+    <x-ui.page-card>
+        @include('seg.permisos.partials.form')
+
+        <x-ui.form-actions
+            :back-url="route('seg.permisos.index')"
+            back-text="Cancelar"
+            submit-text="Actualizar permiso"
+        />
+    </x-ui.page-card>
 </form>
 
 @endsection

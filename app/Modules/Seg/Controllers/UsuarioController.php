@@ -30,11 +30,20 @@ class UsuarioController extends Controller
                 });
             })
             ->when($request->filled('activo'), fn ($q) => $q->where('activo', $request->boolean('activo')))
+            ->when($request->filled('id_rol'), function ($q) use ($request) {
+                $q->whereHas('roles', function ($rolQuery) use ($request) {
+                    $rolQuery->where('seg_roles.id_rol', $request->integer('id_rol'));
+                });
+            })
             ->latest('id_usuario')
             ->paginate(15)
             ->withQueryString();
 
-        return view('seg.usuarios.index', compact('usuarios'));
+        $rolesFiltro = Rol::where('activo', true)
+            ->orderBy('nombre')
+            ->get(['id_rol', 'nombre']);
+
+        return view('seg.usuarios.index', compact('usuarios', 'rolesFiltro'));
     }
 
     public function create(): View
