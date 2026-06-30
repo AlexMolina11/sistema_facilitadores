@@ -1856,3 +1856,403 @@ body {
         position: static;
     }
 }
+
+/* ==========================================================
+   EXPEDIENTE CONSULTOR 2.0 - UX FEPADE
+========================================================== */
+
+.expediente-ux {
+    gap: 1.25rem;
+}
+
+.expediente-ux-hero {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at top right, rgba(0,200,150,.24), transparent 34%),
+                linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+    color: #ffffff;
+    border-radius: 28px;
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    align-items: center;
+    box-shadow: 0 22px 55px rgba(13, 27, 42, .20);
+}
+
+.expediente-ux-hero::after {
+    content: "";
+    position: absolute;
+    right: -90px;
+    bottom: -120px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+}
+
+.expediente-ux-hero-content,
+.expediente-ux-hero-side {
+    position: relative;
+    z-index: 1;
+}
+
+.expediente-ux-hero-content {
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+    min-width: 0;
+}
+
+.expediente-ux-avatar {
+    width: 112px;
+    height: 112px;
+    border-radius: 28px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex: 0 0 112px;
+    box-shadow: 0 16px 32px rgba(0,0,0,.16);
+}
+
+.expediente-ux-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.expediente-ux-avatar span {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.15rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.expediente-ux-kicker {
+    color: rgba(255,255,255,.66);
+    font-size: .78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .25rem;
+}
+
+.expediente-ux-kicker.dark {
+    color: var(--muted);
+}
+
+.expediente-ux-identity h2 {
+    margin: 0 0 .45rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 3vw, 2.5rem);
+}
+
+.expediente-ux-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    color: rgba(255,255,255,.76);
+    font-size: .92rem;
+}
+
+.expediente-ux-meta span:not(:last-child)::after {
+    content: "•";
+    margin-left: .45rem;
+    color: rgba(255,255,255,.38);
+}
+
+.expediente-ux-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .9rem;
+}
+
+.expediente-ux-badge {
+    border-radius: 999px;
+    padding: .42rem .78rem;
+    font-size: .78rem;
+    font-weight: 800;
+    background: rgba(255,255,255,.12);
+    color: #ffffff;
+}
+
+.expediente-ux-badge.success {
+    background: rgba(0,200,150,.20);
+    color: #a9ffe6;
+}
+
+.expediente-ux-badge.warning {
+    background: rgba(239,159,39,.20);
+    color: #ffd28c;
+}
+
+.expediente-ux-badge.danger {
+    background: rgba(226,75,74,.20);
+    color: #ffb4b4;
+}
+
+.expediente-ux-hero-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.expediente-ux-progress-ring {
+    width: 132px;
+    height: 132px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) calc(var(--progress, 0) * 1%), rgba(255,255,255,.14) 0);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,.14);
+    box-shadow: inset 0 0 0 10px rgba(13,27,42,.30);
+}
+
+.expediente-ux-progress-ring strong {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.expediente-ux-progress-ring span {
+    color: rgba(255,255,255,.68);
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.expediente-ux-hero-actions {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.expediente-ux-snapshot {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.expediente-ux-stat {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1rem;
+    box-shadow: 0 10px 24px rgba(13,27,42,.045);
+}
+
+.expediente-ux-stat.primary {
+    background: #f4f9eb;
+    border-color: #cfe7a6;
+}
+
+.expediente-ux-stat span,
+.expediente-ux-stat small {
+    display: block;
+    color: var(--muted);
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.expediente-ux-stat strong {
+    display: block;
+    margin: .25rem 0;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.expediente-ux-summary-panel {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 1.35rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 1.25rem;
+    box-shadow: 0 10px 28px rgba(13,27,42,.045);
+}
+
+.expediente-ux-summary-panel h3 {
+    margin: 0 0 .45rem;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+}
+
+.expediente-ux-summary-panel p {
+    color: var(--muted);
+    margin: 0;
+    font-size: .98rem;
+    line-height: 1.6;
+}
+
+.expediente-ux-summary-contact {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.expediente-ux-summary-contact div {
+    background: var(--surface);
+    border: 1px solid var(--surface2);
+    border-radius: 14px;
+    padding: .8rem;
+}
+
+.expediente-ux-summary-contact span {
+    display: block;
+    color: var(--muted);
+    font-size: .75rem;
+    font-weight: 700;
+    margin-bottom: .25rem;
+}
+
+.expediente-ux-summary-contact strong {
+    display: block;
+    color: var(--text);
+    word-break: break-word;
+}
+
+.expediente-ux-panel .expediente-panel-header > div:first-child {
+    position: relative;
+    padding-left: 3.15rem;
+}
+
+.expediente-ux-section-icon {
+    position: absolute;
+    left: 0;
+    top: .1rem;
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,200,150,.12);
+    color: #007a5a;
+}
+
+.expediente-ux-timeline {
+    position: relative;
+}
+
+.expediente-ux-timeline .expediente-timeline-card {
+    position: relative;
+    border-left: 0;
+    padding-left: 1.25rem;
+}
+
+.expediente-ux-timeline .expediente-timeline-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 1.25rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 5px rgba(0,200,150,.12);
+}
+
+.expediente-ux-side-summary {
+    background: #fbfcf7;
+    border-color: #d9e7a8;
+}
+
+.expediente-ux-side-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .72rem 0;
+    border-bottom: 1px solid rgba(13,27,42,.08);
+}
+
+.expediente-ux-side-metric:last-child {
+    border-bottom: 0;
+}
+
+.expediente-ux-side-metric span {
+    color: var(--muted);
+    font-size: .88rem;
+    font-weight: 700;
+}
+
+.expediente-ux-side-metric strong {
+    color: var(--navy);
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+}
+
+.expediente-ux-doc-card,
+.expediente-ux-reference-card,
+.expediente-ux-language,
+.expediente-ux-area-block {
+    transition: .15s ease;
+}
+
+.expediente-ux-doc-card:hover,
+.expediente-ux-reference-card:hover,
+.expediente-ux-language:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(13,27,42,.06);
+}
+
+@media (max-width: 1199px) {
+    .expediente-ux-snapshot {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .expediente-ux-summary-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .expediente-ux-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.35rem;
+        border-radius: 22px;
+    }
+
+    .expediente-ux-hero-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .expediente-ux-avatar {
+        width: 88px;
+        height: 88px;
+        flex-basis: 88px;
+        border-radius: 22px;
+    }
+
+    .expediente-ux-hero-side {
+        width: 100%;
+        align-items: flex-start;
+    }
+
+    .expediente-ux-snapshot {
+        grid-template-columns: 1fr;
+    }
+
+    .expediente-ux-summary-contact {
+        width: 100%;
+    }
+
+    .expediente-ux-panel .expediente-panel-header > div:first-child {
+        padding-left: 0;
+        padding-top: 3rem;
+    }
+}
+
