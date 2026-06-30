@@ -22,7 +22,6 @@
     $nivelesIdioma = $catalogos['nivelesIdioma'] ?? collect();
     $tiposReferencia = $catalogos['tiposReferencia'] ?? collect();
     $tiposRelacion = $catalogos['tiposRelacion'] ?? collect();
-    $tiposConsultoria = $catalogos['tiposConsultoria'] ?? collect();
 
     $nombreCompleto = $consultor->nombre_completo ?? trim(($consultor->nombres ?? '') . ' ' . ($consultor->apellidos ?? ''));
     $iniciales = strtoupper(substr($consultor->nombres ?? 'C', 0, 1) . substr($consultor->apellidos ?? 'F', 0, 1));
@@ -62,7 +61,6 @@
     $areasPerfil = $consultor->areasEspecializacion ?? collect();
     $idiomas = $consultor->idiomas ?? collect();
     $referencias = $consultor->referencias ?? collect();
-    $consultorias = $consultor->tiposConsultoria ?? collect();
 
     $avancePerfil = $avancePerfil ?? $consultor->avancePerfil();
     $porcentajePerfil = $avancePerfil['porcentaje'] ?? 0;
@@ -758,24 +756,6 @@
                 @empty
                     <div class="expediente-empty-state">Sin áreas de especialización registradas.</div>
                 @endforelse
-            </section>
-
-            <section class="expediente-panel">
-                <div class="expediente-panel-header compact">
-                    <h4>Tipos de consultoría</h4>
-                </div>
-
-                <div class="expediente-tag-row vertical">
-                    @forelse($consultorias as $consultorTipoConsultoria)
-                        @php
-                            $tipoConsultoria = $tiposConsultoria->get($consultorTipoConsultoria->id_tipo_consultoria);
-                        @endphp
-
-                        <span>{{ $tipoConsultoria->nombre ?? 'Tipo de consultoría no registrado' }}</span>
-                    @empty
-                        <div class="expediente-empty-state">Sin tipos de consultoría registrados.</div>
-                    @endforelse
-                </div>
             </section>
 
         </aside>

@@ -120,8 +120,6 @@ class ConsultorController extends Controller
             'idiomas' => fn ($query) => $query->where('activo', true),
 
             'referencias' => fn ($query) => $query->where('activo', true),
-
-            'tiposConsultoria' => fn ($query) => $query->where('activo', true),
         ]);
 
         $catalogos = [
@@ -181,10 +179,6 @@ class ConsultorController extends Controller
             'tiposRelacion' => DB::table('tbl_tipo_relacion')
                 ->get()
                 ->keyBy('id_tipo_relacion'),
-
-            'tiposConsultoria' => DB::table('tbl_tipo_consultoria')
-                ->get()
-                ->keyBy('id_tipo_consultoria'),
         ];
 
         $avancePerfil = $consultor->avancePerfil();

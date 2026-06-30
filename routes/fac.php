@@ -26,7 +26,6 @@ use App\Modules\Fac\Controllers\Catalogo\IdiomaNivelController;
 use App\Modules\Fac\Controllers\Catalogo\NivelAcademicoController;
 use App\Modules\Fac\Controllers\Catalogo\TipoDisponibilidadController;
 use App\Modules\Fac\Controllers\Catalogo\TipoDocumentoController;
-use App\Modules\Fac\Controllers\Catalogo\TipoConsultoriaController;
 use App\Modules\Fac\Controllers\Catalogo\SexoController;
 use App\Modules\Fac\Controllers\BusquedaAvanzadaController;
 
@@ -198,7 +197,6 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('nivel-academico', NivelAcademicoController::class);
             Route::resource('tipo-disponibilidad', TipoDisponibilidadController::class);
             Route::resource('tipo-documento', TipoDocumentoController::class);
-            Route::resource('tipo-consultoria', TipoConsultoriaController::class);
             Route::resource('sexo', SexoController::class);
         });
 });
