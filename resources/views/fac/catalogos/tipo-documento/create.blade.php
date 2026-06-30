@@ -1,85 +1,42 @@
 @extends('layouts.app')
 
-@section('title', 'Nuevo tipo documento | Facilitadores FEPADE')
+@section('title', 'Nuevo tipo de documento | Facilitadores FEPADE')
+@section('page-title', 'Nuevo tipo de documento')
+@section('page-subtitle', 'Registrar un nuevo tipo de documento')
 
 @section('content')
 
-<div class="fepade-card">
+<x-ui.page-header title="Nuevo tipo de documento" subtitle="Completa la información del tipo de documento." />
 
-    <form method="POST"
-          action="{{ route('fac.catalogos.tipo-documento.store') }}">
-
+<x-ui.page-card title="Datos del tipo de documento" subtitle="Registra el nombre y estado del tipo de documento.">
+    <form method="POST" action="{{ route('fac.catalogos.tipo-documento.store') }}">
         @csrf
 
         <div class="row g-4">
-
             <div class="col-md-8">
-
-                <label class="form-label">
-                    Nombre <span class="text-danger">*</span>
-                </label>
-
-                <input
-                    type="text"
-                    name="nombre"
-                    value="{{ old('nombre') }}"
-                    class="form-control @error('nombre') is-invalid @enderror"
-                    placeholder="Ej: DUI"
-                >
+                <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                <input type="text" name="nombre" value="{{ old('nombre') }}" class="form-control @error('nombre') is-invalid @enderror" placeholder="Ej: DUI">
 
                 @error('nombre')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
+                    <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-
             </div>
 
             <div class="col-md-4">
-
-                <label class="form-label d-block">
-                    Estado
-                </label>
-
+                <label class="form-label d-block">Estado</label>
                 <div class="form-check form-switch mt-2">
-
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="activo"
-                        value="1"
-                        id="activo"
-                        {{ old('activo', true) ? 'checked' : '' }}
-                    >
-
-                    <label class="form-check-label" for="activo">
-                        Activo
-                    </label>
-
+                    <input class="form-check-input" type="checkbox" name="activo" value="1" id="activo" {{ old('activo', true) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="activo">Activo</label>
                 </div>
-
             </div>
-
         </div>
 
-        <hr class="my-4">
-
-        <div class="d-flex justify-content-end gap-2">
-
-            <a href="{{ route('fac.catalogos.tipo-documento.index') }}"
-               class="btn btn-outline-secondary">
-                Cancelar
-            </a>
-
-            <button type="submit"
-                    class="btn btn-fepade">
-                Guardar tipo
-            </button>
-
-        </div>
-
+        <x-ui.form-actions
+            :backUrl="route('fac.catalogos.tipo-documento.index')"
+            submitText="Guardar"
+            backText="Cancelar"
+        />
     </form>
-
-</div>
+</x-ui.page-card>
 
 @endsection
