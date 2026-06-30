@@ -64,7 +64,7 @@
                             <span class="badge badge-warning-soft">Inactivo</span>
                         @endif
                     </td>
-                    <td>
+                    <td class="text-end">
                         <x-ui.action-buttons
                             :editUrl="route('fac.catalogos.tipo-atestado.edit', $tipoAtestado)"
                             :deleteUrl="route('fac.catalogos.tipo-atestado.destroy', $tipoAtestado)"

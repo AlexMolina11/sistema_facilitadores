@@ -72,7 +72,7 @@
                             <span class="badge badge-warning-soft">Inactivo</span>
                         @endif
                     </td>
-                    <td>
+                    <td class="text-end">
                         <x-ui.action-buttons
                             :editUrl="route('fac.catalogos.area-especializacion.edit', $area)"
                             :deleteUrl="route('fac.catalogos.area-especializacion.destroy', $area)"
