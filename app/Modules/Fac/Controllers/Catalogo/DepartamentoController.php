@@ -14,20 +14,35 @@ class DepartamentoController extends Controller
     public function index(Request $request)
     {
         $buscar = $request->get('buscar');
+        $idPais = $request->get('id_pais');
+
+        $paises = Pais::where('activo', true)
+            ->orderBy('nombre_pais')
+            ->get();
 
         $departamentos = Departamento::with('pais')
             ->when($buscar, function ($query) use ($buscar) {
-                $query->where('nombre_departamento', 'like', "%{$buscar}%")
-                      ->orWhere('mh_codigo_depto', 'like', "%{$buscar}%")
-                      ->orWhereHas('pais', function ($q) use ($buscar) {
-                          $q->where('nombre_pais', 'like', "%{$buscar}%");
-                      });
+                $query->where(function ($q) use ($buscar) {
+                    $q->where('nombre_departamento', 'like', "%{$buscar}%")
+                        ->orWhere('mh_codigo_depto', 'like', "%{$buscar}%")
+                        ->orWhereHas('pais', function ($pais) use ($buscar) {
+                            $pais->where('nombre_pais', 'like', "%{$buscar}%");
+                        });
+                });
+            })
+            ->when($idPais, function ($query) use ($idPais) {
+                $query->where('id_pais', $idPais);
             })
             ->orderBy('nombre_departamento')
             ->paginate(10)
             ->withQueryString();
 
-        return view('fac.catalogos.departamentos.index', compact('departamentos', 'buscar'));
+        return view('fac.catalogos.departamentos.index', compact(
+            'departamentos',
+            'buscar',
+            'paises',
+            'idPais'
+        ));
     }
 
     public function create()

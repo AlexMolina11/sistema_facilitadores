@@ -11,23 +11,24 @@
     subtitle="Registro de usuarios internos del sistema con roles y permisos específicos."
 />
 
-<div class="fepade-card">
-    <form method="POST" action="{{ route('seg.usuarios.store') }}">
-            @csrf
+<form method="POST" action="{{ route('seg.usuarios.store') }}">
+    @csrf
 
-            @include('seg.usuarios.partials.form', [
-                'usuario' => null,
-                'rolesSeleccionados' => [],
-                'permisosPermitidos' => [],
-                'permisosDenegados' => [],
-                'permisosEfectivos' => [],
-            ])
+    <x-ui.page-card>
+        @include('seg.usuarios.partials.form', [
+            'usuario' => null,
+            'rolesSeleccionados' => [],
+            'permisosPermitidos' => [],
+            'permisosDenegados' => [],
+            'permisosEfectivos' => [],
+        ])
 
-            <div class="d-flex justify-content-end gap-2 mt-4">
-                <a href="{{ route('seg.usuarios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-                <button class="btn btn-navy">Guardar usuario</button>
-            </div>
-    </form>
-</div>
+        <x-ui.form-actions
+            :back-url="route('seg.usuarios.index')"
+            back-text="Cancelar"
+            submit-text="Guardar usuario"
+        />
+    </x-ui.page-card>
+</form>
 
 @endsection

@@ -11,24 +11,25 @@
     subtitle="Modificación de datos, roles, permisos directos y consultor asociado."
 />
 
-<div class="fepade-card">
-    <form method="POST" action="{{ route('seg.usuarios.update', $usuario) }}">
-            @csrf
-            @method('PUT')
+<form method="POST" action="{{ route('seg.usuarios.update', $usuario) }}">
+    @csrf
+    @method('PUT')
 
-            @include('seg.usuarios.partials.form', [
-                'usuario' => $usuario,
-                'rolesSeleccionados' => $usuario->roles->pluck('id_rol')->toArray(),
-                'permisosPermitidos' => $permisosPermitidos ?? [],
-                'permisosDenegados' => $permisosDenegados ?? [],
-                'permisosEfectivos' => $permisosEfectivos ?? [],
-            ])
+    <x-ui.page-card>
+        @include('seg.usuarios.partials.form', [
+            'usuario' => $usuario,
+            'rolesSeleccionados' => $usuario->roles->pluck('id_rol')->toArray(),
+            'permisosPermitidos' => $permisosPermitidos ?? [],
+            'permisosDenegados' => $permisosDenegados ?? [],
+            'permisosEfectivos' => $permisosEfectivos ?? [],
+        ])
 
-            <div class="d-flex justify-content-end gap-2 mt-4">
-                <a href="{{ route('seg.usuarios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-                <button class="btn btn-navy">Actualizar usuario</button>
-            </div>
-    </form>
-</div>
+        <x-ui.form-actions
+            :back-url="route('seg.usuarios.index')"
+            back-text="Cancelar"
+            submit-text="Actualizar usuario"
+        />
+    </x-ui.page-card>
+</form>
 
 @endsection

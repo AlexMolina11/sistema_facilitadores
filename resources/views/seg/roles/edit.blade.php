@@ -12,15 +12,15 @@
     @csrf
     @method('PUT')
 
-    <div class="fepade-card">
-        <div>
-            @include('seg.roles.partials.form')
-        </div>
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <a href="{{ route('seg.roles.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-            <button class="btn btn-navy">Actualizar</button>
-        </div>
-    </div>
+    <x-ui.page-card>
+        @include('seg.roles.partials.form')
+
+        <x-ui.form-actions
+            :back-url="route('seg.roles.index')"
+            back-text="Cancelar"
+            submit-text="Actualizar"
+        />
+    </x-ui.page-card>
 </form>
 
 @endsection

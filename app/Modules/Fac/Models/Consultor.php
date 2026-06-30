@@ -160,15 +160,6 @@ class Consultor extends Model
         );
     }
 
-    public function tiposConsultoria()
-    {
-        return $this->hasMany(
-            ConsultorTipoConsultoria::class,
-            'id_consultor',
-            'id_consultor'
-        );
-    }
-
     public function referencias()
     {
         return $this->hasMany(

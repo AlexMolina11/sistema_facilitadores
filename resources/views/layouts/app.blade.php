@@ -22,7 +22,6 @@
         @include('layouts.partials.topbar')
 
         <section class="app-content">
-            @include('layouts.partials.alerts')
             <x-ui.alerts />
             @yield('content')
         </section>

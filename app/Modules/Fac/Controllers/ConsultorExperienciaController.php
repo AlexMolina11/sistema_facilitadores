@@ -8,7 +8,6 @@ use App\Modules\Fac\Models\ConsultorDisponibilidad;
 use App\Modules\Fac\Models\ConsultorExperienciaLaboral;
 use App\Modules\Fac\Models\ConsultorIdioma;
 use App\Modules\Fac\Models\ConsultorReferencia;
-use App\Modules\Fac\Models\ConsultorTipoConsultoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -600,7 +599,6 @@ class ConsultorExperienciaController extends Controller
             'habilidadesTecnicas' => \App\Modules\Fac\Models\HabilidadTecnica::with('areaEspecializacion')->where('activo', true)->orderBy('nombre')->get(),
             'idiomas' => DB::table('tbl_idioma')->where('activo', true)->orderBy('nombre')->get(),
             'nivelesIdioma' => DB::table('tbl_idioma_nivel')->where('activo', true)->orderBy('nombre')->get(),
-            'tiposConsultoria' => DB::table('tbl_tipo_consultoria')->where('activo', true)->orderBy('nombre')->get(),
             'tiposReferencia' => DB::table('tbl_tipo_referencia')->where('activo', true)->orderBy('nombre')->get(),
             'tiposRelacion' => DB::table('tbl_tipo_relacion')->where('activo', true)->orderBy('nombre')->get(),
         ];

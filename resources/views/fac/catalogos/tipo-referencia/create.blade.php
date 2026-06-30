@@ -6,88 +6,37 @@
 
 @section('content')
 
-<x-ui.page-header
-    title="Nuevo tipo de referencia"
-    subtitle="Completa la información del tipo de referencia."
-/>
+<x-ui.page-header title="Nuevo tipo de referencia" subtitle="Completa la información del tipo de referencia." />
 
-<div class="fepade-card">
-
-    <form method="POST"
-          action="{{ route('fac.catalogos.tipo-referencia.store') }}">
-
+<x-ui.page-card title="Datos del tipo de referencia" subtitle="Registra el nombre y estado del tipo de referencia.">
+    <form method="POST" action="{{ route('fac.catalogos.tipo-referencia.store') }}">
         @csrf
 
         <div class="row g-4">
-
             <div class="col-md-8">
-
-                <label class="form-label">
-                    Nombre del tipo de referencia
-                    <span class="text-danger">*</span>
-                </label>
-
-                <input
-                    type="text"
-                    name="nombre"
-                    value="{{ old('nombre') }}"
-                    class="form-control @error('nombre') is-invalid @enderror"
-                    placeholder="Ej: Referencia Personal"
-                >
+                <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                <input type="text" name="nombre" value="{{ old('nombre') }}" class="form-control @error('nombre') is-invalid @enderror" placeholder="Ej: Profesional">
 
                 @error('nombre')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
+                    <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-
             </div>
 
             <div class="col-md-4">
-
-                <label class="form-label d-block">
-                    Estado
-                </label>
-
+                <label class="form-label d-block">Estado</label>
                 <div class="form-check form-switch mt-2">
-
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="activo"
-                        value="1"
-                        id="activo"
-                        {{ old('activo', true) ? 'checked' : '' }}
-                    >
-
-                    <label class="form-check-label" for="activo">
-                        Activo
-                    </label>
-
+                    <input class="form-check-input" type="checkbox" name="activo" value="1" id="activo" {{ old('activo', true) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="activo">Activo</label>
                 </div>
-
             </div>
-
         </div>
 
-        <hr class="my-4">
-
-        <div class="d-flex justify-content-end gap-2">
-
-            <a href="{{ route('fac.catalogos.tipo-referencia.index') }}"
-               class="btn btn-outline-secondary">
-                Cancelar
-            </a>
-
-            <button type="submit"
-                    class="btn btn-fepade">
-                Guardar tipo de referencia
-            </button>
-
-        </div>
-
+        <x-ui.form-actions
+            :backUrl="route('fac.catalogos.tipo-referencia.index')"
+            submitText="Guardar"
+            backText="Cancelar"
+        />
     </form>
-
-</div>
+</x-ui.page-card>
 
 @endsection
