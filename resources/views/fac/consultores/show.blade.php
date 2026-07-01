@@ -8,6 +8,7 @@
 
 @php
     use App\Modules\Fac\Support\ProfileProgressPresenter;
+    use App\Modules\Fac\Support\ProfessionalSummaryPresenter;
     use Illuminate\Support\Facades\Route;
     use Illuminate\Support\Facades\Storage;
 
@@ -113,22 +114,7 @@
         default => ['texto' => 'Perfil en construcción', 'clase' => 'danger'],
     };
 
-    $resumenProfesional = $nombreCompleto ?: 'Este consultor';
-    $resumenProfesional .= ' cuenta con un expediente profesional registrado en el sistema de Facilitadores FEPADE';
-
-    if ($experiencias->count() > 0) {
-        $resumenProfesional .= ', con experiencia laboral documentada';
-    }
-
-    if ($areasNombres->count() > 0) {
-        $resumenProfesional .= ' y especialización en ' . $primerasAreas;
-    }
-
-    if ($idiomas->count() > 0) {
-        $resumenProfesional .= '. Además, registra dominio de ' . $idiomas->count() . ' idioma(s)';
-    }
-
-    $resumenProfesional .= '.';
+    $resumenProfesional = ProfessionalSummaryPresenter::make($consultor);
 
     $ultimaActualizacion = $consultor->updated_at ? $consultor->updated_at->format('d/m/Y') : 'No registrada';
 @endphp

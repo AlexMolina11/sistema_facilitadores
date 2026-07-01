@@ -6,43 +6,114 @@
 
 @section('content')
 
+@php
+    $filtros = $filtros ?? request()->all();
+    $totalResultados = $totalConsultores ?? ($consultores->total() ?? 0);
+    $busquedaGeneral = $filtros['q'] ?? request('q');
+
+    /**
+     * El contador de filtros activos no incluye la búsqueda general,
+     * porque esta se muestra como indicador independiente en el hero.
+     * Tampoco incluye fecha_tipo, porque es solo el selector de criterio
+     * y no representa un filtro aplicado por sí mismo.
+     */
+    $camposIgnoradosConteo = ['page', 's', '_token', 'q', 'fecha_tipo'];
+
+    $filtrosActivos = collect($filtros)
+        ->reject(fn ($value, $key) => in_array($key, $camposIgnoradosConteo, true))
+        ->reduce(function ($total, $value) {
+            if (is_array($value)) {
+                return $total + collect($value)->filter(fn ($item) => filled($item))->count();
+            }
+
+            return $total + (filled($value) ? 1 : 0);
+        }, 0);
+@endphp
+
 <x-ui.page-header
     title="Búsqueda avanzada"
-    subtitle="Filtra consultores por perfil profesional, experiencia, ubicación, formación, idiomas y disponibilidad."
+    subtitle="Encuentra consultores por perfil profesional, experiencia, ubicación, formación, idiomas y disponibilidad."
 />
 
 <form method="GET" action="{{ route('fac.busqueda.index') }}" id="formBusquedaAvanzada" data-url-base="{{ route('fac.busqueda.index') }}">
-    <div class="fepade-card busqueda-toolbar mb-4">
-        <div class="row g-3 align-items-end">
-            <div class="col-lg-8">
-                <label class="form-label">Búsqueda general</label>
-                <div class="input-group">
-                    <input
-                        type="text"
-                        class="form-control"
-                        name="q"
-                        placeholder="Nombre, apellido, documento, NIT, NRC o correo..."
-                        value="{{ $filtros['q'] ?? '' }}"
-                    >
-                    <button class="btn btn-fepade" type="submit">
-                        <i class="fas fa-search me-1"></i> Buscar
-                    </button>
+    <section class="busqueda-hero mb-4">
+        <div class="busqueda-hero-main">
+            <span class="busqueda-hero-icon">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+            </span>
+
+            <div>
+                <h2>Banco de consultores FEPADE</h2>
+                <p>Combina criterios para ubicar perfiles con mayor precisión y abrir su expediente profesional.</p>
+
+                <div class="busqueda-hero-metrics">
+                    <span><strong id="busquedaTotalResultados">{{ $totalResultados }}</strong> resultado<span id="busquedaTotalPlural">{{ $totalResultados === 1 ? '' : 's' }}</span></span>
+                    <span><strong id="busquedaFiltrosActivos">{{ $filtrosActivos }}</strong> filtro<span id="busquedaFiltrosPlural">{{ $filtrosActivos === 1 ? '' : 's' }}</span> activo<span id="busquedaFiltrosActivosPlural">{{ $filtrosActivos === 1 ? '' : 's' }}</span></span>
+                    <span><strong id="busquedaGeneralIndicador">{{ filled($busquedaGeneral) ? 'Sí' : 'No' }}</strong> búsqueda general</span>
                 </div>
             </div>
+        </div>
 
-            <div class="col-lg-4 text-lg-end">
-                <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-secondary w-100 w-lg-auto">
-                    <i class="fas fa-eraser me-1"></i> Limpiar filtros
+        <div class="busqueda-hero-actions">
+            <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-light">
+                <i class="fas fa-eraser me-1"></i> Limpiar
+            </a>
+        </div>
+    </section>
+
+    <div class="fepade-card busqueda-toolbar mb-4">
+        <div class="busqueda-search-box">
+            <div class="busqueda-search-icon">
+                <i class="fas fa-search"></i>
+            </div>
+
+            <div class="busqueda-search-input">
+                <label class="form-label">Búsqueda general</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    name="q"
+                    placeholder="Nombre, apellido, documento, NIT, NRC o correo..."
+                    value="{{ $filtros['q'] ?? '' }}"
+                >
+            </div>
+
+            <div class="busqueda-search-actions">
+                <button class="btn btn-fepade" type="submit">
+                    <i class="fas fa-search me-1"></i> Buscar
+                </button>
+
+                <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-secondary">
+                    Limpiar filtros
                 </a>
             </div>
+        </div>
+    </div>
+
+    <div class="busqueda-active-summary fepade-card mb-4" id="busquedaActiveSummary">
+        <div class="busqueda-active-summary-header">
+            <div>
+                <span class="busqueda-section-kicker">Criterios aplicados</span>
+                <h5>Resumen de búsqueda</h5>
+            </div>
+            <span class="busqueda-active-search" id="busquedaGeneralTexto">
+                {{ filled($busquedaGeneral) ? 'Búsqueda: ' . $busquedaGeneral : 'Sin búsqueda general' }}
+            </span>
+        </div>
+
+        <div class="busqueda-active-chip-row" id="busquedaActiveChips">
+            <span class="busqueda-active-empty">Sin filtros avanzados activos.</span>
         </div>
     </div>
 
     <div class="busqueda-layout">
         <aside class="busqueda-filtros fepade-card">
             <div class="busqueda-filtros-header mb-3">
-                <h5>Filtros avanzados</h5>
-                <p>Combina filtros para encontrar perfiles específicos.</p>
+                <div>
+                    <h5>Filtros avanzados</h5>
+                    <p>Combina criterios sin perder el contexto de la búsqueda.</p>
+                </div>
+                <span class="busqueda-filter-counter" id="busquedaFilterCounter">{{ $filtrosActivos }}</span>
             </div>
 
             <div class="accordion accordion-flush" id="accordionFiltros">
@@ -51,7 +122,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#filtroFechas">
-                            Fechas
+                            <i class="fa-regular fa-calendar-days me-2"></i> Fechas
                         </button>
                     </h2>
 
@@ -96,7 +167,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroPerfil">
-                            Información general
+                            <i class="fa-regular fa-id-card me-2"></i> Información general
                         </button>
                     </h2>
 
@@ -132,7 +203,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroUbicacion">
-                            Ubicación y disponibilidad
+                            <i class="fa-solid fa-location-dot me-2"></i> Ubicación y disponibilidad
                         </button>
                     </h2>
 
@@ -236,7 +307,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroEducacion">
-                            Educación y atestados
+                            <i class="fa-solid fa-graduation-cap me-2"></i> Educación y atestados
                         </button>
                     </h2>
 
@@ -360,7 +431,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroIdiomas">
-                            Idiomas
+                            <i class="fa-solid fa-language me-2"></i> Idiomas
                         </button>
                     </h2>
 
@@ -420,7 +491,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtroExperiencia">
-                            Experiencia profesional
+                            <i class="fa-solid fa-briefcase me-2"></i> Experiencia profesional
                         </button>
                     </h2>
 
@@ -489,6 +560,129 @@ document.addEventListener('DOMContentLoaded', function () {
         distritos: @json(route('fac.ajax.distritos')),
         ubicacion: @json(route('fac.ajax.ubicacion.distrito')),
     };
+
+    const resumenUi = {
+        total: document.getElementById('busquedaTotalResultados'),
+        totalPlural: document.getElementById('busquedaTotalPlural'),
+        filtros: document.getElementById('busquedaFiltrosActivos'),
+        filtrosPlural: document.getElementById('busquedaFiltrosPlural'),
+        filtrosActivosPlural: document.getElementById('busquedaFiltrosActivosPlural'),
+        contadorPanel: document.getElementById('busquedaFilterCounter'),
+        busquedaIndicador: document.getElementById('busquedaGeneralIndicador'),
+        busquedaTexto: document.getElementById('busquedaGeneralTexto'),
+        chips: document.getElementById('busquedaActiveChips'),
+    };
+
+    const nombresFiltros = {
+        fecha_filtro: 'Fecha',
+        fecha_desde: 'Desde',
+        fecha_hasta: 'Hasta',
+        sexo: 'Sexo',
+        edad_min: 'Edad mínima',
+        edad_max: 'Edad máxima',
+        pais: 'País',
+        departamento: 'Departamento',
+        municipio_mh: 'Municipio',
+        distrito: 'Distrito',
+        disponibilidad: 'Disponibilidad',
+        area_especializacion: 'Área',
+        habilidades_tecnicas: 'Habilidad',
+        nivel_academico: 'Nivel académico',
+        tipo_formacion: 'Tipo de formación',
+        tipo_atestado: 'Tipo de atestado',
+        educacion_institucion: 'Institución',
+        educacion_pais: 'País formación',
+        idiomas: 'Idioma',
+        cargo: 'Cargo',
+        empresa: 'Empresa',
+        anios_experiencia: 'Años de experiencia',
+    };
+
+    const camposIgnoradosResumen = new Set(['page', 's', '_token', 'q', 'fecha_tipo']);
+
+    function nombreBaseCampo(name) {
+        return name.replace(/\[\]$/, '').replace(/\[[^\]]+\]$/, '');
+    }
+
+    function textoCampo(element) {
+        if (element.tagName === 'SELECT') {
+            const option = element.options[element.selectedIndex];
+            return option ? option.textContent.trim() : element.value;
+        }
+
+        if (element.type === 'checkbox' || element.type === 'radio') {
+            if (!element.checked) return '';
+            const label = form.querySelector(`label[for="${element.id}"]`);
+            return label ? label.textContent.trim() : element.value;
+        }
+
+        return element.value.trim();
+    }
+
+    function obtenerFiltrosActivosDesdeFormulario() {
+        if (!form) return [];
+
+        const filtros = [];
+        const usados = new Set();
+
+        form.querySelectorAll('input[name], select[name], textarea[name]').forEach(element => {
+            const base = nombreBaseCampo(element.name);
+            if (camposIgnoradosResumen.has(base)) return;
+
+            const valor = textoCampo(element);
+            if (!valor) return;
+            if (['Todos', 'Todas', 'Seleccione nivel'].includes(valor)) return;
+
+            const key = `${element.name}:${element.value}`;
+            if (usados.has(key)) return;
+            usados.add(key);
+
+            filtros.push({
+                label: nombresFiltros[base] ?? base,
+                value: valor,
+            });
+        });
+
+        return filtros;
+    }
+
+    function actualizarResumenBusqueda(total = null) {
+        const filtros = obtenerFiltrosActivosDesdeFormulario();
+        const cantidad = filtros.length;
+        const busqueda = (form?.querySelector('[name="q"]')?.value ?? '').trim();
+
+        if (resumenUi.filtros) resumenUi.filtros.textContent = cantidad;
+        if (resumenUi.contadorPanel) resumenUi.contadorPanel.textContent = cantidad;
+        if (resumenUi.filtrosPlural) resumenUi.filtrosPlural.textContent = cantidad === 1 ? '' : 's';
+        if (resumenUi.filtrosActivosPlural) resumenUi.filtrosActivosPlural.textContent = cantidad === 1 ? '' : 's';
+
+        if (resumenUi.busquedaIndicador) resumenUi.busquedaIndicador.textContent = busqueda ? 'Sí' : 'No';
+        if (resumenUi.busquedaTexto) resumenUi.busquedaTexto.textContent = busqueda ? `Búsqueda: ${busqueda}` : 'Sin búsqueda general';
+
+        if (Number.isInteger(total)) {
+            if (resumenUi.total) resumenUi.total.textContent = total;
+            if (resumenUi.totalPlural) resumenUi.totalPlural.textContent = total === 1 ? '' : 's';
+        }
+
+        if (!resumenUi.chips) return;
+
+        resumenUi.chips.innerHTML = '';
+
+        if (!cantidad) {
+            const empty = document.createElement('span');
+            empty.className = 'busqueda-active-empty';
+            empty.textContent = 'Sin filtros avanzados activos.';
+            resumenUi.chips.appendChild(empty);
+            return;
+        }
+
+        filtros.forEach(filtro => {
+            const chip = document.createElement('span');
+            chip.className = 'busqueda-active-chip';
+            chip.innerHTML = `<strong>${filtro.label}:</strong> ${filtro.value}`;
+            resumenUi.chips.appendChild(chip);
+        });
+    }
 
     function resetSelect(select, label = 'Todos') {
         if (!select) return;
@@ -559,6 +753,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(data => {
                     resultados.innerHTML = data.html;
 
+                    const totalActualizado = parseInt(resultados.querySelector('[data-total-resultados]')?.dataset.totalResultados ?? '', 10);
+                    actualizarResumenBusqueda(Number.isInteger(totalActualizado) ? totalActualizado : null);
+
                     if (data.url) {
                         window.history.replaceState({}, '', data.url);
                     }
@@ -571,6 +768,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 .finally(() => setLoading(false));
         }, delay);
     }
+
+    actualizarResumenBusqueda({{ (int) $totalResultados }});
 
     pais?.addEventListener('change', function () {
         resetSelect(departamento);
@@ -682,6 +881,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form?.addEventListener('submit', function (event) {
         event.preventDefault();
+        actualizarResumenBusqueda();
         buscar(null, 0);
     });
 
@@ -691,6 +891,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const eventName = ['text', 'number', 'date', 'search'].includes(element.type) ? 'input' : 'change';
 
         element.addEventListener(eventName, function () {
+            actualizarResumenBusqueda();
             if (!cargandoUbicacion) buscar();
         });
     });
@@ -718,6 +919,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const select = target.querySelector('select');
                 if (select) select.value = '';
             }
+
+            actualizarResumenBusqueda();
         });
     });
 
