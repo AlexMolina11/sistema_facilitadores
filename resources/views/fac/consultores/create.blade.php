@@ -6,10 +6,24 @@
 
 @section('content')
 
-<x-ui.page-header 
-    title="Nuevo consultor"
-    subtitle="Completa la información base del consultor."
-/>
+<section class="busqueda-hero mb-4">
+    <div class="busqueda-hero-main">
+        <span class="busqueda-hero-icon">
+            <i class="fa-solid fa-plus"></i>
+        </span>
+
+        <div>
+            <h2>Nuevo consultor</h2>
+            <p>Completa la información base del consultor.</p>
+        </div>
+    </div>
+
+    <div class="busqueda-hero-actions">
+        <a href="{{ route('fac.consultores.index') }}" class="btn btn-outline-light">
+            <i class="fas fa-close me-1"></i> Cancelar
+        </a>
+    </div>
+</section>
 
 <div class="fepade-card">
     <form method="POST" action="{{ route('fac.consultores.store') }}" enctype="multipart/form-data">

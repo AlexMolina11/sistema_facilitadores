@@ -6,11 +6,24 @@
 
 @section('content')
 
-<x-ui.page-header title="Consultores" subtitle="Listado de consultores registrados en el sistema.">
-    <a href="{{ route('fac.consultores.create') }}" class="btn btn-fepade">
-        Nuevo consultor
-    </a>
-</x-ui.page-header>
+<section class="busqueda-hero mb-4">
+    <div class="busqueda-hero-main">
+        <span class="busqueda-hero-icon">
+            <i class="fa-solid fa-list"></i>
+        </span>
+
+        <div>
+            <h2>Listado de consultores FEPADE</h2>
+            <p>Registra, edita y gestiona los datos de los consultores.</p>
+        </div>
+    </div>
+
+    <div class="busqueda-hero-actions">
+        <a href="{{ route('fac.consultores.create') }}" class="btn btn-outline-light">
+            <i class="fas fa-plus me-1"></i> Nuevo consultor
+        </a>
+    </div>
+</section>
 
 <div class="fepade-card mb-4">
     <form method="GET" action="{{ route('fac.consultores.index') }}" class="row g-3 align-items-end">
