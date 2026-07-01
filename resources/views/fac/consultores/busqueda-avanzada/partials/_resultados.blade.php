@@ -153,8 +153,8 @@
                             <i class="fa-solid fa-user me-1"></i> Abrir expediente
                         </a>
 
-                        @if(\Illuminate\Support\Facades\Route::has('fac.cv.preview'))
-                            <a href="{{ route('fac.cv.preview', ['consultor' => $consultor->id_consultor]) }}" class="btn btn-outline-primary">
+                        @if(\Illuminate\Support\Facades\Route::has('fac.cv.configurar'))
+                            <a href="{{ route('fac.cv.configurar', $consultor) }}" class="btn btn-outline-primary">
                                 <i class="fa-solid fa-file-export me-1"></i> Exportar CV
                             </a>
                         @else

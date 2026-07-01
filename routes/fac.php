@@ -28,6 +28,7 @@ use App\Modules\Fac\Controllers\Catalogo\TipoDisponibilidadController;
 use App\Modules\Fac\Controllers\Catalogo\TipoDocumentoController;
 use App\Modules\Fac\Controllers\Catalogo\SexoController;
 use App\Modules\Fac\Controllers\BusquedaAvanzadaController;
+use App\Modules\Fac\Controllers\ExportacionCvController;
 
 Route::middleware(['auth'])->group(function () {
 
@@ -154,6 +155,17 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('ubicacion-por-distrito', [BusquedaAvanzadaController::class, 'ubicacionPorDistrito'])
                 ->name('ubicacion.distrito');
+        });
+    
+    Route::prefix('consultores/{consultor}/cv')
+        ->name('fac.cv.')
+        ->middleware('consultor.owner:fac.consultores.ver')
+        ->group(function () {
+            Route::get('configurar', [ExportacionCvController::class, 'configurar'])
+                ->name('configurar');
+
+            Route::post('pdf', [ExportacionCvController::class, 'pdf'])
+                ->name('pdf');
         });
 
         

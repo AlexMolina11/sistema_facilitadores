@@ -4,6 +4,7 @@ namespace App\Modules\Fac\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Modules\Fac\Models\TipoTelefono;
 
 class ConsultorTelefono extends Model
 {
@@ -26,4 +27,9 @@ class ConsultorTelefono extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+
+    public function tipoTelefono()
+    {
+        return $this->belongsTo(TipoTelefono::class, 'id_tipo_telefono', 'id_tipo_telefono');
+    }
 }

@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Modules\Fac\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Modules\Fac\Models\Consultor;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
+
+class ExportacionCvController extends Controller
+{
+    public function configurar(Consultor $consultor): View
+    {
+        $this->cargarConsultor($consultor);
+
+        return view('fac.cv.configurar', [
+            'consultor' => $consultor,
+            'plantillas' => $this->plantillas(),
+            'cvData' => $this->cvData($consultor),
+        ]);
+    }
+
+    public function pdf(Request $request, Consultor $consultor): Response
+    {
+        $this->cargarConsultor($consultor);
+
+        $config = json_decode($request->input('config_json', '{}'), true);
+
+        if (! is_array($config)) {
+            $config = [];
+        }
+
+        $plantilla = $config['plantilla'] ?? 'fepade';
+
+        if (! array_key_exists($plantilla, $this->plantillas())) {
+            $plantilla = 'fepade';
+        }
+
+        $view = match ($plantilla) {
+            'mineducyt_birf' => 'fac.cv.pdf.mineducyt-birf',
+            'resumen_personal' => 'fac.cv.pdf.resumen-personal',
+            'profesional' => 'fac.cv.pdf.profesional',
+            default => 'fac.cv.pdf.fepade',
+        };
+
+        $pdf = Pdf::loadView($view, [
+            'consultor' => $consultor,
+            'cvData' => $this->cvData($consultor),
+            'config' => $config,
+        ])->setPaper('letter', 'portrait');
+
+        $nombre = 'cv-' . str($consultor->nombre_completo ?: 'consultor')->slug('-') . '.pdf';
+
+        return $pdf->stream($nombre);
+    }
+
+    private function plantillas(): array
+    {
+        return [
+            'fepade' => 'Formato CV FEPADE',
+            'mineducyt_birf' => 'Formato CV MINEDUCYT / BIRF',
+            'resumen_personal' => 'Resumen del CV del personal propuesto',
+            'profesional' => 'CV profesional completo',
+        ];
+    }
+
+    private function cargarConsultor(Consultor $consultor): void
+    {
+        $consultor->load([
+            'pais',
+            'municipio',
+            'municipio.departamento',
+            'emails' => fn ($q) => $q->where('activo', true)->orderByDesc('principal'),
+            'telefonos' => fn ($q) => $q->where('activo', true)->with('tipoTelefono'),
+            'disponibilidades' => fn ($q) => $q->where('activo', true)->with('tipoDisponibilidad'),
+            'experienciasLaborales' => fn ($q) => $q->where('activo', true)->orderByDesc('trabajo_actual')->orderByDesc('desde'),
+            'atestados' => fn ($q) => $q->where('activo', true)
+                ->with(['tipoFormacion', 'tipoAtestado', 'nivelAcademico', 'pais'])
+                ->orderByDesc('fecha_fin'),
+            'capacitacionesFepade' => fn ($q) => $q->where('activo', true)->orderByDesc('fecha_fin'),
+            'areasEspecializacion' => fn ($q) => $q->where('activo', true)
+                ->with(['areaEspecializacion', 'habilidades.habilidadTecnica']),
+            'idiomas' => fn ($q) => $q->where('activo', true)->with(['idioma', 'nivel']),
+            'referencias' => fn ($q) => $q->where('activo', true)->with(['tipoReferencia']),
+        ]);
+    }
+
+    private function cvData(Consultor $consultor): array
+    {
+        return [
+            'personal' => [
+                'foto' => $consultor->ruta_foto ? asset('storage/' . $consultor->ruta_foto) : null,
+                'nombre' => $consultor->nombre_completo,
+                'fecha_nacimiento' => optional($consultor->fecha_nacimiento)->format('d/m/Y'),
+                'nacionalidad' => $consultor->nacionalidad,
+                'residencia' => optional($consultor->pais)->nombre_pais,
+                'direccion' => $consultor->direccion_residencia,
+            ],
+
+            'emails' => $consultor->emails->map(fn ($item) => [
+                'id' => $item->id_email,
+                'email' => $item->email,
+                'principal' => (bool) $item->principal,
+            ])->values(),
+
+            'telefonos' => $consultor->telefonos->map(fn ($item) => [
+                'id' => $item->id_consultor_telefono,
+                'tipo' => optional($item->tipoTelefono)->nombre,
+                'numero' => $item->numero_telefono,
+                'extension' => $item->extension,
+            ])->values(),
+
+            'experiencias' => $consultor->experienciasLaborales->map(fn ($item) => [
+                'id' => $item->id_experiencia,
+                'empresa' => $item->empresa,
+                'cargo' => $item->cargo,
+                'descripcion' => $item->descripcion,
+                'desde' => optional($item->desde)->format('d/m/Y'),
+                'hasta' => $item->trabajo_actual ? 'Actualidad' : optional($item->hasta)->format('d/m/Y'),
+                'jefe_nombre' => $item->jefe_nombre,
+                'jefe_email' => $item->jefe_email,
+                'jefe_telefono' => $item->jefe_telefono,
+            ])->values(),
+
+            'atestados' => $consultor->atestados->map(fn ($item) => [
+                'id' => $item->id_atestado,
+                'tipo_formacion' => optional($item->tipoFormacion)->nombre,
+                'tipo_atestado' => optional($item->tipoAtestado)->nombre,
+                'nivel' => optional($item->nivelAcademico)->nombre,
+                'titulo' => $item->titulo,
+                'institucion' => $item->institucion,
+                'descripcion' => $item->descripcion,
+                'pais' => optional($item->pais)->nombre_pais,
+                'fecha_inicio' => optional($item->fecha_inicio)->format('d/m/Y'),
+                'fecha_fin' => optional($item->fecha_fin)->format('d/m/Y'),
+                'horas' => $item->horas,
+            ])->values(),
+
+            'capacitaciones_fepade' => $consultor->capacitacionesFepade->map(fn ($item) => [
+                'id' => $item->id_capacitacion_fepade,
+                'nombre_evento' => $item->nombre_evento,
+                'tema' => $item->tema,
+                'institucion' => $item->institucion,
+                'modalidad' => $item->modalidad,
+                'fecha_inicio' => optional($item->fecha_inicio)->format('d/m/Y'),
+                'fecha_fin' => optional($item->fecha_fin)->format('d/m/Y'),
+                'horas' => $item->horas,
+                'fuente' => $item->fuente,
+            ])->values(),
+
+            'areas' => $consultor->areasEspecializacion->map(fn ($item) => [
+                'id' => $item->id_consultor_area ?? $item->id_consultor_area_especializacion ?? $item->id,
+                'nombre' => optional($item->areaEspecializacion)->nombre,
+                'habilidades' => $item->habilidades->map(fn ($hab) => [
+                    'id' => $hab->id_consultor_hab_tec ?? $hab->id,
+                    'nombre' => optional($hab->habilidadTecnica)->nombre,
+                ])->values(),
+            ])->values(),
+
+            'idiomas' => $consultor->idiomas->map(fn ($item) => [
+                'id' => $item->id_consultor_idioma,
+                'idioma' => optional($item->idioma)->nombre,
+                'nivel' => optional($item->nivel)->nombre,
+                'certificado' => $item->url_certificado ? 'Sí' : 'No',
+            ])->values(),
+
+            'referencias' => $consultor->referencias->map(fn ($item) => [
+                'id' => $item->id_referencia,
+                'tipo' => optional($item->tipoReferencia)->nombre,
+                'nombre' => $item->nombre,
+                'telefono' => $item->telefono,
+                'correo' => $item->correo,
+                'empresa' => $item->empresa,
+                'cargo' => $item->cargo,
+            ])->values(),
+
+            'disponibilidades' => $consultor->disponibilidades->map(fn ($item) => [
+                'id' => $item->id_consultor_disponibilidad,
+                'nombre' => optional($item->tipoDisponibilidad)->nombre,
+            ])->values(),
+        ];
+    }
+}
