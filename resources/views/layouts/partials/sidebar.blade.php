@@ -78,6 +78,16 @@
                 ['label' => 'Tipos de disponibilidad', 'route' => 'fac.catalogos.tipo-disponibilidad.index', 'active' => 'fac.catalogos.tipo-disponibilidad.*'],
             ],
         ],
+        [
+            'title' => 'Exportación',
+            'items' => [
+                [
+                    'label' => 'Plantillas CV',
+                    'route' => 'fac.catalogos.cv-plantillas.index',
+                    'active' => 'fac.catalogos.cv-plantillas.*',
+                ],
+            ],
+        ],
     ])->map(function ($group) use ($routeAvailable) {
         $group['items'] = collect($group['items'])
             ->filter(fn ($item) => $routeAvailable($item['route']))

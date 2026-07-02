@@ -41,16 +41,17 @@ class ExportacionCvController extends Controller
             ->where('codigo', $codigoPlantilla)
             ->where('activo', true)
             ->where('activa', true)
+            ->where('vista_verificada', true)
             ->first();
 
-        if (! $plantilla) {
-            $plantilla = CvPlantilla::query()
-                ->where('codigo', 'fepade')
-                ->firstOrFail();
-        }
+        if (
+            ! $plantilla ||
+            ! \Illuminate\Support\Facades\View::exists($plantilla->vista_blade)
+        ) {
+            $pdf = Pdf::loadView('fac.cv.pdf.plantilla-no-disponible')
+                ->setPaper('letter', 'portrait');
 
-        if (! ViewFacade::exists($plantilla->vista_blade)) {
-            abort(404, "No existe la vista Blade configurada para esta plantilla: {$plantilla->vista_blade}");
+            return $pdf->stream('plantilla-no-disponible.pdf');
         }
 
         $pdf = Pdf::loadView($plantilla->vista_blade, [
@@ -69,9 +70,11 @@ class ExportacionCvController extends Controller
         return CvPlantilla::query()
             ->where('activo', true)
             ->where('activa', true)
+            ->where('vista_verificada', true)
             ->orderBy('orden')
             ->orderBy('nombre')
             ->get()
+            ->filter(fn ($plantilla) => \Illuminate\Support\Facades\View::exists($plantilla->vista_blade))
             ->mapWithKeys(fn ($plantilla) => [
                 $plantilla->codigo => $plantilla->nombre,
             ])

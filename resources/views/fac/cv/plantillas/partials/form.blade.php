@@ -79,12 +79,16 @@
                 type="number" 
                 name="orden" 
                 value="{{ old('orden', $plantilla->orden ?? 1) }}" 
-                min="1"
-                class="form-control @error('orden') is-invalid @enderror"
+                class="form-control"
+                @if(! $plantilla->exists) readonly @endif
             >
-            @error('orden')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <small class="text-muted">
+                @if(! $plantilla->exists)
+                    Se asigna automáticamente al crear la plantilla.
+                @else
+                    Puede ajustarse manualmente.
+                @endif
+            </small>
         </div>
 
         <div class="col-12">

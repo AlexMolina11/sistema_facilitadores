@@ -34,16 +34,6 @@ class StoreCvPlantillaRequest extends FormRequest
             'descripcion' => ['nullable', 'string'],
             'tamanio_papel' => ['required', Rule::in(['letter', 'a4', 'legal'])],
             'orientacion' => ['required', Rule::in(['portrait', 'landscape'])],
-            'orden' => ['required', 'integer', 'min:1'],
-            'activa' => ['boolean'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'codigo.unique' => 'Ya existe una plantilla con este código.',
-            'codigo.alpha_dash' => 'El código solo puede contener letras, números, guiones y guiones bajos.',
         ];
     }
 }

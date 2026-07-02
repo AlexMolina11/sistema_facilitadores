@@ -23,12 +23,14 @@ class CvPlantillaController extends Controller
 
     public function create()
     {
+        $siguienteOrden = CvPlantilla::withTrashed()->max('orden') + 1;
+
         return view('fac.cv.plantillas.create', [
             'plantilla' => new CvPlantilla([
                 'tamanio_papel' => 'letter',
                 'orientacion' => 'portrait',
-                'orden' => 1,
-                'activa' => true,
+                'orden' => $siguienteOrden ?: 1,
+                'activa' => false,
             ]),
         ]);
     }
@@ -36,14 +38,25 @@ class CvPlantillaController extends Controller
     public function store(StoreCvPlantillaRequest $request): RedirectResponse
     {
         $data = $request->validated();
+
         $data['vista_blade'] = 'fac.cv.pdf.' . $data['codigo'];
+        $data['vista_verificada'] = View::exists($data['vista_blade']);
+        $data['fecha_verificacion'] = $data['vista_verificada'] ? now() : null;
+
+        $data['orden'] = CvPlantilla::withTrashed()->max('orden') + 1;
+        $data['activa'] = false;
         $data['activo'] = true;
 
         CvPlantilla::create($data);
 
         return redirect()
             ->route('fac.catalogos.cv-plantillas.index')
-            ->with('success', 'Plantilla de CV creada correctamente.');
+            ->with(
+                $data['vista_verificada'] ? 'success' : 'warning',
+                $data['vista_verificada']
+                    ? 'Plantilla creada correctamente. Puede activarse cuando lo necesite.'
+                    : 'Plantilla creada, pero queda inactiva porque aún no existe o no se ha verificado su vista Blade.'
+            );
     }
 
     public function edit(CvPlantilla $cvPlantilla)
@@ -56,7 +69,23 @@ class CvPlantillaController extends Controller
     public function update(UpdateCvPlantillaRequest $request, CvPlantilla $cvPlantilla): RedirectResponse
     {
         $data = $request->validated();
+
         $data['vista_blade'] = 'fac.cv.pdf.' . $data['codigo'];
+
+        $vistaExiste = View::exists($data['vista_blade']);
+
+        if ($cvPlantilla->vista_blade !== $data['vista_blade']) {
+            $data['vista_verificada'] = $vistaExiste;
+            $data['fecha_verificacion'] = $vistaExiste ? now() : null;
+
+            if (! $vistaExiste) {
+                $data['activa'] = false;
+            }
+        }
+
+        if (($data['activa'] ?? false) && (! $vistaExiste || ! ($data['vista_verificada'] ?? $cvPlantilla->vista_verificada))) {
+            $data['activa'] = false;
+        }
 
         $cvPlantilla->update($data);
 
@@ -81,6 +110,26 @@ class CvPlantillaController extends Controller
 
     public function toggle(CvPlantilla $cvPlantilla): RedirectResponse
     {
+        if (! $cvPlantilla->activa) {
+            if (! View::exists($cvPlantilla->vista_blade)) {
+                $cvPlantilla->update([
+                    'activa' => false,
+                    'vista_verificada' => false,
+                    'fecha_verificacion' => null,
+                ]);
+
+                return redirect()
+                    ->route('fac.catalogos.cv-plantillas.index')
+                    ->with('error', 'No se puede activar la plantilla porque la vista Blade no existe.');
+            }
+
+            if (! $cvPlantilla->vista_verificada) {
+                return redirect()
+                    ->route('fac.catalogos.cv-plantillas.index')
+                    ->with('error', 'Debe verificar la vista Blade antes de activar esta plantilla.');
+            }
+        }
+
         $cvPlantilla->update([
             'activa' => ! $cvPlantilla->activa,
         ]);
@@ -93,13 +142,24 @@ class CvPlantillaController extends Controller
     public function verificarVista(CvPlantilla $cvPlantilla): RedirectResponse
     {
         if (View::exists($cvPlantilla->vista_blade)) {
+            $cvPlantilla->update([
+                'vista_verificada' => true,
+                'fecha_verificacion' => now(),
+            ]);
+
             return redirect()
                 ->route('fac.catalogos.cv-plantillas.index')
-                ->with('success', "La vista {$cvPlantilla->vista_blade} existe.");
+                ->with('success', "La vista {$cvPlantilla->vista_blade} existe y fue verificada.");
         }
+
+        $cvPlantilla->update([
+            'activa' => false,
+            'vista_verificada' => false,
+            'fecha_verificacion' => null,
+        ]);
 
         return redirect()
             ->route('fac.catalogos.cv-plantillas.index')
-            ->with('error', "No existe la vista {$cvPlantilla->vista_blade}.");
+            ->with('error', "No existe la vista {$cvPlantilla->vista_blade}. La plantilla queda inactiva.");
     }
 }

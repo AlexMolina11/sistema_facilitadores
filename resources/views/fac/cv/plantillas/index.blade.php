@@ -23,6 +23,7 @@
                     <th>Vista Blade</th>
                     <th>Papel</th>
                     <th>Orientación</th>
+                    <th>Verificación</th>
                     <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -42,6 +43,18 @@
                         <td>{{ strtoupper($plantilla->tamanio_papel) }}</td>
                         <td>{{ $plantilla->orientacion === 'portrait' ? 'Vertical' : 'Horizontal' }}</td>
                         <td>
+                            @if($plantilla->vista_verificada)
+                                <span class="badge badge-success-soft">Verificada</span>
+                                @if($plantilla->fecha_verificacion)
+                                    <div class="text-muted small">
+                                        {{ $plantilla->fecha_verificacion->format('d/m/Y H:i') }}
+                                    </div>
+                                @endif
+                            @else
+                                <span class="badge badge-warning-soft">Pendiente</span>
+                            @endif
+                        </td>
+                        <td>
                             @if($plantilla->activa)
                                 <span class="badge badge-success-soft">Activa</span>
                             @else
@@ -59,7 +72,11 @@
 
                                 <form method="POST" action="{{ route('fac.catalogos.cv-plantillas.toggle', $plantilla) }}">
                                     @csrf
-                                    <button class="btn btn-sm btn-outline-primary" title="Activar / desactivar">
+                                    <button 
+                                        class="btn btn-sm btn-outline-primary" 
+                                        title="Activar / desactivar"
+                                        @disabled(! $plantilla->vista_verificada && ! $plantilla->activa)
+                                    >
                                         <i class="fa-solid fa-power-off"></i>
                                     </button>
                                 </form>

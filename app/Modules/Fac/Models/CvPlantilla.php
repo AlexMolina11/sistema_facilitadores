@@ -18,6 +18,8 @@ class CvPlantilla extends Model
         'nombre',
         'descripcion',
         'vista_blade',
+        'vista_verificada',
+        'fecha_verificacion',
         'tamanio_papel',
         'orientacion',
         'orden',
@@ -31,6 +33,8 @@ class CvPlantilla extends Model
     protected $casts = [
         'activa' => 'boolean',
         'activo' => 'boolean',
+        'vista_verificada' => 'boolean',
+        'fecha_verificacion' => 'datetime',
         'orden' => 'integer',
     ];
 
