@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
+use App\Modules\Fac\Models\CvPlantilla;
+use Illuminate\Support\Facades\View as ViewFacade;
 
 class ExportacionCvController extends Controller
 {
@@ -33,38 +35,47 @@ class ExportacionCvController extends Controller
             $config = [];
         }
 
-        $plantilla = $config['plantilla'] ?? 'fepade';
+        $codigoPlantilla = $config['plantilla'] ?? 'fepade';
 
-        if (! array_key_exists($plantilla, $this->plantillas())) {
-            $plantilla = 'fepade';
+        $plantilla = CvPlantilla::query()
+            ->where('codigo', $codigoPlantilla)
+            ->where('activo', true)
+            ->where('activa', true)
+            ->first();
+
+        if (! $plantilla) {
+            $plantilla = CvPlantilla::query()
+                ->where('codigo', 'fepade')
+                ->firstOrFail();
         }
 
-        $view = match ($plantilla) {
-            'mineducyt_birf' => 'fac.cv.pdf.mineducyt-birf',
-            'resumen_personal' => 'fac.cv.pdf.resumen-personal',
-            'profesional' => 'fac.cv.pdf.profesional',
-            default => 'fac.cv.pdf.fepade',
-        };
+        if (! ViewFacade::exists($plantilla->vista_blade)) {
+            abort(404, "No existe la vista Blade configurada para esta plantilla: {$plantilla->vista_blade}");
+        }
 
-        $pdf = Pdf::loadView($view, [
+        $pdf = Pdf::loadView($plantilla->vista_blade, [
             'consultor' => $consultor,
             'cvData' => $this->cvData($consultor),
             'config' => $config,
-        ])->setPaper('letter', 'portrait');
+        ])->setPaper($plantilla->tamanio_papel, $plantilla->orientacion);
 
         $nombre = 'cv-' . str($consultor->nombre_completo ?: 'consultor')->slug('-') . '.pdf';
 
         return $pdf->stream($nombre);
     }
 
-    private function plantillas(): array
+   private function plantillas(): array
     {
-        return [
-            'fepade' => 'Formato CV FEPADE',
-            'mineducyt_birf' => 'Formato CV MINEDUCYT / BIRF',
-            'resumen_personal' => 'Resumen del CV del personal propuesto',
-            'profesional' => 'CV profesional completo',
-        ];
+        return CvPlantilla::query()
+            ->where('activo', true)
+            ->where('activa', true)
+            ->orderBy('orden')
+            ->orderBy('nombre')
+            ->get()
+            ->mapWithKeys(fn ($plantilla) => [
+                $plantilla->codigo => $plantilla->nombre,
+            ])
+            ->toArray();
     }
 
     private function cargarConsultor(Consultor $consultor): void
