@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 use App\Modules\Fac\Models\CvPlantilla;
 use Illuminate\Support\Facades\View as ViewFacade;
+use Illuminate\Support\Facades\Storage;
 
 class ExportacionCvController extends Controller
 {
@@ -104,20 +105,44 @@ class ExportacionCvController extends Controller
 
     private function cvData(Consultor $consultor): array
     {
+        $fotoUrl = null;
+        $fotoPdf = null;
+
+        if ($consultor->ruta_foto) {
+            $fotoUrl = Storage::url($consultor->ruta_foto);
+
+            try {
+                $fotoPdf = Storage::disk('public')->path($consultor->ruta_foto);
+            } catch (\Throwable $e) {
+                $fotoPdf = public_path('storage/' . $consultor->ruta_foto);
+            }
+        }
+
+        $pais = optional($consultor->pais)->nombre_pais;
+        $departamento = optional(optional($consultor->municipio)->departamento)->nombre_departamento;
+        $distrito = optional($consultor->municipio)->nombre_distrito;
+
+        $residenciaCompleta = collect([
+            $pais,
+            $departamento,
+            $distrito,
+        ])->filter()->implode(', ');
+
         return [
             'personal' => [
-                'foto' => $consultor->ruta_foto ? asset('storage/' . $consultor->ruta_foto) : null,
+                'foto' => $fotoUrl,
+                'foto_pdf' => $fotoPdf,
                 'nombre' => $consultor->nombre_completo,
                 'fecha_nacimiento' => optional($consultor->fecha_nacimiento)->format('d/m/Y'),
                 'nacionalidad' => $consultor->nacionalidad,
-                'residencia' => optional($consultor->pais)->nombre_pais,
+                'residencia' => $pais,
+                'residencia_completa' => $residenciaCompleta,
                 'direccion' => $consultor->direccion_residencia,
             ],
 
             'emails' => $consultor->emails->map(fn ($item) => [
                 'id' => $item->id_email,
                 'email' => $item->email,
-                'principal' => (bool) $item->principal,
             ])->values(),
 
             'telefonos' => $consultor->telefonos->map(fn ($item) => [
@@ -125,6 +150,11 @@ class ExportacionCvController extends Controller
                 'tipo' => optional($item->tipoTelefono)->nombre,
                 'numero' => $item->numero_telefono,
                 'extension' => $item->extension,
+                'telefono_completo' => trim(
+                    (optional($item->tipoTelefono)->nombre ? optional($item->tipoTelefono)->nombre . ': ' : '') .
+                    ($item->extension ? '(' . $item->extension . ') ' : '') .
+                    $item->numero_telefono
+                ),
             ])->values(),
 
             'experiencias' => $consultor->experienciasLaborales->map(fn ($item) => [
@@ -134,6 +164,7 @@ class ExportacionCvController extends Controller
                 'descripcion' => $item->descripcion,
                 'desde' => optional($item->desde)->format('d/m/Y'),
                 'hasta' => $item->trabajo_actual ? 'Actualidad' : optional($item->hasta)->format('d/m/Y'),
+                'trabajo_actual' => $item->trabajo_actual ? 'Sí' : 'No',
                 'jefe_nombre' => $item->jefe_nombre,
                 'jefe_email' => $item->jefe_email,
                 'jefe_telefono' => $item->jefe_telefono,
@@ -150,7 +181,10 @@ class ExportacionCvController extends Controller
                 'pais' => optional($item->pais)->nombre_pais,
                 'fecha_inicio' => optional($item->fecha_inicio)->format('d/m/Y'),
                 'fecha_fin' => optional($item->fecha_fin)->format('d/m/Y'),
+                'fecha_emision' => optional($item->fecha_emision)->format('d/m/Y'),
+                'fecha_vencimiento' => optional($item->fecha_vencimiento)->format('d/m/Y'),
                 'horas' => $item->horas,
+                'archivo_url' => $item->url_archivo ? url(Storage::url($item->url_archivo)) : null,
             ])->values(),
 
             'capacitaciones_fepade' => $consultor->capacitacionesFepade->map(fn ($item) => [
@@ -179,6 +213,7 @@ class ExportacionCvController extends Controller
                 'idioma' => optional($item->idioma)->nombre,
                 'nivel' => optional($item->nivel)->nombre,
                 'certificado' => $item->url_certificado ? 'Sí' : 'No',
+                'certificado_url' => $item->url_certificado ? url(Storage::url($item->url_certificado)) : null,
             ])->values(),
 
             'referencias' => $consultor->referencias->map(fn ($item) => [

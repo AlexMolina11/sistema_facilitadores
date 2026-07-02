@@ -52,6 +52,18 @@
                 <small class="text-muted d-block mt-2">
                     Puede cambiar de plantilla sin perder los elementos seleccionados.
                 </small>
+
+                <div class="d-grid gap-2 mt-3">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnSelectAllCv">Seleccionar todo</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnClearAllCv">Quitar todo</button>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnExpandAllCv">Expandir todo</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCollapseAllCv">Contraer todo</button>
+                    </div>
+                </div>
             </div>
 
             <div class="accordion" id="cvAccordion">
@@ -64,6 +76,14 @@
                     </h2>
                     <div id="cvDatos" class="accordion-collapse collapse show" data-bs-parent="#cvAccordion">
                         <div class="accordion-body">
+                            <div class="d-flex gap-2 mb-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary cv-section-select" data-section="personal">
+                                    Seleccionar sección
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary cv-section-clear" data-section="personal">
+                                    Quitar sección
+                                </button>
+                            </div>
                             @foreach($cvData['personal'] as $key => $value)
                                 <div class="form-check cv-check">
                                     <input class="form-check-input cv-toggle" type="checkbox" checked
@@ -83,7 +103,7 @@
                     'collapseId' => 'cvEmails',
                     'section' => 'emails',
                     'items' => $cvData['emails'],
-                    'fields' => ['email' => 'Correo', 'principal' => 'Principal'],
+                    'fields' => ['email' => 'Correo'],
                     'mainField' => 'email',
                 ])
 
@@ -92,7 +112,7 @@
                     'collapseId' => 'cvTelefonos',
                     'section' => 'telefonos',
                     'items' => $cvData['telefonos'],
-                    'fields' => ['tipo' => 'Tipo', 'numero' => 'Número', 'extension' => 'Extensión'],
+                    'fields' => ['tipo' => 'Tipo', 'extension' => 'Extensión', 'numero' => 'Número'],
                     'mainField' => 'numero',
                 ])
 
@@ -129,7 +149,10 @@
                         'pais' => 'País',
                         'fecha_inicio' => 'Fecha inicio',
                         'fecha_fin' => 'Fecha fin',
+                        'fecha_emision' => 'Fecha emisión',
+                        'fecha_vencimiento' => 'Fecha vencimiento',
                         'horas' => 'Horas',
+                        'archivo_url' => 'Ver atestado',
                     ],
                     'mainField' => 'titulo',
                 ])
@@ -160,7 +183,7 @@
                     'fields' => [
                         'idioma' => 'Idioma',
                         'nivel' => 'Nivel',
-                        'certificado' => 'Certificado',
+                        'certificado_url' => 'Ver certificado',
                     ],
                     'mainField' => 'idioma',
                 ])
@@ -292,13 +315,24 @@ document.addEventListener('DOMContentLoaded', function () {
         return fields.some(field => isSelected(section, item.id, field) && item[field]);
     }
 
-    function renderRows(section, items, fields, labels = null) {
+    function renderRows(section, items, fields) {
         return items
             .filter(item => rowIsVisible(section, item, fields))
             .map(item => {
                 return `<tr>${fields.map(field => {
-                    const value = isSelected(section, item.id, field) ? escapeHtml(item[field]) : '';
-                    return `<td>${value || '&nbsp;'}</td>`;
+                    if (!isSelected(section, item.id, field) || !item[field]) {
+                        return `<td>&nbsp;</td>`;
+                    }
+
+                    if (field === 'archivo_url') {
+                        return `<td><a href="${escapeHtml(item[field])}" target="_blank">Ver atestado</a></td>`;
+                    }
+
+                    if (field === 'certificado_url') {
+                        return `<td><a href="${escapeHtml(item[field])}" target="_blank">Ver certificado</a></td>`;
+                    }
+
+                    return `<td>${escapeHtml(item[field])}</td>`;
                 }).join('')}</tr>`;
             }).join('');
     }
@@ -530,10 +564,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     <h3>Idiomas</h3>
                     <ul>
-                        ${data.idiomas.filter(item => rowIsVisible('idiomas', item, ['idioma', 'nivel'])).map(item => `
+                        ${data.idiomas.filter(item => rowIsVisible('idiomas', item, ['idioma', 'nivel', 'certificado_url'])).map(item => `
                             <li>
                                 ${isSelected('idiomas', item.id, 'idioma') ? escapeHtml(item.idioma) : ''}
                                 ${isSelected('idiomas', item.id, 'nivel') ? ' — ' + escapeHtml(item.nivel) : ''}
+                                ${isSelected('idiomas', item.id, 'certificado_url') && item.certificado_url 
+                                    ? `<br><a href="${escapeHtml(item.certificado_url)}" target="_blank">Ver certificado</a>` 
+                                    : ''}
                             </li>
                         `).join('') || '<li>Sin idiomas registrados</li>'}
                     </ul>
@@ -580,6 +617,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 ${isSelected('atestados', item.id, 'institucion') ? `<p class="cv-pro-place">${escapeHtml(item.institucion)}</p>` : ''}
                                 ${isSelected('atestados', item.id, 'tipo_formacion') ? `<small>${escapeHtml(item.tipo_formacion)}</small>` : ''}
                                 ${isSelected('atestados', item.id, 'descripcion') ? `<p>${escapeHtml(item.descripcion)}</p>` : ''}
+                                ${isSelected('atestados', item.id, 'archivo_url') && item.archivo_url ? `<p><a href="${escapeHtml(item.archivo_url)}" target="_blank">Ver atestado</a></p>`: ''}
                             </div>
                         `).join('') || '<p>Sin formación registrada.</p>'}
                     </section>
@@ -626,8 +664,15 @@ document.addEventListener('DOMContentLoaded', function () {
             .join('<br>');
 
         const telefonos = window.cvData.telefonos
-            .filter(item => rowIsVisible('telefonos', item, ['numero']))
-            .map(item => escapeHtml(item.numero))
+            .filter(item => rowIsVisible('telefonos', item, ['tipo', 'extension', 'numero']))
+            .map(item => {
+                const tipo = isSelected('telefonos', item.id, 'tipo') && item.tipo ? escapeHtml(item.tipo) + ': ' : '';
+                const extension = isSelected('telefonos', item.id, 'extension') && item.extension ? '(' + escapeHtml(item.extension) + ') ' : '';
+                const numero = isSelected('telefonos', item.id, 'numero') && item.numero ? escapeHtml(item.numero) : '';
+
+                return `${tipo}${extension}${numero}`;
+            })
+            .filter(Boolean)
             .join('<br>');
 
         if (!emails && !telefonos) return '';
@@ -659,6 +704,48 @@ document.addEventListener('DOMContentLoaded', function () {
         configInput.value = JSON.stringify(state);
     }
 
+    function setToggle(input, checked) {
+        input.checked = checked;
+
+        const section = input.dataset.section;
+        const item = input.dataset.item;
+        const field = input.dataset.field;
+
+        state.selections[section] ??= {};
+        state.selections[section][item] ??= {};
+        state.selections[section][item][field] = checked;
+    }
+
+    function setSection(section, checked) {
+        document.querySelectorAll(`.cv-toggle[data-section="${section}"]`).forEach(input => {
+            setToggle(input, checked);
+        });
+    }
+
+    function setItem(section, item, checked) {
+        document.querySelectorAll(`.cv-toggle[data-section="${section}"][data-item="${item}"]`).forEach(input => {
+            setToggle(input, checked);
+        });
+    }
+
+    function setAll(checked) {
+        document.querySelectorAll('.cv-toggle').forEach(input => {
+            setToggle(input, checked);
+        });
+    }
+
+    function expandAll() {
+        document.querySelectorAll('#cvAccordion .accordion-collapse').forEach(el => {
+            bootstrap.Collapse.getOrCreateInstance(el, { toggle: false }).show();
+        });
+    }
+
+    function collapseAll() {
+        document.querySelectorAll('#cvAccordion .accordion-collapse').forEach(el => {
+            bootstrap.Collapse.getOrCreateInstance(el, { toggle: false }).hide();
+        });
+    }
+
     initSelections();
     render();
 
@@ -673,6 +760,60 @@ document.addEventListener('DOMContentLoaded', function () {
             state.selections[section] ??= {};
             state.selections[section][item] ??= {};
             state.selections[section][item][field] = this.checked;
+
+            render();
+        });
+    });
+
+    document.getElementById('btnSelectAllCv').addEventListener('click', function () {
+        setAll(true);
+        render();
+    });
+
+    document.getElementById('btnClearAllCv').addEventListener('click', function () {
+        setAll(false);
+        render();
+    });
+
+    document.getElementById('btnExpandAllCv').addEventListener('click', expandAll);
+    document.getElementById('btnCollapseAllCv').addEventListener('click', collapseAll);
+
+    document.querySelectorAll('.cv-section-select').forEach(button => {
+        button.addEventListener('click', function () {
+            setSection(this.dataset.section, true);
+            render();
+        });
+    });
+
+    document.querySelectorAll('.cv-section-clear').forEach(button => {
+        button.addEventListener('click', function () {
+            setSection(this.dataset.section, false);
+            render();
+        });
+    });
+
+    document.querySelectorAll('.cv-item-select').forEach(button => {
+        button.addEventListener('click', function () {
+            setItem(this.dataset.section, this.dataset.item, true);
+            render();
+        });
+    });
+
+    document.querySelectorAll('.cv-item-clear').forEach(button => {
+        button.addEventListener('click', function () {
+            setItem(this.dataset.section, this.dataset.item, false);
+            render();
+        });
+    });
+
+    document.querySelectorAll('.cv-toggle[data-section="areas"]').forEach(input => {
+        input.addEventListener('change', function () {
+            const areaId = this.dataset.item;
+            const checked = this.checked;
+
+            document.querySelectorAll(`.cv-toggle[data-section="habilidades_area_${areaId}"]`).forEach(hab => {
+                setToggle(hab, checked);
+            });
 
             render();
         });
