@@ -98,112 +98,138 @@
 
 <style>
     @page {
-        margin: 24px;
+        margin: 44px;
     }
 
     body {
         margin: 0;
         font-family: DejaVu Sans, Arial, sans-serif;
         font-size: 10.3px;
-        color: #1f2937;
-        line-height: 1.35;
-        background: #ffffff;
+        color: #0D1B2A;
+        line-height: 1.38;
+        background: #FFFFFF;
     }
 
     .cv-pro-document {
         width: 100%;
     }
 
-    .cv-pro-header-table {
+    /* HERO */
+    .cv-pro-hero {
+        background: #0D1B2A;
+        margin: -44px -44px 18px -44px;
+        padding: 30px 44px 18px;
+        border-bottom: 6px solid #00C896;
+        color: #FFFFFF;
+        page-break-inside: avoid;
+    }
+
+    .cv-pro-hero-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 14px;
-        background: #f8fafc;
-        border: 1px solid #dfe5ea;
-        border-left: 8px solid #0D1B2A;
     }
 
-    .cv-pro-header-photo-cell {
-        width: 145px;
-        vertical-align: top;
-        padding: 18px 18px 18px 20px;
-    }
-
-    .cv-pro-header-info-cell {
+    .cv-pro-hero-photo-cell {
+        width: 132px;
         vertical-align: middle;
-        padding: 18px 22px 18px 0;
+        padding-right: 24px;
     }
 
-    .cv-pro-photo {
-        width: 112px;
-        height: 112px;
-        border-radius: 56px;
+    .cv-pro-hero-info-cell {
+        vertical-align: middle;
+    }
+
+    .cv-pro-hero-photo {
+        width: 108px;
+        height: 108px;
+        border-radius: 54px;
         overflow: hidden;
-        border: 4px solid #ffffff;
-        background: #eef2f8;
+        background: #FFFFFF;
+        border: 4px solid #FFFFFF;
         text-align: center;
-        box-shadow: 0 0 0 2px #0D1B2A;
     }
 
-    .cv-pro-photo img {
-        width: 112px;
-        height: 112px;
+    .cv-pro-hero-photo img {
+        width: 108px;
+        height: 108px;
         object-fit: cover;
     }
 
-    .cv-pro-photo-empty {
-        height: 112px;
-        line-height: 112px;
+    .cv-pro-hero-photo-empty {
+        height: 108px;
+        line-height: 108px;
+        color: #0D1B2A;
         font-size: 30px;
         font-weight: bold;
-        color: #0D1B2A;
         text-transform: uppercase;
     }
 
-    .cv-pro-name {
-        margin: 0;
-        font-size: 27px;
+    .cv-pro-hero-brand {
+        color: #00C896;
+        font-size: 8.5px;
         font-weight: bold;
-        color: #0D1B2A;
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        margin-bottom: 7px;
+    }
+
+    .cv-pro-hero-name {
+        margin: 0;
+        color: #FFFFFF;
+        font-size: 27px;
+        line-height: 1.05;
+        font-weight: bold;
         text-transform: uppercase;
         letter-spacing: .035em;
-        line-height: 1.08;
     }
 
-    .cv-pro-role {
-        margin-top: 6px;
+    .cv-pro-hero-role {
+        display: inline-block;
+        margin-top: 8px;
         margin-bottom: 12px;
-        color: #385506;
-        font-size: 11px;
+        padding: 3px 10px;
+        border: 1px solid #00C896;
+        border-radius: 12px;
+        color: #FFFFFF;
+        font-size: 9.5px;
         font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: .08em;
+        letter-spacing: .06em;
     }
 
-    .cv-pro-meta {
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid #d8dee4;
-    }
-
-    .cv-pro-meta-pill {
+    .cv-pro-hero-meta span {
         display: inline-block;
-        padding: 3px 8px;
-        margin: 0 5px 5px 0;
-        background: #eef5d7;
-        border: 1px solid #d9e7a8;
-        border-radius: 12px;
-        color: #385506;
+        margin: 0 18px 6px 0;
+        color: #EEF2F8;
         font-size: 9px;
-        font-weight: bold;
     }
 
+    .cv-pro-hero-meta strong {
+        display: block;
+        color: #00C896;
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        margin-bottom: 2px;
+    }
+
+    .cv-pro-hero-footer {
+        margin-top: 16px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,.18);
+        color: #EEF2F8;
+        font-size: 8.5px;
+        text-align: right;
+    }
+
+    /* RESUMEN */
     .cv-pro-summary-section {
-        margin-bottom: 8px;
-        padding: 9px 10px;
-        border: 1px solid #e1e7ed;
-        border-radius: 8px;
-        background: #fbfcfd;
+        margin-bottom: 10px;
+        padding: 10px 12px;
+        background: #F7F9FC;
+        border: 1px solid rgba(13, 27, 42, 0.10);
+        border-left: 4px solid #00C896;
+        page-break-inside: avoid;
     }
 
     .cv-pro-summary-title {
@@ -211,45 +237,59 @@
         font-weight: bold;
         text-transform: uppercase;
         color: #0D1B2A;
-        margin-bottom: 6px;
-        letter-spacing: .06em;
+        margin-bottom: 7px;
+        letter-spacing: .07em;
     }
 
     .cv-pro-summary-pill {
         display: inline-block;
-        background: #ffffff;
-        border: 1px solid #d7dde2;
+        background: #FFFFFF;
+        border: 1px solid rgba(13, 27, 42, 0.10);
         border-radius: 12px;
-        padding: 3px 8px;
-        margin: 0 4px 4px 0;
-        color: #374151;
+        padding: 3px 9px;
+        margin: 0 5px 5px 0;
+        color: #0D1B2A;
         font-size: 9px;
     }
 
+    .cv-pro-summary-pill-accent {
+        display: inline-block;
+        background: #EEF2F8;
+        border: 1px solid rgba(13, 27, 42, 0.10);
+        border-radius: 12px;
+        padding: 3px 9px;
+        margin: 0 5px 5px 0;
+        color: #0099FF;
+        font-size: 9px;
+        font-weight: bold;
+    }
+
+    /* SECCIONES */
     .cv-pro-section {
-        margin-top: 16px;
-        margin-bottom: 16px;
+        margin-top: 18px;
         page-break-inside: auto;
     }
 
     .cv-pro-section-title {
-        margin: 0 0 10px;
+        margin: 0 0 12px;
         padding: 7px 10px;
-        background: #0D1B2A;
-        color: #ffffff;
-        font-size: 12px;
+        background: #162032;
+        color: #FFFFFF;
+        font-size: 11.5px;
         font-weight: bold;
         text-transform: uppercase;
         letter-spacing: .055em;
-        border-radius: 6px;
+        border-left: 5px solid #00C896;
+        page-break-after: avoid;
     }
 
     .cv-pro-item {
-        margin-bottom: 10px;
-        padding: 10px 10px 8px;
-        border: 1px solid #e5eaf0;
-        border-radius: 8px;
-        background: #ffffff;
+        position: relative;
+        margin-bottom: 11px;
+        padding: 10px 12px;
+        background: #FFFFFF;
+        border: 1px solid rgba(13, 27, 42, 0.10);
+        border-left: 4px solid #00C896;
         page-break-inside: avoid;
     }
 
@@ -257,11 +297,11 @@
         font-size: 11.5px;
         font-weight: bold;
         color: #0D1B2A;
-        margin-right: 115px;
+        margin-right: 120px;
     }
 
     .cv-pro-place {
-        color: #385506;
+        color: #0099FF;
         font-weight: bold;
         margin: 3px 0;
     }
@@ -269,43 +309,47 @@
     .cv-pro-date {
         float: right;
         max-width: 120px;
-        text-align: right;
-        font-size: 9.2px;
-        color: #64748b;
-        background: #f3f6f8;
-        border-radius: 8px;
-        padding: 2px 6px;
+        text-align: center;
+        font-size: 9px;
+        font-weight: bold;
+        color: #0D1B2A;
+        background: #EEF2F8;
+        border: 1px solid rgba(13, 27, 42, 0.10);
+        border-radius: 10px;
+        padding: 2px 8px;
     }
 
     .cv-pro-small {
-        margin-top: 4px;
-        color: #64748b;
+        margin-top: 5px;
+        color: #6B7A90;
         font-size: 9px;
     }
 
+    /* TAGS */
     .cv-pro-tags {
-        margin-top: 5px;
-        margin-bottom: 3px;
+        margin-top: 6px;
     }
 
     .cv-pro-tag {
         display: inline-block;
         margin: 2px 3px 2px 0;
-        padding: 2px 7px;
-        border-radius: 10px;
-        background: #eef5d7;
-        border: 1px solid #d9e7a8;
-        color: #385506;
+        padding: 2px 8px;
+        border-radius: 9px;
+        background: #F7F9FC;
+        border: 1px solid rgba(13, 27, 42, 0.10);
+        color: #0D1B2A;
         font-size: 8.7px;
         font-weight: bold;
     }
 
+    /* LINKS */
     .cv-pro-link {
-        color: #0065cc;
+        color: #0099FF;
         text-decoration: none;
         font-weight: bold;
     }
 
+    /* REFERENCIAS */
     .cv-pro-grid {
         width: 100%;
         border-collapse: collapse;
@@ -319,32 +363,62 @@
     }
 
     .cv-pro-ref {
-        border: 1px solid #dce2e8;
-        border-radius: 8px;
-        background: #fbfcfd;
-        padding: 8px;
+        background: #F7F9FC;
+        border: 1px solid rgba(13, 27, 42, 0.10);
+        border-top: 3px solid #162032;
+        padding: 9px 10px;
+        page-break-inside: avoid;
     }
 
     .cv-pro-ref strong {
         display: block;
         color: #0D1B2A;
+        font-size: 10.5px;
+        margin-bottom: 2px;
     }
 
     .cv-pro-ref span {
         display: block;
-        color: #4b5563;
+        color: #6B7A90;
+        font-size: 9px;
+        margin-top: 1px;
     }
 
     .cv-pro-ref-type {
-        margin: 8px 0 5px;
-        color: #385506;
-        font-size: 9px;
+        display: inline-block;
+        margin: 8px 0 6px;
+        padding: 2px 9px;
+        border-radius: 9px;
+        background: #0D1B2A;
+        color: #FFFFFF;
+        font-size: 8.7px;
         font-weight: bold;
         text-transform: uppercase;
+        letter-spacing: .04em;
+        page-break-after: avoid;
+    }
+
+    /* SALTOS DE PÁGINA */
+    .cv-pro-section-title,
+    .cv-pro-ref-type {
+        page-break-after: avoid;
+    }
+
+    .cv-pro-item,
+    .cv-pro-ref,
+    .cv-pro-summary-section,
+    .cv-pro-hero {
+        page-break-inside: avoid;
+    }
+
+    tr,
+    td,
+    table {
+        page-break-inside: avoid;
     }
 
     .cv-pro-empty {
-        color: #64748b;
+        color: #6B7A90;
         font-style: italic;
     }
 
@@ -355,52 +429,72 @@
 
 <div class="cv-pro-document">
 
-    <table class="cv-pro-header-table">
-        <tr>
-            <td class="cv-pro-header-photo-cell">
-                @if($fotoPdf && file_exists($fotoPdf))
-                    <div class="cv-pro-photo">
-                        <img src="{{ $fotoPdf }}" alt="Foto">
-                    </div>
-                @else
-                    <div class="cv-pro-photo">
-                        <div class="cv-pro-photo-empty">
-                            {{ $iniciales ?: 'CV' }}
+    <div class="cv-pro-hero">
+        <table class="cv-pro-hero-table">
+            <tr>
+                <td class="cv-pro-hero-photo-cell">
+                    @if($fotoPdf && file_exists($fotoPdf))
+                        <div class="cv-pro-hero-photo">
+                            <img src="{{ $fotoPdf }}" alt="Foto">
                         </div>
+                    @else
+                        <div class="cv-pro-hero-photo">
+                            <div class="cv-pro-hero-photo-empty">
+                                {{ $iniciales ?: 'CV' }}
+                            </div>
+                        </div>
+                    @endif
+                </td>
+
+                <td class="cv-pro-hero-info-cell">
+                    <div class="cv-pro-hero-brand">CONSULTORES FEPADE 2026</div>
+
+                    <h1 class="cv-pro-hero-name">
+                        {{ $personal('nombre') ?: 'Consultor FEPADE' }}
+                    </h1>
+
+                    <div class="cv-pro-hero-role">
+                        Consultor/a profesional FEPADE
                     </div>
-                @endif
-            </td>
 
-            <td class="cv-pro-header-info-cell">
-                <h1 class="cv-pro-name">{{ $personal('nombre') ?: 'Consultor FEPADE' }}</h1>
-                <div class="cv-pro-role">Consultor/a profesional FEPADE</div>
+                    <div class="cv-pro-hero-meta">
+                        @if($personal('nacionalidad'))
+                            <span>
+                                <strong>Nacionalidad</strong>
+                                {{ $personal('nacionalidad') }}
+                            </span>
+                        @endif
 
-                <div class="cv-pro-meta">
-                    @if($personal('nacionalidad'))
-                        <span class="cv-pro-meta-pill">Nacionalidad: {{ $personal('nacionalidad') }}</span>
-                    @endif
+                        @if($personal('residencia_completa') || $personal('residencia'))
+                            <span>
+                                <strong>Residencia</strong>
+                                {{ $personal('residencia_completa') ?: $personal('residencia') }}
+                            </span>
+                        @endif
 
-                    @if($personal('residencia_completa') || $personal('residencia'))
-                        <span class="cv-pro-meta-pill">
-                            Residencia: {{ $personal('residencia_completa') ?: $personal('residencia') }}
-                        </span>
-                    @endif
+                        @if($personal('fecha_nacimiento'))
+                            <span>
+                                <strong>Nacimiento</strong>
+                                {{ $personal('fecha_nacimiento') }}
+                            </span>
+                        @endif
+                    </div>
+                </td>
+            </tr>
+        </table>
 
-                    @if($personal('fecha_nacimiento'))
-                        <span class="cv-pro-meta-pill">Nacimiento: {{ $personal('fecha_nacimiento') }}</span>
-                    @endif
-                </div>
-            </td>
-        </tr>
-    </table>
+        <div class="cv-pro-hero-footer">
+            Documento generado automáticamente por el Sistema de Gestión de Consultores FEPADE
+        </div>
+    </div>
 
     @if($hayContacto)
         <div class="cv-pro-summary-section">
-            <div class="cv-pro-summary-title">Contacto</div>
+            <div class="cv-pro-summary-title">Información de contacto</div>
 
             @foreach($emails as $item)
                 @if($cell('emails', $item, 'email'))
-                    <span class="cv-pro-summary-pill">{{ $cell('emails', $item, 'email') }}</span>
+                    <span class="cv-pro-summary-pill">Correo: {{ $cell('emails', $item, 'email') }}</span>
                 @endif
             @endforeach
 
@@ -417,6 +511,10 @@
                     {{ $cell('telefonos', $item, 'numero') }}
                 </span>
             @endforeach
+        </div>
+
+        <div class="cv-pro-summary-section">
+            <div class="cv-pro-summary-title">Dirección de residencia</div>
 
             @if($personal('direccion'))
                 <span class="cv-pro-summary-pill">{{ $personal('direccion') }}</span>
