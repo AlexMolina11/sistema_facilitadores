@@ -37,6 +37,10 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('permission:fac.dashboard.ver')
         ->name('fac.dashboard');
 
+    Route::get('/dashboard/exportar-csv', [DashboardController::class, 'exportarCsv'])
+        ->middleware('permission:fac.dashboard.ver')
+        ->name('fac.dashboard.exportar-csv');
+
     Route::get('consultores', [ConsultorController::class, 'index'])
         ->middleware('permission:fac.consultores.ver,fac.consultores.gestionar')
         ->name('fac.consultores.index');
