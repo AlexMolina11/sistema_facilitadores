@@ -314,6 +314,43 @@
                     'mainField' => 'nombre',
                 ])
 
+                <div class="accordion-item cv-template-only" data-template="fepade">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#cvFepadeOpciones">
+                            Opciones específicas
+                        </button>
+                    </h2>
+
+                    <div id="cvFepadeOpciones" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+
+                            <div class="cv-config-item">
+                                <strong>Países con experiencia de trabajo últimos 10 años</strong>
+
+                                <div class="form-check cv-check mt-2">
+                                    <input
+                                        class="form-check-input cv-toggle"
+                                        type="checkbox"
+                                        checked
+                                        data-section="fepade_opciones"
+                                        data-item="paises_experiencia_10"
+                                        data-field="mostrar"
+                                        id="fepade_paises_experiencia_10"
+                                    >
+
+                                    <label class="form-check-label" for="fepade_paises_experiencia_10">
+                                        Mostrar países donde tiene experiencia de trabajo en los últimos 10 años
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
                 <div class="accordion-item">
 
                     <h2 class="accordion-header">
@@ -474,6 +511,7 @@
 <script>
     window.cvData = @json($cvData);
     window.cvPlantillas = @json($plantillas);
+    window.cvCatalogos = @json($cvCatalogos ?? []);
 </script>
 
 <script>
@@ -607,26 +645,159 @@ document.addEventListener('DOMContentLoaded', function () {
         return `<h2>${title}</h2>`;
     }
 
+    const TIPO_FORMACION = window.cvCatalogos.tipo_formacion || {};
+
+    function parseDateIso(value) {
+        if (!value) return null;
+
+        const date = new Date(value + 'T00:00:00');
+
+        return isNaN(date.getTime()) ? null : date;
+    }
+
+    function atestadosPorTipo(ids) {
+        return window.cvData.atestados.filter(item => {
+            return ids.includes(Number(item.id_tipo_formacion))
+                && rowIsVisible('atestados', item, [
+                    'titulo',
+                    'institucion',
+                    'fecha_inicio',
+                    'fecha_fin',
+                    'archivo_url'
+                ]);
+        });
+    }
+
+    function cargoFepade() {
+        const experiencias = [...window.cvData.experiencias];
+
+        const actual = experiencias.find(item => item.trabajo_actual_bool === true || item.hasta === 'Actualidad');
+
+        if (actual && isSelected('experiencias', actual.id, 'cargo')) {
+            return escapeHtml(actual.cargo);
+        }
+
+        const reciente = experiencias
+            .filter(item => item.hasta_iso)
+            .sort((a, b) => {
+                const fechaA = parseDateIso(a.hasta_iso);
+                const fechaB = parseDateIso(b.hasta_iso);
+
+                return (fechaB?.getTime() || 0) - (fechaA?.getTime() || 0);
+            })[0];
+
+        return reciente && isSelected('experiencias', reciente.id, 'cargo')
+            ? escapeHtml(reciente.cargo)
+            : '';
+    }
+
+    function paisesExperienciaUltimos10() {
+        const hoy = new Date();
+        const limite = new Date();
+        limite.setFullYear(hoy.getFullYear() - 10);
+
+        const paises = window.cvData.experiencias
+            .filter(item => {
+                const hasta = item.trabajo_actual_bool
+                    ? hoy
+                    : parseDateIso(item.hasta_iso);
+
+                return hasta && hasta >= limite && item.pais;
+            })
+            .map(item => item.pais);
+
+        return [...new Set(paises)];
+    }
+
+    function asociacionesFepade() {
+        return window.cvData.areas
+            .filter(area => isSelected('areas', area.id, 'nombre'))
+            .map(area => {
+                const atestado = window.cvData.atestados.find(a => Number(a.id) === Number(area.id_atestado));
+                const institucion = atestado?.institucion || '';
+
+                const habilidades = [];
+
+                document.querySelectorAll(`.cv-habilidad-toggle[data-area="${area.id}"]`).forEach(input => {
+                    const habId = input.dataset.item;
+
+                    if (!isSelected(`habilidades_area_${area.id}`, habId, 'nombre')) {
+                        return;
+                    }
+
+                    const label = input.closest('.form-check')?.querySelector('label');
+                    const nombre = label ? label.textContent.trim() : '';
+
+                    if (nombre) {
+                        habilidades.push(nombre);
+                    }
+                });
+
+                return {
+                    institucion,
+                    area: area.nombre,
+                    habilidades: [...new Set(habilidades)]
+                };
+            })
+            .filter(item => item.institucion || item.area || item.habilidades.length);
+    }
+
+    function renderTemplateVisibility() {
+        document.querySelectorAll('.cv-template-only').forEach(el => {
+            el.style.display = el.dataset.template === state.plantilla ? '' : 'none';
+        });
+    }
+
     function renderFepade() {
         const data = window.cvData;
+
+        const educacionFormal = atestadosPorTipo(TIPO_FORMACION.educacion_formal || []);
+
+        const otrosEstudios = atestadosPorTipo([
+            ...(TIPO_FORMACION.acreditacion || []),
+            ...(TIPO_FORMACION.educacion_continua || []),
+        ]);
+
+        const consultorias = atestadosPorTipo([
+            ...(TIPO_FORMACION.capacitacion_impartida || []),
+            ...(TIPO_FORMACION.capacitacion_recibida || []),
+            ...(TIPO_FORMACION.consultoria_realizada || []),
+        ]);
+
+        const asociaciones = asociacionesFepade();
+
+        const mostrarPaisesExperiencia = isSelected('fepade_opciones', 'paises_experiencia_10', 'mostrar');
+        const paisesExperiencia = paisesExperienciaUltimos10();
 
         let html = `<h1 class="cv-title">Hoja de Vida</h1>`;
 
         html += `
             <table class="cv-table cv-table-clean">
-                <tr><th>Cargo:</th><td></td></tr>
+                <tr><th>Cargo:</th><td>${cargoFepade() || '&nbsp;'}</td></tr>
                 <tr><th>Nombre del Profesional:</th><td>${personal('nombre')}</td></tr>
                 <tr><th>Fecha de nacimiento:</th><td>${personal('fecha_nacimiento')}</td></tr>
-                <tr><th>País de ciudadanía/residencia:</th><td>${personal('nacionalidad') || personal('residencia')}</td></tr>
+                <tr><th>País de ciudadanía/residencia:</th><td>${personal('residencia')}</td></tr>
             </table>
         `;
 
         html += sectionTitle('1. Educación:');
         html += `
             <table class="cv-table">
-                <thead><tr><th>Título obtenido</th><th>Institución</th><th>Fecha de estudios</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Título obtenido</th>
+                        <th>Institución</th>
+                        <th>Fecha de estudios</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    ${renderRows('atestados', data.atestados, ['titulo', 'institucion', 'fecha_fin']) || '<tr><td colspan="3">&nbsp;</td></tr>'}
+                    ${educacionFormal.map(item => `
+                        <tr>
+                            <td>${isSelected('atestados', item.id, 'titulo') ? escapeHtml(item.titulo) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'institucion') ? escapeHtml(item.institucion) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'fecha_fin') ? escapeHtml(item.fecha_fin) : ''}</td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="3">&nbsp;</td></tr>'}
                 </tbody>
             </table>
         `;
@@ -634,9 +805,21 @@ document.addEventListener('DOMContentLoaded', function () {
         html += sectionTitle('2. Asociaciones profesionales a las que pertenece:');
         html += `
             <table class="cv-table">
-                <thead><tr><th>Institución / área</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Institución</th>
+                        <th>Área de especialización</th>
+                        <th>Habilidad técnica</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    ${data.areas.filter(a => isSelected('areas', a.id, 'nombre')).map(a => `<tr><td>${escapeHtml(a.nombre)}</td></tr>`).join('') || '<tr><td>&nbsp;</td></tr>'}
+                    ${asociaciones.map(item => `
+                        <tr>
+                            <td>${escapeHtml(item.institucion) || '&nbsp;'}</td>
+                            <td>${escapeHtml(item.area) || '&nbsp;'}</td>
+                            <td>${item.habilidades.length ? item.habilidades.map(h => escapeHtml(h)).join('<br>') : '&nbsp;'}</td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="3">&nbsp;</td></tr>'}
                 </tbody>
             </table>
         `;
@@ -644,20 +827,41 @@ document.addEventListener('DOMContentLoaded', function () {
         html += sectionTitle('3. Otros estudios:');
         html += `
             <table class="cv-table">
-                <thead><tr><th>Nombre del curso/seminario</th><th>Institución</th><th>Fecha</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Nombre del curso/seminario</th>
+                        <th>Institución que lo impartió</th>
+                        <th>Fecha de estudios</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    ${renderRows('atestados', data.atestados, ['titulo', 'institucion', 'fecha_inicio']) || '<tr><td colspan="3">&nbsp;</td></tr>'}
+                    ${otrosEstudios.map(item => `
+                        <tr>
+                            <td>${isSelected('atestados', item.id, 'titulo') ? escapeHtml(item.titulo) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'institucion') ? escapeHtml(item.institucion) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'fecha_fin') ? escapeHtml(item.fecha_fin) : ''}</td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="3">&nbsp;</td></tr>'}
                 </tbody>
             </table>
         `;
 
-        html += sectionTitle('4. Países donde tiene experiencia de trabajo los últimos 10 años:');
-        html += `<p>${personal('residencia') || '&nbsp;'}</p>`;
+        if (mostrarPaisesExperiencia) {
+            html += sectionTitle('4. Países donde tiene experiencia de trabajo los últimos 10 años:');
+            html += `<p>${paisesExperiencia.length ? paisesExperiencia.map(p => escapeHtml(p)).join(', ') : '&nbsp;'}</p>`;
+        }
 
         html += sectionTitle('5. Historia laboral:');
         html += `
             <table class="cv-table">
-                <thead><tr><th>Desde</th><th>Hasta</th><th>Empresa</th><th>Cargos desempeñados</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Desde</th>
+                        <th>Hasta</th>
+                        <th>Empresa</th>
+                        <th>Cargos desempeñados</th>
+                    </tr>
+                </thead>
                 <tbody>
                     ${renderRows('experiencias', data.experiencias, ['desde', 'hasta', 'empresa', 'cargo']) || '<tr><td colspan="4">&nbsp;</td></tr>'}
                 </tbody>
@@ -667,9 +871,21 @@ document.addEventListener('DOMContentLoaded', function () {
         html += sectionTitle('6. Experiencia en consultorías y gestión de proyectos:');
         html += `
             <table class="cv-table">
-                <thead><tr><th>Consultorías</th><th>Empresa / organización</th><th>Fecha</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Consultorías / capacitaciones</th>
+                        <th>Empresa / organización</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    ${renderRows('atestados', data.atestados, ['titulo', 'institucion', 'fecha_fin']) || '<tr><td colspan="3">&nbsp;</td></tr>'}
+                    ${consultorias.map(item => `
+                        <tr>
+                            <td>${isSelected('atestados', item.id, 'titulo') ? escapeHtml(item.titulo) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'institucion') ? escapeHtml(item.institucion) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'fecha_fin') ? escapeHtml(item.fecha_fin) : ''}</td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="3">&nbsp;</td></tr>'}
                 </tbody>
             </table>
         `;
@@ -677,7 +893,14 @@ document.addEventListener('DOMContentLoaded', function () {
         html += sectionTitle('7. Experiencia como facilitador/a:');
         html += `
             <table class="cv-table">
-                <thead><tr><th>Nombre de la capacitación</th><th>Fecha inicio</th><th>Fecha fin</th><th>Empresa a quien se impartió</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Nombre de la capacitación</th>
+                        <th>Fecha inicio</th>
+                        <th>Fecha fin</th>
+                        <th>Empresa a quien se impartió</th>
+                    </tr>
+                </thead>
                 <tbody>
                     ${renderRows('capacitaciones_fepade', data.capacitaciones_fepade, ['nombre_evento', 'fecha_inicio', 'fecha_fin', 'institucion']) || '<tr><td colspan="4">&nbsp;</td></tr>'}
                 </tbody>
@@ -685,6 +908,8 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         html += renderContact();
+
+        renderTemplateVisibility();
 
         return html;
     }
@@ -1155,6 +1380,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function render() {
         state.plantilla = plantillaSelect.value;
         templateName.textContent = window.cvPlantillas[state.plantilla];
+        
+        renderTemplateVisibility();
 
         let html = '';
 

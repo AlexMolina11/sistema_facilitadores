@@ -1,4 +1,5 @@
 @include('fac.cv.pdf._styles')
+
 @php
     $selected = function ($section, $item, $field) use ($config) {
         return data_get($config, "selections.$section.$item.$field") === true;
@@ -25,15 +26,105 @@
             ? ($item[$field] ?? '')
             : '';
     };
+
+    $TIPO_FORMACION = $cvCatalogos['tipo_formacion'] ?? [];
+
+    $atestadosPorTipo = function ($ids) use ($cvData, $visible) {
+        return collect($cvData['atestados'] ?? [])
+            ->filter(fn ($item) => in_array((int) ($item['id_tipo_formacion'] ?? 0), $ids, true))
+            ->filter(fn ($item) => $visible('atestados', $item, [
+                'titulo',
+                'institucion',
+                'fecha_inicio',
+                'fecha_fin',
+                'archivo_url',
+            ]));
+    };
+
+    $parseDate = function ($value) {
+        if (blank($value)) {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::parse($value);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    };
+
+    $experiencias = collect($cvData['experiencias'] ?? []);
+
+    $cargoActual = $experiencias->first(fn ($item) => ($item['trabajo_actual_bool'] ?? false) === true);
+
+    $cargoReciente = $cargoActual ?: $experiencias
+        ->filter(fn ($item) => ! blank($item['hasta_iso'] ?? null))
+        ->sortByDesc('hasta_iso')
+        ->first();
+
+    $cargo = $cargoReciente && $selected('experiencias', $cargoReciente['id'], 'cargo')
+        ? ($cargoReciente['cargo'] ?? '')
+        : '';
+
+    $educacionFormal = $atestadosPorTipo($TIPO_FORMACION['educacion_formal'] ?? []);
+
+    $otrosEstudios = $atestadosPorTipo(array_merge(
+        $TIPO_FORMACION['acreditacion'] ?? [],
+        $TIPO_FORMACION['educacion_continua'] ?? []
+    ));
+
+    $consultorias = $atestadosPorTipo(array_merge(
+        $TIPO_FORMACION['capacitacion_impartida'] ?? [],
+        $TIPO_FORMACION['capacitacion_recibida'] ?? [],
+        $TIPO_FORMACION['consultoria_realizada'] ?? []
+    ));
+
+    $asociaciones = collect($cvData['areas'] ?? [])
+        ->filter(fn ($area) => $selected('areas', $area['id'], 'nombre'))
+        ->map(function ($area) use ($cvData, $selected) {
+            $atestado = collect($cvData['atestados'] ?? [])
+                ->first(fn ($item) => (int) $item['id'] === (int) ($area['id_atestado'] ?? 0));
+
+            $habilidades = collect($area['habilidades'] ?? [])
+                ->filter(fn ($hab) => $selected('habilidades_area_' . $area['id'], $hab['id'], 'nombre'))
+                ->pluck('nombre')
+                ->filter()
+                ->unique()
+                ->values();
+
+            return [
+                'institucion' => $atestado['institucion'] ?? '',
+                'area' => $area['nombre'] ?? '',
+                'habilidades' => $habilidades,
+            ];
+        })
+        ->filter(fn ($item) => $item['institucion'] || $item['area'] || $item['habilidades']->count());
+
+    $mostrarPaisesExperiencia = $selected('fepade_opciones', 'paises_experiencia_10', 'mostrar');
+
+    $limite10 = now()->subYears(10);
+
+    $paisesExperiencia = $experiencias
+        ->filter(function ($item) use ($parseDate, $limite10) {
+            $hasta = ($item['trabajo_actual_bool'] ?? false)
+                ? now()
+                : $parseDate($item['hasta_iso'] ?? null);
+
+            return $hasta && $hasta->greaterThanOrEqualTo($limite10) && ! blank($item['pais'] ?? null);
+        })
+        ->pluck('pais')
+        ->filter()
+        ->unique()
+        ->values();
 @endphp
 
 <h1 class="cv-title">Hoja de Vida</h1>
 
 <table class="cv-table cv-table-clean">
-    <tr><th>Cargo:</th><td></td></tr>
+    <tr><th>Cargo:</th><td>{{ $cargo }}</td></tr>
     <tr><th>Nombre del Profesional:</th><td>{{ $personal('nombre') }}</td></tr>
     <tr><th>Fecha de nacimiento:</th><td>{{ $personal('fecha_nacimiento') }}</td></tr>
-    <tr><th>País de ciudadanía/residencia:</th><td>{{ $personal('nacionalidad') ?: $personal('residencia') }}</td></tr>
+    <tr><th>País de ciudadanía/residencia:</th><td>{{ $personal('residencia') }}</td></tr>
 </table>
 
 <h2>1. Educación:</h2>
@@ -46,7 +137,7 @@
         </tr>
     </thead>
     <tbody>
-        @forelse(collect($cvData['atestados'])->filter(fn($item) => $visible('atestados', $item, ['titulo', 'institucion', 'fecha_fin'])) as $item)
+        @forelse($educacionFormal as $item)
             <tr>
                 <td>{{ $cell('atestados', $item, 'titulo') }}</td>
                 <td>{{ $cell('atestados', $item, 'institucion') }}</td>
@@ -61,13 +152,25 @@
 <h2>2. Asociaciones profesionales a las que pertenece:</h2>
 <table class="cv-table">
     <thead>
-        <tr><th>Institución / área</th></tr>
+        <tr>
+            <th>Institución</th>
+            <th>Área de especialización</th>
+            <th>Habilidad técnica</th>
+        </tr>
     </thead>
     <tbody>
-        @forelse(collect($cvData['areas'])->filter(fn($item) => $selected('areas', $item['id'], 'nombre')) as $item)
-            <tr><td>{{ $item['nombre'] }}</td></tr>
+        @forelse($asociaciones as $item)
+            <tr>
+                <td>{{ $item['institucion'] ?: '' }}</td>
+                <td>{{ $item['area'] ?: '' }}</td>
+                <td>
+                    @foreach($item['habilidades'] as $habilidad)
+                        {{ $habilidad }}<br>
+                    @endforeach
+                </td>
+            </tr>
         @empty
-            <tr><td>&nbsp;</td></tr>
+            <tr><td colspan="3">&nbsp;</td></tr>
         @endforelse
     </tbody>
 </table>
@@ -82,11 +185,11 @@
         </tr>
     </thead>
     <tbody>
-        @forelse(collect($cvData['atestados'])->filter(fn($item) => $visible('atestados', $item, ['titulo', 'institucion', 'fecha_inicio'])) as $item)
+        @forelse($otrosEstudios as $item)
             <tr>
                 <td>{{ $cell('atestados', $item, 'titulo') }}</td>
                 <td>{{ $cell('atestados', $item, 'institucion') }}</td>
-                <td>{{ $cell('atestados', $item, 'fecha_inicio') }}</td>
+                <td>{{ $cell('atestados', $item, 'fecha_fin') }}</td>
             </tr>
         @empty
             <tr><td colspan="3">&nbsp;</td></tr>
@@ -94,8 +197,10 @@
     </tbody>
 </table>
 
-<h2>4. Países donde tiene experiencia de trabajo los últimos 10 años:</h2>
-<p>{{ $personal('residencia') }}</p>
+@if($mostrarPaisesExperiencia)
+    <h2>4. Países donde tiene experiencia de trabajo los últimos 10 años:</h2>
+    <p>{{ $paisesExperiencia->implode(', ') }}</p>
+@endif
 
 <h2>5. Historia laboral:</h2>
 <table class="cv-table">
@@ -108,7 +213,7 @@
         </tr>
     </thead>
     <tbody>
-        @forelse(collect($cvData['experiencias'])->filter(fn($item) => $visible('experiencias', $item, ['desde', 'hasta', 'empresa', 'cargo'])) as $item)
+        @forelse($experiencias->filter(fn($item) => $visible('experiencias', $item, ['desde', 'hasta', 'empresa', 'cargo'])) as $item)
             <tr>
                 <td>{{ $cell('experiencias', $item, 'desde') }}</td>
                 <td>{{ $cell('experiencias', $item, 'hasta') }}</td>
@@ -125,13 +230,13 @@
 <table class="cv-table">
     <thead>
         <tr>
-            <th>Consultorías</th>
+            <th>Consultorías / capacitaciones</th>
             <th>Empresa / organización</th>
             <th>Fecha</th>
         </tr>
     </thead>
     <tbody>
-        @forelse(collect($cvData['atestados'])->filter(fn($item) => $visible('atestados', $item, ['titulo', 'institucion', 'fecha_fin'])) as $item)
+        @forelse($consultorias as $item)
             <tr>
                 <td>{{ $cell('atestados', $item, 'titulo') }}</td>
                 <td>{{ $cell('atestados', $item, 'institucion') }}</td>
