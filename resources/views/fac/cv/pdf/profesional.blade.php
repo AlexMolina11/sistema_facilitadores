@@ -535,6 +535,10 @@
         $habilidadesSeleccionadas = collect();
 
         foreach (($cvData['areas'] ?? []) as $area) {
+            if (! $selected('areas', $area['id'], 'nombre')) {
+                continue;
+            }
+
             foreach (($area['habilidades'] ?? []) as $hab) {
                 if (data_get($config, "selections.habilidades_area_{$area['id']}.{$hab['id']}.nombre") === true && ! blank($hab['nombre'])) {
                     $habilidadesSeleccionadas->push($hab['nombre']);
@@ -555,11 +559,20 @@
     @if($idiomas->count())
         <div class="cv-pro-summary-section">
             <div class="cv-pro-summary-title">Idiomas</div>
+
             @foreach($idiomas as $item)
                 <span class="cv-pro-summary-pill">
                     {{ $cell('idiomas', $item, 'idioma') }}
+
                     @if($cell('idiomas', $item, 'nivel'))
                         — {{ $cell('idiomas', $item, 'nivel') }}
+                    @endif
+
+                    @if($cell('idiomas', $item, 'certificado_url'))
+                        <br>
+                        <a class="cv-pro-link" href="{{ $cell('idiomas', $item, 'certificado_url') }}">
+                            Ver atestado
+                        </a>
                     @endif
                 </span>
             @endforeach

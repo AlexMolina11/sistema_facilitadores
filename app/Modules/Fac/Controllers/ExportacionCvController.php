@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Modules\Fac\Models\CvPlantilla;
 use Illuminate\Support\Facades\View as ViewFacade;
 use Illuminate\Support\Facades\Storage;
+use App\Modules\Fac\Models\TipoFormacion;
+use Illuminate\Support\Str;
 
 class ExportacionCvController extends Controller
 {
@@ -23,6 +25,9 @@ class ExportacionCvController extends Controller
             'consultor' => $consultor,
             'plantillas' => $this->plantillas(),
             'cvData' => $this->cvData($consultor),
+            'cvCatalogos' => [
+                'tipo_formacion' => $this->mapaTipoFormacion(),
+            ],
         ]);
     }
 
@@ -59,6 +64,9 @@ class ExportacionCvController extends Controller
             'consultor' => $consultor,
             'cvData' => $this->cvData($consultor),
             'config' => $config,
+            'cvCatalogos' => [
+                'tipo_formacion' => $this->mapaTipoFormacion(),
+            ],
         ])->setPaper($plantilla->tamanio_papel, $plantilla->orientacion);
 
         $nombre = 'cv-' . str($consultor->nombre_completo ?: 'consultor')->slug('-') . '.pdf';
@@ -91,7 +99,9 @@ class ExportacionCvController extends Controller
             'emails' => fn ($q) => $q->where('activo', true)->orderByDesc('principal'),
             'telefonos' => fn ($q) => $q->where('activo', true)->with('tipoTelefono'),
             'disponibilidades' => fn ($q) => $q->where('activo', true)->with('tipoDisponibilidad'),
-            'experienciasLaborales' => fn ($q) => $q->where('activo', true)->orderByDesc('trabajo_actual')->orderByDesc('desde'),
+            'experienciasLaborales' => fn ($q) => $q->where('activo', true)
+                ->orderByDesc('trabajo_actual')
+                ->orderByDesc('desde'),
             'atestados' => fn ($q) => $q->where('activo', true)
                 ->with(['tipoFormacion', 'tipoAtestado', 'nivelAcademico', 'pais'])
                 ->orderByDesc('fecha_fin'),
@@ -163,8 +173,13 @@ class ExportacionCvController extends Controller
                 'cargo' => $item->cargo,
                 'descripcion' => $item->descripcion,
                 'desde' => optional($item->desde)->format('d/m/Y'),
+                'desde_iso' => optional($item->desde)->format('Y-m-d'),
                 'hasta' => $item->trabajo_actual ? 'Actualidad' : optional($item->hasta)->format('d/m/Y'),
+                'hasta_iso' => optional($item->hasta)->format('Y-m-d'),
                 'trabajo_actual' => $item->trabajo_actual ? 'Sí' : 'No',
+                'trabajo_actual_bool' => (bool) $item->trabajo_actual,
+                'id_pais' => $item->id_pais ?? null,
+                'pais' => null,
                 'jefe_nombre' => $item->jefe_nombre,
                 'jefe_email' => $item->jefe_email,
                 'jefe_telefono' => $item->jefe_telefono,
@@ -172,6 +187,7 @@ class ExportacionCvController extends Controller
 
             'atestados' => $consultor->atestados->map(fn ($item) => [
                 'id' => $item->id_atestado,
+                'id_tipo_formacion' => $item->id_tipo_formacion,
                 'tipo_formacion' => optional($item->tipoFormacion)->nombre,
                 'tipo_atestado' => optional($item->tipoAtestado)->nombre,
                 'nivel' => optional($item->nivelAcademico)->nombre,
@@ -201,6 +217,8 @@ class ExportacionCvController extends Controller
 
             'areas' => $consultor->areasEspecializacion->map(fn ($item) => [
                 'id' => $item->id_consultor_area ?? $item->id_consultor_area_especializacion ?? $item->id,
+                'id_atestado' => $item->id_atestado,
+                'id_capacitacion_fepade' => $item->id_capacitacion_fepade,
                 'nombre' => optional($item->areaEspecializacion)->nombre,
                 'habilidades' => $item->habilidades->map(fn ($hab) => [
                     'id' => $hab->id_consultor_hab_tec ?? $hab->id,
@@ -231,5 +249,18 @@ class ExportacionCvController extends Controller
                 'nombre' => optional($item->tipoDisponibilidad)->nombre,
             ])->values(),
         ];
+    }
+
+    private function mapaTipoFormacion(): array
+    {
+        return TipoFormacion::query()
+            ->where('activo', true)
+            ->get()
+            ->mapWithKeys(function ($tipo) {
+                return [
+                    Str::slug($tipo->nombre, '_') => [$tipo->id_tipo_formacion],
+                ];
+            })
+            ->toArray();
     }
 }
