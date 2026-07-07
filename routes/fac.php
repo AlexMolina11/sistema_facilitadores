@@ -28,6 +28,8 @@ use App\Modules\Fac\Controllers\Catalogo\TipoDisponibilidadController;
 use App\Modules\Fac\Controllers\Catalogo\TipoDocumentoController;
 use App\Modules\Fac\Controllers\Catalogo\SexoController;
 use App\Modules\Fac\Controllers\BusquedaAvanzadaController;
+use App\Modules\Fac\Controllers\ExportacionCvController;
+use App\Modules\Fac\Controllers\CvPlantillaController;
 
 Route::middleware(['auth'])->group(function () {
 
@@ -155,7 +157,17 @@ Route::middleware(['auth'])->group(function () {
             Route::get('ubicacion-por-distrito', [BusquedaAvanzadaController::class, 'ubicacionPorDistrito'])
                 ->name('ubicacion.distrito');
         });
+    
+    Route::prefix('consultores/{consultor}/cv')
+        ->name('fac.cv.')
+        ->middleware('consultor.owner:fac.consultores.ver')
+        ->group(function () {
+            Route::get('configurar', [ExportacionCvController::class, 'configurar'])
+                ->name('configurar');
 
+            Route::post('pdf', [ExportacionCvController::class, 'pdf'])
+                ->name('pdf');
+        });
         
     Route::prefix('catalogos')
         ->name('fac.catalogos.')
@@ -198,5 +210,15 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('tipo-disponibilidad', TipoDisponibilidadController::class);
             Route::resource('tipo-documento', TipoDocumentoController::class);
             Route::resource('sexo', SexoController::class);
+
+            Route::resource('cv-plantillas', CvPlantillaController::class)
+                ->parameters(['cv-plantillas' => 'cvPlantilla'])
+                ->names('cv-plantillas');
+
+            Route::post('cv-plantillas/{cvPlantilla}/toggle', [CvPlantillaController::class, 'toggle'])
+                ->name('cv-plantillas.toggle');
+
+            Route::post('cv-plantillas/{cvPlantilla}/verificar-vista', [CvPlantillaController::class, 'verificarVista'])
+                ->name('cv-plantillas.verificar-vista');
         });
 });

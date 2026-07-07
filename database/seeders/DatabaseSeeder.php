@@ -23,6 +23,7 @@ use Database\Seeders\fac\AreaEspecializacionSeeder;
 use Database\Seeders\fac\HabilidadTecnicaSeeder;
 use Database\Seeders\fac\TipoRelacionSeeder;
 use Database\Seeders\fac\SexoSeeder;
+use Database\Seeders\fac\CvPlantillaSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -51,6 +52,7 @@ class DatabaseSeeder extends Seeder
             AreaEspecializacionSeeder::class,
             HabilidadTecnicaSeeder::class,
             SexoSeeder::class,
+            CvPlantillaSeeder::class,
         ]);
     }
 }
