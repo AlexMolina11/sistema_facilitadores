@@ -44,7 +44,6 @@
 
             <div class="busqueda-search-input">
                 <h2>Banco de consultores FEPADE</h2>
-                <p>Combina criterios para ubicar perfiles con mayor precisión y abrir su expediente profesional.</p>
                 <input
                     type="text"
                     class="form-control-BA"

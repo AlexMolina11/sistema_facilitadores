@@ -2342,7 +2342,7 @@ body {
 
 .busqueda-hero-BA h2 {
     color: white;
-    margin: 0;
+    margin-bottom: 10px;
     font-family: 'Syne', sans-serif;
     font-weight: 800;
 }
