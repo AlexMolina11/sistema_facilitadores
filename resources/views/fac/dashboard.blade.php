@@ -6,7 +6,7 @@
 
 @section('content')
 
-<x-ui.page-header
+<!--<x-ui.page-header
     title="Dashboard funcional avanzado"
     subtitle="Indicadores consolidados para seguimiento administrativo, análisis de perfiles y reportería."
 >
@@ -18,20 +18,29 @@
             <i class="fa-solid fa-print me-1"></i> Imprimir
         </button>
     </div>
-</x-ui.page-header>
+</x-ui.page-header>-->
 
 <div class="dashboard-advanced-hero mb-4">
     <div>
-        <span class="dashboard-kicker">Fase 11</span>
+        <span class="dashboard-kicker">Dashboard funcional avanzado</span>
         <h2>Lectura ejecutiva de la base de consultores</h2>
         <p>
             Visualiza registros, estado de perfiles, cobertura de información, especialidades,
             disponibilidad, idiomas y comportamiento de altas por periodo.
         </p>
     </div>
+    
     <div class="dashboard-hero-metric">
         <strong>{{ $totalConsultores }}</strong>
         <span>consultores filtrados</span>
+        <div class="d-flex gap-2 flex-wrap mt-3">
+            <a href="{{ route('fac.dashboard.exportar-csv', request()->query()) }}" class="btn btn-success">
+                <i class="fa-solid fa-file-csv me-1"></i> Exportar CSV
+            </a>
+            <button type="button" class="btn btn-navy" onclick="window.print()">
+                <i class="fa-solid fa-print me-1"></i> Imprimir
+            </button>
+        </div>
     </div>
 </div>
 

@@ -30,48 +30,24 @@
         }, 0);
 @endphp
 
-<x-ui.page-header
+<!--<x-ui.page-header
     title="Búsqueda avanzada"
     subtitle="Encuentra consultores por perfil profesional, experiencia, ubicación, formación, idiomas y disponibilidad."
-/>
+/>-->
 
 <form method="GET" action="{{ route('fac.busqueda.index') }}" id="formBusquedaAvanzada" data-url-base="{{ route('fac.busqueda.index') }}">
-    <section class="busqueda-hero mb-4">
-        <div class="busqueda-hero-main">
+    <div class="busqueda-hero-BA busqueda-toolbar mb-4 text-center">
+        <div class="busqueda-search-box">
             <span class="busqueda-hero-icon">
                 <i class="fa-solid fa-magnifying-glass-chart"></i>
             </span>
 
-            <div>
+            <div class="busqueda-search-input">
                 <h2>Banco de consultores FEPADE</h2>
                 <p>Combina criterios para ubicar perfiles con mayor precisión y abrir su expediente profesional.</p>
-
-                <div class="busqueda-hero-metrics">
-                    <span><strong id="busquedaTotalResultados">{{ $totalResultados }}</strong> resultado<span id="busquedaTotalPlural">{{ $totalResultados === 1 ? '' : 's' }}</span></span>
-                    <span><strong id="busquedaFiltrosActivos">{{ $filtrosActivos }}</strong> filtro<span id="busquedaFiltrosPlural">{{ $filtrosActivos === 1 ? '' : 's' }}</span> activo<span id="busquedaFiltrosActivosPlural">{{ $filtrosActivos === 1 ? '' : 's' }}</span></span>
-                    <span><strong id="busquedaGeneralIndicador">{{ filled($busquedaGeneral) ? 'Sí' : 'No' }}</strong> búsqueda general</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="busqueda-hero-actions">
-            <a href="{{ route('fac.busqueda.index') }}" class="btn btn-outline-light">
-                <i class="fas fa-eraser me-1"></i> Limpiar
-            </a>
-        </div>
-    </section>
-
-    <div class="fepade-card busqueda-toolbar mb-4">
-        <div class="busqueda-search-box">
-            <div class="busqueda-search-icon">
-                <i class="fas fa-search"></i>
-            </div>
-
-            <div class="busqueda-search-input">
-                <label class="form-label">Búsqueda general</label>
                 <input
                     type="text"
-                    class="form-control"
+                    class="form-control-BA"
                     name="q"
                     placeholder="Nombre, apellido, documento, NIT, NRC o correo..."
                     value="{{ $filtros['q'] ?? '' }}"
@@ -79,7 +55,7 @@
             </div>
 
             <div class="busqueda-search-actions">
-                <button class="btn btn-fepade" type="submit">
+                <button class="btn btn-fepade-BA" type="submit">
                     <i class="fas fa-search me-1"></i> Buscar
                 </button>
 

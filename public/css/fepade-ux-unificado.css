@@ -58,8 +58,19 @@
     box-shadow: 0 0 0 .2rem rgba(119, 145, 35, .14);
 }
 
+.form-control-BA {
+    border-radius: .8rem;
+    border-color: var(--fepade-border);
+    min-height: 42px;
+}
+
+.form-control-BA:focus {
+    border-color: var(--fepade-accent);
+    box-shadow: 0 0 0 .2rem rgba(119, 145, 35, .14);
+}
+
 /* Botones institucionales */
-.btn-fepade,
+/*.btn-fepade,*/
 .btn-navy,
 .btn-primary {
     background-color: var(--fepade-navy);
@@ -69,7 +80,7 @@
     font-weight: 600;
 }
 
-.btn-fepade:hover,
+/*.btn-fepade:hover,*/
 .btn-navy:hover,
 .btn-primary:hover {
     background-color: var(--fepade-navy-soft);
