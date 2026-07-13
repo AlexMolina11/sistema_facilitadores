@@ -36,7 +36,7 @@
     <tr><th>País de ciudadanía/residencia:</th><td>{{ $personal('nacionalidad') ?: $personal('residencia') }}</td></tr>
 </table>
 
-<h2>1. Educación:</h2>
+<h2>Educación:</h2>
 <table class="cv-table">
     <thead>
         <tr>
@@ -58,7 +58,7 @@
     </tbody>
 </table>
 
-<h2>2. Otras capacitaciones recibidas:</h2>
+<h2>Otras capacitaciones recibidas:</h2>
 <table class="cv-table">
     <thead>
         <tr>
@@ -80,7 +80,7 @@
     </tbody>
 </table>
 
-<h2>3. Experiencia laboral pertinente para el trabajo:</h2>
+<h2>Experiencia laboral pertinente para el trabajo:</h2>
 <table class="cv-table">
     <thead>
         <tr>
@@ -110,7 +110,7 @@
     </tbody>
 </table>
 
-<h2>4. Pertenencia a asociaciones profesionales y publicaciones:</h2>
+<h2>Pertenencia a asociaciones profesionales y publicaciones:</h2>
 <p><strong>Asociaciones profesionales:</strong></p>
 <ul>
     @forelse(collect($cvData['areas'])->filter(fn($item) => $selected('areas', $item['id'], 'nombre')) as $item)
@@ -125,7 +125,7 @@
     <li>&nbsp;</li>
 </ul>
 
-<h2>5. Idiomas:</h2>
+<h2>Idiomas:</h2>
 <table class="cv-table">
     <thead>
         <tr>
@@ -147,11 +147,14 @@
     </tbody>
 </table>
 
-<h2>6. Idoneidad para el trabajo:</h2>
+<h2>Idoneidad para el trabajo:</h2>
 <table class="cv-table">
     <tr>
         <th>Tareas detalladas asignadas al grupo de Expertos del Consultor:</th>
-        <td>LLENADO POR FEPADE</td>
+        <td class="cv-manual-text">
+            @php($tareasAsignadas = trim((string) data_get($config, 'campos_manual.tareas_asignadas', '')))
+            {!! $tareasAsignadas !== '' ? nl2br(e($tareasAsignadas)) : 'PENDIENTE DE COMPLETAR POR FEPADE' !!}
+        </td>
     </tr>
 </table>
 

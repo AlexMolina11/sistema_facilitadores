@@ -152,4 +152,32 @@
         font-weight: bold;
         width: 220px;
     }
+
+    .cv-pdf-section {
+        margin-bottom: 14px;
+    }
+
+    .cv-pdf-section-title,
+    .cv-pdf-section > h2,
+    h2 {
+        page-break-after: avoid;
+    }
+
+    .cv-table thead {
+        display: table-header-group;
+    }
+
+    .cv-table tr {
+        page-break-inside: avoid;
+    }
+
+    .cv-keep-together {
+        page-break-inside: avoid;
+    }
+
+    .cv-manual-text {
+        white-space: pre-wrap;
+        line-height: 1.45;
+    }
+
 </style>

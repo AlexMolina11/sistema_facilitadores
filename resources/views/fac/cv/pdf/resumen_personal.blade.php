@@ -103,6 +103,9 @@
 
     <tr>
         <td>Detalle de las actividades asignadas en esta consultoría</td>
-        <td>COMPLETADO POR FEPADE</td>
+        <td class="cv-manual-text">
+            @php($actividadesConsultoria = trim((string) data_get($config, 'campos_manual.actividades_consultoria', '')))
+            {!! $actividadesConsultoria !== '' ? nl2br(e($actividadesConsultoria)) : 'PENDIENTE DE COMPLETAR POR FEPADE' !!}
+        </td>
     </tr>
 </table>

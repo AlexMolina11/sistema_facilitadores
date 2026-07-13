@@ -33,13 +33,14 @@
             </button>
         </div>
 
-        <div class="cv-paper-wrap">
+        <div class="cv-paper-wrap" id="cvPreviewScroll">
             <div class="cv-paper" id="cvPreview"></div>
         </div>
     </div>
 
     <aside class="cv-config-panel">
         <div class="cv-config-sticky">
+            <div class="cv-config-toolbar">
             <div class="fepade-card mb-3">
                 <h5 class="mb-2">1. Plantilla</h5>
 
@@ -66,6 +67,61 @@
                 </div>
             </div>
 
+            <div class="fepade-card mb-3 cv-filter-card">
+                <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                    <div>
+                        <h5 class="mb-1">2. Filtrar trayectoria</h5>
+                        <small class="text-muted">Experiencia, formación, capacitaciones, áreas y habilidades.</small>
+                    </div>
+                    <span class="badge text-bg-light" id="atestadosFilterStatus">Todos</span>
+                </div>
+
+                <div class="btn-group w-100 cv-period-filter" role="group" aria-label="Filtrar trayectoria por período">
+                    <button type="button" class="btn btn-sm btn-outline-secondary active" data-years="all">Todos</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-years="2">2 años</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-years="5">5 años</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-years="10">10 años</button>
+                </div>
+
+                <small class="text-muted d-block mt-2" id="atestadosFilterSummary">
+                    Se muestra toda la trayectoria registrada.
+                </small>
+            </div>
+
+            <div class="fepade-card mb-3 cv-template-manual-fields" id="manualFieldsCard" hidden>
+                <h5 class="mb-1">3. Información completada por FEPADE</h5>
+                <small class="text-muted d-block mb-3">
+                    El texto se reflejará en la vista previa y en el PDF.
+                </small>
+
+                <div class="cv-manual-field" data-template="mineducyt_birf" hidden>
+                    <label for="manualTareasAsignadas" class="form-label fw-semibold">
+                        Tareas detalladas asignadas al grupo de Expertos del Consultor
+                    </label>
+                    <textarea
+                        id="manualTareasAsignadas"
+                        class="form-control cv-manual-input"
+                        rows="5"
+                        data-manual-field="tareas_asignadas"
+                        placeholder="Digite las tareas asignadas por FEPADE..."></textarea>
+                </div>
+
+                <div class="cv-manual-field" data-template="resumen_personal" hidden>
+                    <label for="manualActividadesConsultoria" class="form-label fw-semibold">
+                        Detalle de las actividades asignadas en esta consultoría
+                    </label>
+                    <textarea
+                        id="manualActividadesConsultoria"
+                        class="form-control cv-manual-input"
+                        rows="5"
+                        data-manual-field="actividades_consultoria"
+                        placeholder="Digite el detalle de las actividades asignadas..."></textarea>
+                </div>
+            </div>
+
+            </div>
+
+            <div class="cv-config-sections">
             <div class="accordion" id="cvAccordion">
 
                 <div class="accordion-item">
@@ -504,6 +560,7 @@
                 </div>
 
             </div>
+            </div>
         </div>
     </aside>
 </div>
@@ -524,7 +581,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const state = {
         plantilla: plantillaSelect.value,
-        selections: {}
+        selections: {},
+        filtros: {
+            atestados_anios: 'all'
+        },
+        campos_manual: {
+            tareas_asignadas: '',
+            actividades_consultoria: ''
+        }
     };
 
     function setToggle(input, checked) {
@@ -601,6 +665,168 @@ document.addEventListener('DOMContentLoaded', function () {
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#039;');
+    }
+
+    function escapeMultiline(value) {
+        return escapeHtml(value).replace(/\r?\n/g, '<br>');
+    }
+
+    function manualValue(field) {
+        return escapeMultiline(state.campos_manual?.[field] || '');
+    }
+
+    function atestadoReferenceDate(item) {
+        return parseDateIso(item.fecha_fin_iso)
+            || parseDateIso(item.fecha_emision_iso)
+            || parseDateIso(item.fecha_inicio_iso);
+    }
+
+    function capacitacionReferenceDate(item) {
+        return parseDateIso(item.fecha_fin_iso)
+            || parseDateIso(item.fecha_inicio_iso);
+    }
+
+    function experienciaIntersectsPeriod(item, limit, today) {
+        const start = parseDateIso(item.desde_iso);
+        const end = item.trabajo_actual_bool
+            ? today
+            : parseDateIso(item.hasta_iso);
+
+        if (!end) return false;
+
+        return end >= limit && (!start || start <= today);
+    }
+
+    function setConfigItemVisibility(section, itemId, visible) {
+        const element = document.querySelector(`[data-config-section="${section}"][data-config-item="${itemId}"]`);
+
+        if (element) {
+            element.hidden = !visible;
+            element.classList.toggle('is-period-filtered', !visible);
+        }
+    }
+
+    function setWholeItem(section, itemId, checked) {
+        document.querySelectorAll(`.cv-toggle[data-section="${section}"][data-item="${itemId}"]`).forEach(input => {
+            setToggle(input, checked);
+        });
+    }
+
+    function applyTrajectoryPeriodFilter(years) {
+        const normalized = years === 'all' ? 'all' : Number(years);
+        const today = new Date();
+        const limit = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+        if (normalized !== 'all') {
+            limit.setFullYear(limit.getFullYear() - normalized);
+        }
+
+        const visibleAtestados = new Set();
+        const visibleCapacitaciones = new Set();
+        const counts = {
+            experiencias: 0,
+            atestados: 0,
+            capacitaciones: 0,
+            areas: 0,
+        };
+
+        window.cvData.experiencias.forEach(item => {
+            const visible = normalized === 'all'
+                ? true
+                : experienciaIntersectsPeriod(item, limit, today);
+
+            setWholeItem('experiencias', item.id, visible);
+            setConfigItemVisibility('experiencias', item.id, visible);
+            if (visible) counts.experiencias++;
+        });
+
+        window.cvData.atestados.forEach(item => {
+            const referenceDate = atestadoReferenceDate(item);
+            const visible = normalized === 'all'
+                ? true
+                : Boolean(referenceDate && referenceDate >= limit && referenceDate <= today);
+
+            setWholeItem('atestados', item.id, visible);
+            setConfigItemVisibility('atestados', item.id, visible);
+
+            if (visible) {
+                visibleAtestados.add(Number(item.id));
+                counts.atestados++;
+            }
+        });
+
+        window.cvData.capacitaciones_fepade.forEach(item => {
+            const referenceDate = capacitacionReferenceDate(item);
+            const visible = normalized === 'all'
+                ? true
+                : Boolean(referenceDate && referenceDate >= limit && referenceDate <= today);
+
+            setWholeItem('capacitaciones_fepade', item.id, visible);
+            setConfigItemVisibility('capacitaciones_fepade', item.id, visible);
+
+            if (visible) {
+                visibleCapacitaciones.add(Number(item.id));
+                counts.capacitaciones++;
+            }
+        });
+
+        window.cvData.areas.forEach(area => {
+            const atestadoId = area.id_atestado ? Number(area.id_atestado) : null;
+            const capacitacionId = area.id_capacitacion_fepade ? Number(area.id_capacitacion_fepade) : null;
+
+            const visible = normalized === 'all'
+                ? true
+                : Boolean(
+                    (atestadoId && visibleAtestados.has(atestadoId))
+                    || (capacitacionId && visibleCapacitaciones.has(capacitacionId))
+                );
+
+            setArea(area.id, visible);
+            setConfigItemVisibility('areas', area.id, visible);
+            if (visible) counts.areas++;
+        });
+
+        state.filtros.atestados_anios = normalized;
+        updateTrajectoryFilterUi(counts);
+        render();
+    }
+
+    function currentVisibleCount(section, items) {
+        return items.filter(item => {
+            return Boolean(document.querySelector(`.cv-toggle[data-section="${section}"][data-item="${item.id}"]:checked`));
+        }).length;
+    }
+
+    function updateTrajectoryFilterUi(counts = null) {
+        const years = state.filtros.atestados_anios;
+        const actual = counts || {
+            experiencias: currentVisibleCount('experiencias', window.cvData.experiencias),
+            atestados: currentVisibleCount('atestados', window.cvData.atestados),
+            capacitaciones: currentVisibleCount('capacitaciones_fepade', window.cvData.capacitaciones_fepade),
+            areas: currentVisibleCount('areas', window.cvData.areas),
+        };
+
+        document.querySelectorAll('.cv-period-filter [data-years]').forEach(button => {
+            button.classList.toggle('active', String(button.dataset.years) === String(years));
+        });
+
+        const status = document.getElementById('atestadosFilterStatus');
+        const summary = document.getElementById('atestadosFilterSummary');
+
+        status.textContent = years === 'all' ? 'Todos' : `Últimos ${years} años`;
+        summary.textContent = `${actual.experiencias} experiencias, ${actual.atestados} atestados, ${actual.capacitaciones} capacitaciones y ${actual.areas} áreas visibles.`;
+    }
+
+    function renderManualFieldsVisibility() {
+        const card = document.getElementById('manualFieldsCard');
+        const supported = ['mineducyt_birf', 'resumen_personal'];
+        const visible = supported.includes(state.plantilla);
+
+        card.hidden = !visible;
+
+        document.querySelectorAll('.cv-manual-field').forEach(field => {
+            field.hidden = field.dataset.template !== state.plantilla;
+        });
     }
 
     function visibleFields(section, item, fields) {
@@ -787,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('1. Educación:');
+        html += sectionTitle('Educación:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -809,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('2. Asociaciones profesionales a las que pertenece:');
+        html += sectionTitle('Asociaciones profesionales a las que pertenece:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -831,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('3. Otros estudios:');
+        html += sectionTitle('Otros estudios:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -854,11 +1080,11 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         if (mostrarPaisesExperiencia) {
-            html += sectionTitle('4. Países donde tiene experiencia de trabajo los últimos 10 años:');
+            html += sectionTitle('Países donde tiene experiencia de trabajo los últimos 10 años:');
             html += `<p>${paisesExperiencia.length ? paisesExperiencia.map(p => escapeHtml(p)).join(', ') : '&nbsp;'}</p>`;
         }
 
-        html += sectionTitle('5. Historia laboral:');
+        html += sectionTitle('Historia laboral:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -875,7 +1101,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('6. Experiencia en consultorías y gestión de proyectos:');
+        html += sectionTitle('Experiencia en consultorías y gestión de proyectos:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -897,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('7. Experiencia como facilitador/a:');
+        html += sectionTitle('Experiencia como facilitador/a:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -936,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('1. Educación:');
+        html += sectionTitle('Educación:');
         html += `
             <table class="cv-table">
                 <thead><tr><th>Título obtenido</th><th>Institución</th><th>Fecha de estudios</th></tr></thead>
@@ -944,7 +1170,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('2. Otras capacitaciones recibidas:');
+        html += sectionTitle('Otras capacitaciones recibidas:');
         html += `
             <table class="cv-table">
                 <thead><tr><th>Nombre del curso/seminario</th><th>Institución</th><th>Fecha</th></tr></thead>
@@ -952,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('3. Experiencia laboral pertinente para el trabajo:');
+        html += sectionTitle('Experiencia laboral pertinente para el trabajo:');
         html += `
             <table class="cv-table">
                 <thead><tr><th>Período</th><th>Entidad empleadora y referencias</th><th>País</th><th>Resumen</th></tr></thead>
@@ -976,12 +1202,12 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('4. Pertenencia a asociaciones profesionales y publicaciones:');
+        html += sectionTitle('Pertenencia a asociaciones profesionales y publicaciones:');
         html += `<p><strong>Asociaciones profesionales:</strong></p>`;
         html += `<ul>${data.areas.filter(a => isSelected('areas', a.id, 'nombre')).map(a => `<li>${escapeHtml(a.nombre)}</li>`).join('') || '<li>&nbsp;</li>'}</ul>`;
         html += `<p><strong>Publicaciones:</strong></p><ul><li>&nbsp;</li></ul>`;
 
-        html += sectionTitle('5. Idiomas:');
+        html += sectionTitle('Idiomas:');
         html += `
             <table class="cv-table">
                 <thead><tr><th>Idioma</th><th>Nivel</th><th>Certificado</th></tr></thead>
@@ -989,8 +1215,8 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('6. Idoneidad para el trabajo:');
-        html += `<table class="cv-table"><tr><th>Tareas asignadas</th><td>LLENADO POR FEPADE</td></tr></table>`;
+        html += sectionTitle('Idoneidad para el trabajo:');
+        html += `<table class="cv-table"><tr><th>Tareas asignadas</th><td class="cv-manual-value">${manualValue('tareas_asignadas') || '<span class="cv-placeholder-text">Pendiente de completar por FEPADE</span>'}</td></tr></table>`;
 
         html += renderContact();
 
@@ -1034,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${firstE && isSelected('experiencias', firstE.id, 'cargo') ? 'Cargo: ' + escapeHtml(firstE.cargo) + '<br>' : ''}
                     ${firstE && isSelected('experiencias', firstE.id, 'empresa') ? 'Institución: ' + escapeHtml(firstE.empresa) : ''}
                 </td></tr>
-                <tr><td>Detalle de las actividades asignadas en esta consultoría</td><td>COMPLETADO POR FEPADE</td></tr>
+                <tr><td>Detalle de las actividades asignadas en esta consultoría</td><td class="cv-manual-value">${manualValue('actividades_consultoria') || '<span class="cv-placeholder-text">Pendiente de completar por FEPADE</span>'}</td></tr>
             </table>
         `;
 
@@ -1386,11 +1612,98 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
+    const templateSections = {
+        fepade: [
+            'personal',
+            'emails',
+            'telefonos',
+            'experiencias',
+            'atestados',
+            'capacitaciones_fepade',
+            'areas',
+            'fepade_opciones'
+        ],
+
+        mineducyt_birf: [
+            'personal',
+            'emails',
+            'telefonos',
+            'experiencias',
+            'atestados',
+            'areas',
+            'idiomas'
+        ],
+
+        resumen_personal: [
+            'personal',
+            'experiencias',
+            'atestados',
+            'areas'
+        ],
+
+        profesional: [
+            'personal',
+            'emails',
+            'telefonos',
+            'experiencias',
+            'atestados',
+            'capacitaciones_fepade',
+            'areas',
+            'idiomas',
+            'referencias',
+            'disponibilidades'
+        ]
+    };
+
+    const configSectionCollapseMap = {
+        cvDatos: 'personal',
+        cvEmails: 'emails',
+        cvTelefonos: 'telefonos',
+        cvExperiencia: 'experiencias',
+        cvAtestados: 'atestados',
+        cvFepade: 'capacitaciones_fepade',
+        cvIdiomas: 'idiomas',
+        cvReferencias: 'referencias',
+        cvDisponibilidad: 'disponibilidades',
+        cvFepadeOpciones: 'fepade_opciones',
+        cvAreas: 'areas'
+    };
+
+    function initConfigSectionMetadata() {
+        Object.entries(configSectionCollapseMap).forEach(([collapseId, section]) => {
+            const collapse = document.getElementById(collapseId);
+            const item = collapse?.closest('.accordion-item');
+
+            if (item) {
+                item.dataset.cvSection = section;
+            }
+        });
+    }
+
+    function renderConfigSections() {
+        const allowedSections = templateSections[state.plantilla] || [];
+
+        document.querySelectorAll('#cvAccordion .accordion-item[data-cv-section]').forEach(item => {
+            const visible = allowedSections.includes(item.dataset.cvSection);
+            item.hidden = !visible;
+
+            if (!visible) {
+                const collapse = item.querySelector('.accordion-collapse.show');
+
+                if (collapse && window.bootstrap?.Collapse) {
+                    bootstrap.Collapse.getOrCreateInstance(collapse, { toggle: false }).hide();
+                }
+            }
+        });
+    }
+
     function render() {
         state.plantilla = plantillaSelect.value;
         templateName.textContent = window.cvPlantillas[state.plantilla];
         
         renderTemplateVisibility();
+        renderManualFieldsVisibility();
+        renderConfigSections();
 
         let html = '';
 
@@ -1406,6 +1719,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         preview.innerHTML = html;
         configInput.value = JSON.stringify(state);
+
     }
 
     function setAll(checked) {
@@ -1427,9 +1741,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     initSelections();
+    initConfigSectionMetadata();
+    updateTrajectoryFilterUi();
     render();
 
-    plantillaSelect.addEventListener('change', render);
+    plantillaSelect.addEventListener('change', () => render());
+
+    document.querySelectorAll('.cv-period-filter [data-years]').forEach(button => {
+        button.addEventListener('click', function () {
+            applyTrajectoryPeriodFilter(this.dataset.years);
+        });
+    });
+
+    document.querySelectorAll('.cv-manual-input').forEach(input => {
+        input.addEventListener('input', function () {
+            state.campos_manual[this.dataset.manualField] = this.value;
+            render();
+        });
+    });
 
     document.querySelectorAll('.cv-toggle').forEach(input => {
         input.addEventListener('change', function () {
@@ -1520,6 +1849,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+
     document.getElementById('btnGenerarPdf').addEventListener('click', function () {
         configInput.value = JSON.stringify(state);
         pdfForm.submit();
@@ -1528,6 +1858,131 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <style>
+
+    .cv-builder {
+        height: calc(100vh - 165px);
+        min-height: 680px;
+        overflow: hidden;
+    }
+
+    .cv-preview-panel,
+    .cv-config-panel {
+        min-height: 0;
+        height: 100%;
+    }
+
+    .cv-preview-panel {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cv-preview-toolbar {
+        flex: 0 0 auto;
+    }
+
+    .cv-paper-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+    }
+
+    .cv-config-sticky {
+        position: sticky;
+        top: 82px;
+        height: 100%;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding-right: 0;
+    }
+
+    .cv-config-toolbar {
+        flex: 0 0 auto;
+        max-height: 46%;
+        overflow-y: auto;
+        padding-right: .35rem;
+        scrollbar-gutter: stable;
+    }
+
+    .cv-config-sections {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+        padding-right: .35rem;
+        border-top: 1px solid var(--surface2);
+        padding-top: .75rem;
+    }
+
+    .cv-config-toolbar::-webkit-scrollbar,
+    .cv-config-sections::-webkit-scrollbar,
+    .cv-paper-wrap::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .cv-config-toolbar::-webkit-scrollbar-thumb,
+    .cv-config-sections::-webkit-scrollbar-thumb,
+    .cv-paper-wrap::-webkit-scrollbar-thumb {
+        background: rgba(101, 98, 100, .35);
+        border-radius: 999px;
+    }
+
+
+    [hidden] {
+        display: none !important;
+    }
+
+
+    .cv-config-panel {
+        min-width: 0;
+    }
+
+    .cv-config-sticky {
+        position: sticky;
+        top: 82px;
+        max-height: calc(100vh - 98px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+        padding-right: .35rem;
+    }
+
+    .cv-config-sticky::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .cv-config-sticky::-webkit-scrollbar-thumb {
+        background: rgba(101, 98, 100, .35);
+        border-radius: 999px;
+    }
+
+    .cv-filter-card,
+    .cv-template-manual-fields {
+        border-left: 4px solid var(--fepade-green, #00C896);
+    }
+
+    .cv-period-filter .btn {
+        white-space: nowrap;
+    }
+
+    .cv-manual-input {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .cv-manual-value {
+        white-space: pre-wrap;
+    }
+
+    .cv-placeholder-text {
+        color: #7a7f87;
+        font-style: italic;
+    }
     .cv-builder {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 390px;
@@ -2207,6 +2662,100 @@ document.addEventListener('DOMContentLoaded', function () {
         color: #0D1B2A;
         font-weight: bold;
         width: 220px;
+    }
+
+    @media (max-width: 1199.98px) {
+        .cv-config-sticky {
+            position: static;
+            max-height: none;
+            overflow: visible;
+            padding-right: 0;
+        }
+    }
+
+
+
+    @media (max-width: 1199.98px) {
+        .cv-builder {
+            height: auto;
+            min-height: 0;
+            overflow: visible;
+        }
+
+        .cv-preview-panel,
+        .cv-config-panel {
+            height: auto;
+        }
+
+        .cv-paper-wrap {
+            max-height: none;
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        .cv-config-sticky {
+            position: static;
+            height: auto;
+            display: block;
+            overflow: visible;
+        }
+
+        .cv-config-toolbar,
+        .cv-config-sections {
+            max-height: none;
+            overflow: visible;
+            padding-right: 0;
+        }
+    }
+
+
+    @media (min-width: 1200px) {
+        .cv-builder {
+            height: calc(100vh - 165px);
+            min-height: 680px;
+            overflow: hidden;
+            align-items: stretch;
+        }
+
+        .cv-preview-panel,
+        .cv-config-panel {
+            height: 100%;
+            min-height: 0;
+        }
+
+        .cv-preview-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cv-paper-wrap {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .cv-config-sticky {
+            position: sticky;
+            top: 82px;
+            height: 100%;
+            max-height: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-right: 0;
+        }
+
+        .cv-config-toolbar {
+            flex: 0 0 auto;
+            max-height: 46%;
+            overflow-y: auto;
+        }
+
+        .cv-config-sections {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+        }
     }
 </style>
 
