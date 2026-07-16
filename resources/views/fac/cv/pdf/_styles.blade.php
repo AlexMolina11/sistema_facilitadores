@@ -181,3 +181,38 @@
     }
 
 </style>
+
+<style>
+    .cv-institutional-document,
+    .cv-summary-document { color:#0D1B2A; font-family:DejaVu Sans, Arial, sans-serif; font-size:10px; line-height:1.4; }
+    .cv-institutional-header,
+    .cv-summary-header { margin:-28px -28px 18px; padding:22px 28px 16px; background:#0D1B2A; border-bottom:6px solid #00C896; color:#FFFFFF; page-break-inside:avoid; }
+    .cv-institutional-brand,
+    .cv-summary-brand { color:#00C896; font-size:8px; font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; }
+    .cv-institutional-header h1,
+    .cv-summary-header h1 { margin:6px 0 3px; color:#FFFFFF; font-size:19px; }
+    .cv-institutional-header p,
+    .cv-summary-header p { margin:0; color:#EEF2F8; font-size:9px; }
+    .cv-institutional-process { padding:9px 11px; margin-bottom:14px; background:#F7F9FC; border:1px solid rgba(13,27,42,.10); border-left:4px solid #00C896; }
+    .cv-numbered-title { padding:7px 9px; margin:15px 0 8px; background:#162032; border-left:5px solid #00C896; color:#FFFFFF; font-size:11px; page-break-after:avoid; }
+    .cv-numbered-title span { display:inline-block; width:18px; height:18px; margin-right:7px; border-radius:9px; background:#00C896; color:#0D1B2A; text-align:center; line-height:18px; font-weight:bold; }
+    .cv-institutional-table thead th,
+    .cv-summary-section-row th { background:#162032; color:#FFFFFF; }
+    .cv-institutional-table tbody tr:nth-child(even) td { background:#F7F9FC; }
+    .cv-cell-reference { margin-top:5px; padding-top:4px; border-top:1px solid rgba(13,27,42,.16); color:#6B7A90; font-size:8.5px; }
+    .cv-inline-tag { display:inline-block; padding:2px 6px; margin:2px 2px 2px 0; border-radius:8px; background:#EEF2F8; border:1px solid rgba(13,27,42,.10); color:#0D1B2A; font-size:8px; font-weight:bold; }
+    .cv-inline-tag-muted { background:#F7F9FC; color:#6B7A90; }
+    .cv-signature-block { width:100%; margin-top:30px; border-collapse:separate; border-spacing:12px 0; }
+    .cv-signature-block td { width:33%; padding-top:7px; border-top:1px solid #0D1B2A; text-align:center; font-size:8px; vertical-align:top; }
+    .cv-signature-authority { margin-top:38px; }
+    .cv-summary-context { width:100%; margin-bottom:13px; border-collapse:separate; border-spacing:8px 0; }
+    .cv-summary-context td { width:50%; padding:9px; background:#F7F9FC; border:1px solid rgba(13,27,42,.10); border-top:3px solid #00C896; vertical-align:top; }
+    .cv-summary-context strong { display:block; margin-bottom:4px; color:#0D1B2A; font-size:8px; text-transform:uppercase; }
+    .cv-summary-table th:first-child { width:34%; background:#EEF2F8; color:#0D1B2A; text-align:left; }
+    .cv-summary-section-row th { padding:7px 9px; background:#162032 !important; color:#FFFFFF !important; text-align:left; text-transform:uppercase; letter-spacing:.4px; border-left:5px solid #00C896; }
+    .cv-compact-list { margin:0; padding-left:16px; }
+    .cv-compact-list li { margin-bottom:4px; }
+    .cv-muted { color:#6B7A90; font-size:8.5px; }
+    .cv-institutional-document a,
+    .cv-summary-document a { color:#0099FF; text-decoration:none; font-weight:bold; }
+</style>
