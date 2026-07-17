@@ -133,7 +133,7 @@
         <tr><th>País de ciudadanía/residencia:</th><td>{{ $personal('residencia') }}</td></tr>
     </table>
 
-    <h2>1. Educación:</h2>
+    <h2>Educación:</h2>
     <table class="cv-table">
         <thead>
             <tr>
@@ -155,7 +155,7 @@
         </tbody>
     </table>
 
-    <h2>2. Asociaciones profesionales a las que pertenece:</h2>
+    <h2>Asociaciones profesionales a las que pertenece:</h2>
     <table class="cv-table">
         <thead>
             <tr>
@@ -181,7 +181,7 @@
         </tbody>
     </table>
 
-    <h2>3. Otros estudios:</h2>
+    <h2>Otros estudios:</h2>
     <table class="cv-table">
         <thead>
             <tr>
@@ -204,11 +204,11 @@
     </table>
 
     @if($mostrarPaisesExperiencia)
-        <h2>4. Países donde tiene experiencia de trabajo los últimos 10 años:</h2>
+        <h2>Países donde tiene experiencia de trabajo los últimos 10 años:</h2>
         <p>{{ $paisesExperiencia->implode(', ') }}</p>
     @endif
 
-    <h2>5. Historia laboral:</h2>
+    <h2>Historia laboral:</h2>
     <table class="cv-table">
         <thead>
             <tr>
@@ -232,7 +232,7 @@
         </tbody>
     </table>
 
-    <h2>6. Experiencia en consultorías y gestión de proyectos:</h2>
+    <h2>Experiencia en consultorías y gestión de proyectos:</h2>
     <table class="cv-table">
         <thead>
             <tr>
@@ -254,7 +254,7 @@
         </tbody>
     </table>
 
-    <h2>7. Experiencia como facilitador/a:</h2>
+    <h2>Experiencia como facilitador/a:</h2>
     <table class="cv-table">
         <thead>
             <tr>

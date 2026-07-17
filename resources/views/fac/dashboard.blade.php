@@ -311,11 +311,70 @@ document.addEventListener('DOMContentLoaded', function () {
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
-    new Chart(document.getElementById('chartHabilidades'), {
-        type: 'bar',
-        data: { labels: safe(habilidades).map(item => item.nombre), datasets: [{ label: 'Consultores', data: safe(habilidades).map(item => item.total) }] },
-        options: { ...chartDefaults, indexAxis: 'y' }
-    });
+    const canvasHabilidades = document.getElementById('chartHabilidades');
+
+    if (canvasHabilidades) {
+        const habilidadesLabels = habilidades.map(item => item.nombre);
+        const habilidadesValores = habilidades.map(item => Number(item.total));
+
+        new Chart(canvasHabilidades, {
+            type: 'bar',
+            data: {
+                labels: habilidadesLabels.length
+                    ? habilidadesLabels
+                    : ['Sin habilidades registradas'],
+                datasets: [{
+                    label: 'Consultores',
+                    data: habilidadesValores.length
+                        ? habilidadesValores
+                        : [0],
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    barThickness: 18,
+                    maxBarThickness: 24
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const total = context.raw ?? 0;
+
+                                return total === 1
+                                    ? '1 consultor'
+                                    : `${total} consultores`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Cantidad de consultores'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            autoSkip: false
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     new Chart(document.getElementById('chartSexo'), {
         type: 'doughnut',

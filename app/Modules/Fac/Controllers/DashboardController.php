@@ -72,40 +72,133 @@ class DashboardController extends Controller
             ->get();
 
         $topHabilidades = DB::table('tbl_consultor_area_habilidad as cah')
-            ->join('tbl_consultor_area_especializacion as cae', 'cae.id_consultor_area', '=', 'cah.id_consultor_area')
-            ->join('tbl_consultor as c', 'c.id_consultor', '=', 'cae.id_consultor')
-            ->join('tbl_habilidad_tecnica as ht', 'ht.id_habilidad_tecnica', '=', 'cah.id_habilidad_tecnica')
+            ->join(
+                'tbl_consultor_area_especializacion as cae',
+                'cae.id_consultor_area',
+                '=',
+                'cah.id_consultor_area'
+            )
+            ->join(
+                'tbl_consultor as c',
+                'c.id_consultor',
+                '=',
+                'cae.id_consultor'
+            )
+            ->join(
+                'tbl_habilidad_tecnica as ht',
+                'ht.id_habilidad_tecnica',
+                '=',
+                'cah.id_habilidad_tecnica'
+            )
+
+            // Registros no eliminados
             ->whereNull('cah.deleted_at')
             ->whereNull('cae.deleted_at')
             ->whereNull('c.deleted_at')
             ->whereNull('ht.deleted_at')
-            ->where('cah.activo', true)
-            ->where('cae.activo', true)
-            ->where('ht.activo', true)
-            ->when($filtros['fecha_inicio'] && $filtros['fecha_fin'], function ($query) use ($filtros) {
-                $query->whereBetween('c.created_at', [
-                    $filtros['fecha_inicio']->copy()->startOfDay(),
-                    $filtros['fecha_fin']->copy()->endOfDay(),
-                ]);
+
+            /*
+            * Compatibilidad con registros antiguos:
+            * activo = 1 o activo = NULL se consideran visibles.
+            */
+            ->where(function ($query) {
+                $query->where('cah.activo', true)
+                    ->orWhereNull('cah.activo');
             })
-            ->when($filtros['id_pais'], fn ($query) => $query->where('c.id_pais', $filtros['id_pais']))
-            ->when($filtros['id_sexo'], fn ($query) => $query->where('c.id_sexo', $filtros['id_sexo']))
-            ->when($filtros['estado'] === 'activos', fn ($query) => $query->where('c.activo', true))
-            ->when($filtros['estado'] === 'inactivos', fn ($query) => $query->where('c.activo', false))
-            ->when($filtros['id_area_especializacion'], fn ($query) => $query->where('cae.id_area_especializacion', $filtros['id_area_especializacion']))
-            ->when($filtros['id_tipo_disponibilidad'], function ($query) use ($filtros) {
-                $query->whereExists(function ($sub) use ($filtros) {
-                    $sub->selectRaw('1')
-                        ->from('tbl_consultor_disponibilidad as fcd')
-                        ->whereColumn('fcd.id_consultor', 'c.id_consultor')
-                        ->whereNull('fcd.deleted_at')
-                        ->where('fcd.activo', true)
-                        ->where('fcd.id_tipo_disponibilidad', $filtros['id_tipo_disponibilidad']);
-                });
+            ->where(function ($query) {
+                $query->where('cae.activo', true)
+                    ->orWhereNull('cae.activo');
             })
-            ->selectRaw('ht.nombre as nombre, COUNT(DISTINCT cae.id_consultor) as total')
-            ->groupBy('ht.nombre')
+            ->where(function ($query) {
+                $query->where('ht.activo', true)
+                    ->orWhereNull('ht.activo');
+            })
+
+            // Filtro por periodo de registro del consultor
+            ->when(
+                $filtros['fecha_inicio'] && $filtros['fecha_fin'],
+                function ($query) use ($filtros) {
+                    $query->whereBetween('c.created_at', [
+                        $filtros['fecha_inicio']->copy()->startOfDay(),
+                        $filtros['fecha_fin']->copy()->endOfDay(),
+                    ]);
+                }
+            )
+
+            // Filtros generales
+            ->when(
+                $filtros['id_pais'],
+                fn ($query) => $query->where(
+                    'c.id_pais',
+                    $filtros['id_pais']
+                )
+            )
+            ->when(
+                $filtros['id_sexo'],
+                fn ($query) => $query->where(
+                    'c.id_sexo',
+                    $filtros['id_sexo']
+                )
+            )
+            ->when(
+                $filtros['estado'] === 'activos',
+                fn ($query) => $query->where('c.activo', true)
+            )
+            ->when(
+                $filtros['estado'] === 'inactivos',
+                fn ($query) => $query->where('c.activo', false)
+            )
+
+            // Área seleccionada en los filtros
+            ->when(
+                $filtros['id_area_especializacion'],
+                fn ($query) => $query->where(
+                    'cae.id_area_especializacion',
+                    $filtros['id_area_especializacion']
+                )
+            )
+
+            // Disponibilidad seleccionada
+            ->when(
+                $filtros['id_tipo_disponibilidad'],
+                function ($query) use ($filtros) {
+                    $query->whereExists(function ($subquery) use ($filtros) {
+                        $subquery
+                            ->selectRaw('1')
+                            ->from('tbl_consultor_disponibilidad as fcd')
+                            ->whereColumn(
+                                'fcd.id_consultor',
+                                'c.id_consultor'
+                            )
+                            ->whereNull('fcd.deleted_at')
+                            ->where(function ($query) {
+                                $query->where('fcd.activo', true)
+                                    ->orWhereNull('fcd.activo');
+                            })
+                            ->where(
+                                'fcd.id_tipo_disponibilidad',
+                                $filtros['id_tipo_disponibilidad']
+                            );
+                    });
+                }
+            )
+
+            /*
+            * Agrupamos por ID y nombre.
+            * Esto evita mezclar habilidades distintas que casualmente
+            * tengan el mismo nombre.
+            */
+            ->selectRaw('
+                ht.id_habilidad_tecnica,
+                ht.nombre AS nombre,
+                COUNT(DISTINCT cae.id_consultor) AS total
+            ')
+            ->groupBy(
+                'ht.id_habilidad_tecnica',
+                'ht.nombre'
+            )
             ->orderByDesc('total')
+            ->orderBy('ht.nombre')
             ->limit(10)
             ->get();
 

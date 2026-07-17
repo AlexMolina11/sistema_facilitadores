@@ -33,13 +33,14 @@
             </button>
         </div>
 
-        <div class="cv-paper-wrap">
+        <div class="cv-paper-wrap" id="cvPreviewScroll">
             <div class="cv-paper" id="cvPreview"></div>
         </div>
     </div>
 
     <aside class="cv-config-panel">
         <div class="cv-config-sticky">
+            <div class="cv-config-toolbar">
             <div class="fepade-card mb-3">
                 <h5 class="mb-2">1. Plantilla</h5>
 
@@ -66,6 +67,87 @@
                 </div>
             </div>
 
+            <div class="fepade-card mb-3 cv-filter-card">
+                <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                    <div>
+                        <h5 class="mb-1">2. Filtrar trayectoria</h5>
+                        <small class="text-muted">Experiencia, formación, capacitaciones, áreas y habilidades.</small>
+                    </div>
+                    <span class="badge text-bg-light" id="atestadosFilterStatus">Todos</span>
+                </div>
+
+                <div class="btn-group w-100 cv-period-filter" role="group" aria-label="Filtrar trayectoria por período">
+                    <button type="button" class="btn btn-sm btn-outline-secondary active" data-years="all">Todos</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-years="2">2 años</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-years="5">5 años</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-years="10">10 años</button>
+                </div>
+
+                <small class="text-muted d-block mt-2" id="atestadosFilterSummary">
+                    Se muestra toda la trayectoria registrada.
+                </small>
+            </div>
+
+            <div class="fepade-card mb-3 cv-template-manual-fields" id="manualFieldsCard" hidden>
+                <h5 class="mb-1">3. Información completada por FEPADE</h5>
+                <small class="text-muted d-block mb-3">
+                    Estos datos corresponden a la oferta o consultoría actual y se reflejarán en la vista previa y en el PDF.
+                </small>
+
+                <div class="cv-manual-field" data-template="mineducyt_birf" hidden>
+                    <div class="mb-3">
+                        <label for="manualCargoNumero" class="form-label fw-semibold">Nombre del cargo y número</label>
+                        <input id="manualCargoNumero" class="form-control cv-manual-input" type="text"
+                            data-manual-field="cargo_numero"
+                            placeholder="Ej.: Especialista en formación – EXP-02">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="manualNombreConsultoriaMineducyt" class="form-label fw-semibold">Nombre de la consultoría o proceso</label>
+                        <input id="manualNombreConsultoriaMineducyt" class="form-control cv-manual-input" type="text"
+                            data-manual-field="nombre_consultoria"
+                            placeholder="Digite el nombre de la consultoría o proceso...">
+                    </div>
+
+                    <div>
+                        <label for="manualTareasAsignadas" class="form-label fw-semibold">
+                            Tareas detalladas asignadas al grupo de Expertos del Consultor
+                        </label>
+                        <textarea id="manualTareasAsignadas" class="form-control cv-manual-input" rows="5"
+                            data-manual-field="tareas_asignadas"
+                            placeholder="Digite las tareas asignadas por FEPADE..."></textarea>
+                    </div>
+                </div>
+
+                <div class="cv-manual-field" data-template="resumen_personal" hidden>
+                    <div class="mb-3">
+                        <label for="manualNombreConsultoriaResumen" class="form-label fw-semibold">Nombre de la consultoría o proceso</label>
+                        <input id="manualNombreConsultoriaResumen" class="form-control cv-manual-input" type="text"
+                            data-manual-field="nombre_consultoria"
+                            placeholder="Digite el nombre de la consultoría o proceso...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="manualCargoPropuesto" class="form-label fw-semibold">Cargo propuesto</label>
+                        <input id="manualCargoPropuesto" class="form-control cv-manual-input" type="text"
+                            data-manual-field="cargo_propuesto"
+                            placeholder="Digite el cargo propuesto...">
+                    </div>
+
+                    <div>
+                        <label for="manualActividadesConsultoria" class="form-label fw-semibold">
+                            Detalle de las actividades asignadas en esta consultoría
+                        </label>
+                        <textarea id="manualActividadesConsultoria" class="form-control cv-manual-input" rows="5"
+                            data-manual-field="actividades_consultoria"
+                            placeholder="Digite el detalle de las actividades asignadas..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+
+            <div class="cv-config-sections">
             <div class="accordion" id="cvAccordion">
 
                 <div class="accordion-item">
@@ -504,6 +586,7 @@
                 </div>
 
             </div>
+            </div>
         </div>
     </aside>
 </div>
@@ -524,7 +607,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const state = {
         plantilla: plantillaSelect.value,
-        selections: {}
+        selections: {},
+        filtros: {
+            atestados_anios: 'all'
+        },
+        campos_manual: {
+            cargo_numero: '',
+            nombre_consultoria: '',
+            cargo_propuesto: '',
+            tareas_asignadas: '',
+            actividades_consultoria: ''
+        }
     };
 
     function setToggle(input, checked) {
@@ -601,6 +694,177 @@ document.addEventListener('DOMContentLoaded', function () {
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#039;');
+    }
+
+    function escapeMultiline(value) {
+        return escapeHtml(value).replace(/\r?\n/g, '<br>');
+    }
+
+    function manualValue(field) {
+        return escapeMultiline(state.campos_manual?.[field] || '');
+    }
+
+    function atestadoReferenceDate(item) {
+        return parseDateIso(item.fecha_fin_iso)
+            || parseDateIso(item.fecha_emision_iso)
+            || parseDateIso(item.fecha_inicio_iso);
+    }
+
+    function capacitacionReferenceDate(item) {
+        return parseDateIso(item.fecha_fin_iso)
+            || parseDateIso(item.fecha_inicio_iso);
+    }
+
+    function experienciaIntersectsPeriod(item, limit, today) {
+        const start = parseDateIso(item.desde_iso);
+        const end = item.trabajo_actual_bool
+            ? today
+            : parseDateIso(item.hasta_iso);
+
+        if (!end) return false;
+
+        return end >= limit && (!start || start <= today);
+    }
+
+    function setConfigItemVisibility(section, itemId, visible) {
+        const element = document.querySelector(`[data-config-section="${section}"][data-config-item="${itemId}"]`);
+
+        if (element) {
+            element.hidden = !visible;
+            element.classList.toggle('is-period-filtered', !visible);
+        }
+    }
+
+    function setWholeItem(section, itemId, checked) {
+        document.querySelectorAll(`.cv-toggle[data-section="${section}"][data-item="${itemId}"]`).forEach(input => {
+            setToggle(input, checked);
+        });
+    }
+
+    function applyTrajectoryPeriodFilter(years) {
+        const normalized = years === 'all' ? 'all' : Number(years);
+        const today = new Date();
+        const limit = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+        if (normalized !== 'all') {
+            limit.setFullYear(limit.getFullYear() - normalized);
+        }
+
+        const visibleAtestados = new Set();
+        const visibleCapacitaciones = new Set();
+        const counts = {
+            experiencias: 0,
+            atestados: 0,
+            capacitaciones: 0,
+            areas: 0,
+        };
+
+        window.cvData.experiencias.forEach(item => {
+            const visible = normalized === 'all'
+                ? true
+                : experienciaIntersectsPeriod(item, limit, today);
+
+            setWholeItem('experiencias', item.id, visible);
+            setConfigItemVisibility('experiencias', item.id, visible);
+            if (visible) counts.experiencias++;
+        });
+
+        window.cvData.atestados.forEach(item => {
+            const referenceDate = atestadoReferenceDate(item);
+            const visible = normalized === 'all'
+                ? true
+                : Boolean(referenceDate && referenceDate >= limit && referenceDate <= today);
+
+            setWholeItem('atestados', item.id, visible);
+            setConfigItemVisibility('atestados', item.id, visible);
+
+            if (visible) {
+                visibleAtestados.add(Number(item.id));
+                counts.atestados++;
+            }
+        });
+
+        window.cvData.capacitaciones_fepade.forEach(item => {
+            const referenceDate = capacitacionReferenceDate(item);
+            const visible = normalized === 'all'
+                ? true
+                : Boolean(referenceDate && referenceDate >= limit && referenceDate <= today);
+
+            setWholeItem('capacitaciones_fepade', item.id, visible);
+            setConfigItemVisibility('capacitaciones_fepade', item.id, visible);
+
+            if (visible) {
+                visibleCapacitaciones.add(Number(item.id));
+                counts.capacitaciones++;
+            }
+        });
+
+        window.cvData.areas.forEach(area => {
+            const atestadoId = area.id_atestado ? Number(area.id_atestado) : null;
+            const capacitacionId = area.id_capacitacion_fepade ? Number(area.id_capacitacion_fepade) : null;
+
+            const visible = normalized === 'all'
+                ? true
+                : Boolean(
+                    (atestadoId && visibleAtestados.has(atestadoId))
+                    || (capacitacionId && visibleCapacitaciones.has(capacitacionId))
+                );
+
+            setArea(area.id, visible);
+            setConfigItemVisibility('areas', area.id, visible);
+            if (visible) counts.areas++;
+        });
+
+        state.filtros.atestados_anios = normalized;
+        updateTrajectoryFilterUi(counts);
+        render();
+    }
+
+    function currentVisibleCount(section, items) {
+        return items.filter(item => {
+            return Boolean(document.querySelector(`.cv-toggle[data-section="${section}"][data-item="${item.id}"]:checked`));
+        }).length;
+    }
+
+    function updateTrajectoryFilterUi(counts = null) {
+        const years = state.filtros.atestados_anios;
+        const actual = counts || {
+            experiencias: currentVisibleCount('experiencias', window.cvData.experiencias),
+            atestados: currentVisibleCount('atestados', window.cvData.atestados),
+            capacitaciones: currentVisibleCount('capacitaciones_fepade', window.cvData.capacitaciones_fepade),
+            areas: currentVisibleCount('areas', window.cvData.areas),
+        };
+
+        document.querySelectorAll('.cv-period-filter [data-years]').forEach(button => {
+            button.classList.toggle('active', String(button.dataset.years) === String(years));
+        });
+
+        const status = document.getElementById('atestadosFilterStatus');
+        const summary = document.getElementById('atestadosFilterSummary');
+
+        status.textContent = years === 'all' ? 'Todos' : `Últimos ${years} años`;
+        summary.textContent = `${actual.experiencias} experiencias, ${actual.atestados} atestados, ${actual.capacitaciones} capacitaciones y ${actual.areas} áreas visibles.`;
+    }
+
+    function renderManualFieldsVisibility() {
+        const card = document.getElementById('manualFieldsCard');
+        const supported = ['mineducyt_birf', 'resumen_personal'];
+        const visible = supported.includes(state.plantilla);
+
+        card.hidden = !visible;
+
+        document.querySelectorAll('.cv-manual-field').forEach(field => {
+            field.hidden = field.dataset.template !== state.plantilla;
+        });
+
+        document.querySelectorAll('.cv-manual-input').forEach(input => {
+            const field = input.dataset.manualField;
+            const stateValue = state.campos_manual?.[field] ?? '';
+
+            if (input.value !== stateValue) {
+                input.value = stateValue;
+            }
+        });
     }
 
     function visibleFields(section, item, fields) {
@@ -787,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('1. Educación:');
+        html += sectionTitle('Educación:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -809,7 +1073,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('2. Asociaciones profesionales a las que pertenece:');
+        html += sectionTitle('Asociaciones profesionales a las que pertenece:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -831,7 +1095,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('3. Otros estudios:');
+        html += sectionTitle('Otros estudios:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -854,11 +1118,11 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         if (mostrarPaisesExperiencia) {
-            html += sectionTitle('4. Países donde tiene experiencia de trabajo los últimos 10 años:');
+            html += sectionTitle('Países donde tiene experiencia de trabajo los últimos 10 años:');
             html += `<p>${paisesExperiencia.length ? paisesExperiencia.map(p => escapeHtml(p)).join(', ') : '&nbsp;'}</p>`;
         }
 
-        html += sectionTitle('5. Historia laboral:');
+        html += sectionTitle('Historia laboral:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -875,7 +1139,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('6. Experiencia en consultorías y gestión de proyectos:');
+        html += sectionTitle('Experiencia en consultorías y gestión de proyectos:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -897,7 +1161,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         `;
 
-        html += sectionTitle('7. Experiencia como facilitador/a:');
+        html += sectionTitle('Experiencia como facilitador/a:');
         html += `
             <table class="cv-table">
                 <thead>
@@ -923,119 +1187,259 @@ document.addEventListener('DOMContentLoaded', function () {
         return html;
     }
 
+    function tipoFormacionIds(...keys) {
+        return keys.flatMap(key => TIPO_FORMACION[key] || []).map(Number);
+    }
+
+    function selectedAtestadosByTypes(typeIds) {
+        return window.cvData.atestados.filter(item =>
+            typeIds.includes(Number(item.id_tipo_formacion))
+            && rowIsVisible('atestados', item, [
+                'tipo_formacion', 'tipo_atestado', 'nivel', 'titulo', 'institucion',
+                'descripcion', 'pais', 'fecha_inicio', 'fecha_fin', 'fecha_emision',
+                'fecha_vencimiento', 'horas', 'archivo_url'
+            ])
+        );
+    }
+
+    function selectedExperiencias() {
+        return window.cvData.experiencias.filter(item =>
+            rowIsVisible('experiencias', item, [
+                'empresa', 'cargo', 'descripcion', 'desde', 'hasta',
+                'jefe_nombre', 'jefe_email', 'jefe_telefono'
+            ])
+        );
+    }
+
+    function selectedAreasWithSkills() {
+        return window.cvData.areas
+            .filter(area => isSelected('areas', area.id, 'nombre') && area.nombre)
+            .map(area => {
+                const habilidades = area.habilidades
+                    .filter(hab => isSelected(`habilidades_area_${area.id}`, hab.id, 'nombre') && hab.nombre)
+                    .map(hab => hab.nombre);
+
+                return { ...area, habilidades };
+            });
+    }
+
+    function selectedIdiomas() {
+        return window.cvData.idiomas.filter(item =>
+            rowIsVisible('idiomas', item, ['idioma', 'nivel', 'certificado_url'])
+        );
+    }
+
+    function emptyText() {
+        return '<span class="cv-placeholder-text">No registrado</span>';
+    }
+
     function renderMineducyt() {
         const data = window.cvData;
-        let html = `<h1 class="cv-title">CURRÍCULUM</h1>`;
+        const educacionFormal = selectedAtestadosByTypes(tipoFormacionIds('educacion_formal'));
+        const formacionComplementaria = selectedAtestadosByTypes(tipoFormacionIds(
+            'acreditacion', 'educacion_continua', 'capacitacion_recibida'
+        ));
+        const experiencias = selectedExperiencias();
+        const areas = selectedAreasWithSkills();
+        const idiomas = selectedIdiomas();
+        const cargoNumero = manualValue('cargo_numero');
+        const nombreConsultoria = manualValue('nombre_consultoria');
+        const tareas = manualValue('tareas_asignadas');
+
+        let html = `
+            <div class="cv-institutional-document">
+                <div class="cv-institutional-header">
+                    <div class="cv-institutional-brand">FEPADE</div>
+                    <h1>CURRÍCULUM DEL PERSONAL PROPUESTO</h1>
+                    <p>Formato CV MINEDUCYT / BIRF</p>
+                </div>
+        `;
 
         html += `
-            <table class="cv-table cv-table-clean">
-                <tr><th>Nombre del cargo y número:</th><td></td></tr>
-                <tr><th>Nombre del Experto:</th><td>${personal('nombre')}</td></tr>
-                <tr><th>Fecha de nacimiento:</th><td>${personal('fecha_nacimiento')}</td></tr>
-                <tr><th>País de ciudadanía/residencia:</th><td>${personal('nacionalidad') || personal('residencia')}</td></tr>
+            <div class="cv-institutional-process">
+                <strong>Consultoría o proceso:</strong>
+                ${nombreConsultoria || '<span class="cv-placeholder-text">Pendiente de completar por FEPADE</span>'}
+            </div>
+
+            <h2 class="cv-numbered-title"><span>1</span> Información general</h2>
+            <table class="cv-table cv-table-clean cv-info-table">
+                <tr><th>Nombre del cargo y número:</th><td>${cargoNumero || '<span class="cv-placeholder-text">Pendiente de completar por FEPADE</span>'}</td></tr>
+                <tr><th>Nombre del Experto:</th><td>${personal('nombre') || '&nbsp;'}</td></tr>
+                <tr><th>Fecha de nacimiento:</th><td>${personal('fecha_nacimiento') || '&nbsp;'}</td></tr>
+                <tr><th>País de ciudadanía/residencia:</th><td>${personal('nacionalidad') || personal('residencia') || '&nbsp;'}</td></tr>
             </table>
         `;
 
-        html += sectionTitle('1. Educación:');
+        html += `<h2 class="cv-numbered-title"><span>2</span> Educación</h2>`;
         html += `
-            <table class="cv-table">
+            <table class="cv-table cv-institutional-table">
                 <thead><tr><th>Título obtenido</th><th>Institución</th><th>Fecha de estudios</th></tr></thead>
-                <tbody>${renderRows('atestados', data.atestados, ['titulo', 'institucion', 'fecha_fin']) || '<tr><td colspan="3">&nbsp;</td></tr>'}</tbody>
-            </table>
-        `;
-
-        html += sectionTitle('2. Otras capacitaciones recibidas:');
-        html += `
-            <table class="cv-table">
-                <thead><tr><th>Nombre del curso/seminario</th><th>Institución</th><th>Fecha</th></tr></thead>
-                <tbody>${renderRows('atestados', data.atestados, ['titulo', 'institucion', 'fecha_inicio']) || '<tr><td colspan="3">&nbsp;</td></tr>'}</tbody>
-            </table>
-        `;
-
-        html += sectionTitle('3. Experiencia laboral pertinente para el trabajo:');
-        html += `
-            <table class="cv-table">
-                <thead><tr><th>Período</th><th>Entidad empleadora y referencias</th><th>País</th><th>Resumen</th></tr></thead>
                 <tbody>
-                    ${data.experiencias.filter(item => rowIsVisible('experiencias', item, ['empresa','cargo','descripcion','desde','hasta','jefe_nombre','jefe_email','jefe_telefono']))
-                    .map(item => `
+                    ${educacionFormal.map(item => `
                         <tr>
-                            <td>${isSelected('experiencias', item.id, 'desde') ? escapeHtml(item.desde) : ''} - ${isSelected('experiencias', item.id, 'hasta') ? escapeHtml(item.hasta) : ''}</td>
-                            <td>
-                                ${isSelected('experiencias', item.id, 'empresa') ? '<strong>Organización:</strong> ' + escapeHtml(item.empresa) + '<br>' : ''}
-                                ${isSelected('experiencias', item.id, 'cargo') ? '<strong>Cargo:</strong> ' + escapeHtml(item.cargo) + '<br>' : ''}
-                                ${isSelected('experiencias', item.id, 'jefe_nombre') ? '<strong>Referencia:</strong> ' + escapeHtml(item.jefe_nombre) + '<br>' : ''}
-                                ${isSelected('experiencias', item.id, 'jefe_telefono') ? '<strong>Teléfono:</strong> ' + escapeHtml(item.jefe_telefono) + '<br>' : ''}
-                                ${isSelected('experiencias', item.id, 'jefe_email') ? '<strong>Correo:</strong> ' + escapeHtml(item.jefe_email) : ''}
-                            </td>
-                            <td>${personal('residencia')}</td>
-                            <td>${isSelected('experiencias', item.id, 'descripcion') ? escapeHtml(item.descripcion) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'titulo') ? escapeHtml(item.titulo) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'institucion') ? escapeHtml(item.institucion) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'fecha_fin') ? escapeHtml(item.fecha_fin) : ''}</td>
                         </tr>
-                    `).join('') || '<tr><td colspan="4">&nbsp;</td></tr>'}
+                    `).join('') || `<tr><td colspan="3">${emptyText()}</td></tr>`}
                 </tbody>
             </table>
         `;
 
-        html += sectionTitle('4. Pertenencia a asociaciones profesionales y publicaciones:');
-        html += `<p><strong>Asociaciones profesionales:</strong></p>`;
-        html += `<ul>${data.areas.filter(a => isSelected('areas', a.id, 'nombre')).map(a => `<li>${escapeHtml(a.nombre)}</li>`).join('') || '<li>&nbsp;</li>'}</ul>`;
-        html += `<p><strong>Publicaciones:</strong></p><ul><li>&nbsp;</li></ul>`;
-
-        html += sectionTitle('5. Idiomas:');
+        html += `<h2 class="cv-numbered-title"><span>3</span> Formación complementaria</h2>`;
         html += `
-            <table class="cv-table">
-                <thead><tr><th>Idioma</th><th>Nivel</th><th>Certificado</th></tr></thead>
-                <tbody>${renderRows('idiomas', data.idiomas, ['idioma', 'nivel', 'certificado_url']) || '<tr><td colspan="3">&nbsp;</td></tr>'}</tbody>
+            <table class="cv-table cv-institutional-table">
+                <thead><tr><th>Curso, seminario o certificación</th><th>Institución</th><th>Fecha</th></tr></thead>
+                <tbody>
+                    ${formacionComplementaria.map(item => `
+                        <tr>
+                            <td>${isSelected('atestados', item.id, 'titulo') ? escapeHtml(item.titulo) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'institucion') ? escapeHtml(item.institucion) : ''}</td>
+                            <td>${isSelected('atestados', item.id, 'fecha_fin') ? escapeHtml(item.fecha_fin) : (isSelected('atestados', item.id, 'fecha_emision') ? escapeHtml(item.fecha_emision) : '')}</td>
+                        </tr>
+                    `).join('') || `<tr><td colspan="3">${emptyText()}</td></tr>`}
+                </tbody>
             </table>
         `;
 
-        html += sectionTitle('6. Idoneidad para el trabajo:');
-        html += `<table class="cv-table"><tr><th>Tareas asignadas</th><td>LLENADO POR FEPADE</td></tr></table>`;
-
-        html += renderContact();
-
+        html += `<h2 class="cv-numbered-title"><span>4</span> Experiencia laboral pertinente para el trabajo</h2>`;
         html += `
-            <h2>Certificación:</h2>
-            <p>Yo, la/el abajo firmante, certifico que este currículum describe correctamente mi persona, mis calificaciones y mi experiencia.</p>
-            <br><br>
-            ______________________________________________________________________<br>
-            Nombre del Consultor/a &nbsp;&nbsp;&nbsp;&nbsp; Firma &nbsp;&nbsp;&nbsp;&nbsp; Fecha
+            <table class="cv-table cv-institutional-table cv-experience-table">
+                <thead><tr><th>Período</th><th>Entidad empleadora y referencias</th><th>País</th><th>Resumen</th></tr></thead>
+                <tbody>
+                    ${experiencias.map(item => {
+                        const referencias = [
+                            isSelected('experiencias', item.id, 'jefe_nombre') && item.jefe_nombre ? `<strong>Referencia:</strong> ${escapeHtml(item.jefe_nombre)}` : '',
+                            isSelected('experiencias', item.id, 'jefe_telefono') && item.jefe_telefono ? `<strong>Teléfono:</strong> ${escapeHtml(item.jefe_telefono)}` : '',
+                            isSelected('experiencias', item.id, 'jefe_email') && item.jefe_email ? `<strong>Correo:</strong> ${escapeHtml(item.jefe_email)}` : ''
+                        ].filter(Boolean).join('<br>');
+
+                        return `
+                            <tr>
+                                <td>${isSelected('experiencias', item.id, 'desde') ? escapeHtml(item.desde) : ''}${isSelected('experiencias', item.id, 'hasta') && item.hasta ? ' – ' + escapeHtml(item.hasta) : ''}</td>
+                                <td>
+                                    ${isSelected('experiencias', item.id, 'empresa') && item.empresa ? `<strong>${escapeHtml(item.empresa)}</strong><br>` : ''}
+                                    ${isSelected('experiencias', item.id, 'cargo') && item.cargo ? `${escapeHtml(item.cargo)}` : ''}
+                                    ${referencias ? `<div class="cv-cell-reference">${referencias}</div>` : ''}
+                                </td>
+                                <td>${item.pais ? escapeHtml(item.pais) : emptyText()}</td>
+                                <td>${isSelected('experiencias', item.id, 'descripcion') && item.descripcion ? escapeHtml(item.descripcion) : '&nbsp;'}</td>
+                            </tr>
+                        `;
+                    }).join('') || `<tr><td colspan="4">${emptyText()}</td></tr>`}
+                </tbody>
+            </table>
         `;
 
+        html += `<h2 class="cv-numbered-title"><span>5</span> Asociaciones profesionales y publicaciones</h2>`;
+        html += `
+            <table class="cv-table cv-institutional-table">
+                <tr><th style="width:32%">Asociaciones profesionales</th><td>${emptyText()}</td></tr>
+                <tr><th>Publicaciones</th><td>${emptyText()}</td></tr>
+            </table>
+        `;
+
+        html += `<h2 class="cv-numbered-title"><span>6</span> Idiomas</h2>`;
+        html += `
+            <table class="cv-table cv-institutional-table">
+                <thead><tr><th>Idioma</th><th>Nivel</th><th>Certificado</th></tr></thead>
+                <tbody>
+                    ${idiomas.map(item => `
+                        <tr>
+                            <td>${isSelected('idiomas', item.id, 'idioma') ? escapeHtml(item.idioma) : ''}</td>
+                            <td>${isSelected('idiomas', item.id, 'nivel') ? escapeHtml(item.nivel) : ''}</td>
+                            <td>${isSelected('idiomas', item.id, 'certificado_url') && item.certificado_url ? `<a href="${escapeHtml(item.certificado_url)}" target="_blank">Ver certificado</a>` : emptyText()}</td>
+                        </tr>
+                    `).join('') || `<tr><td colspan="3">${emptyText()}</td></tr>`}
+                </tbody>
+            </table>
+        `;
+
+        const habilidades = areas.flatMap(area => area.habilidades);
+        html += `<h2 class="cv-numbered-title"><span>7</span> Idoneidad para el trabajo</h2>`;
+        html += `
+            <table class="cv-table cv-institutional-table cv-suitability-table">
+                <tr><th>Tareas detalladas asignadas</th><td class="cv-manual-value">${tareas || '<span class="cv-placeholder-text">Pendiente de completar por FEPADE</span>'}</td></tr>
+                <tr><th>Áreas de especialización relevantes</th><td>${areas.length ? areas.map(area => `<span class="cv-inline-tag">${escapeHtml(area.nombre)}</span>`).join(' ') : emptyText()}</td></tr>
+                <tr><th>Habilidades técnicas relacionadas</th><td>${habilidades.length ? [...new Set(habilidades)].map(h => `<span class="cv-inline-tag cv-inline-tag-muted">${escapeHtml(h)}</span>`).join(' ') : emptyText()}</td></tr>
+            </table>
+        `;
+
+        html += `<h2 class="cv-numbered-title"><span>8</span> Información de contacto</h2>`;
+        html += renderContact() || `<p>${emptyText()}</p>`;
+
+        html += `
+            <h2 class="cv-numbered-title"><span>9</span> Certificación</h2>
+            <p>Yo, la/el abajo firmante, certifico que este currículum describe correctamente mi persona, mis calificaciones y mi experiencia.</p>
+            <div class="cv-signature-block">
+                <div>Nombre del Consultor/a</div><div>Firma</div><div>Fecha</div>
+            </div>
+            <div class="cv-signature-block cv-signature-authority">
+                <div><strong>Ana María Porras de Bardi</strong><br>Directora Ejecutiva y Representante Legal<br>FEPADE</div><div>Firma</div><div>Fecha</div>
+            </div>
+        `;
+
+        html += `</div>`;
         return html;
     }
 
     function renderResumen() {
-        const data = window.cvData;
-        const firstA = data.atestados[0] || {};
-        const firstE = data.experiencias[0] || {};
+        const educacionFormal = selectedAtestadosByTypes(tipoFormacionIds('educacion_formal'));
+        const especialidades = selectedAtestadosByTypes(tipoFormacionIds(
+            'acreditacion', 'educacion_continua', 'capacitacion_recibida'
+        ));
+        const experiencias = selectedExperiencias();
+        const areas = selectedAreasWithSkills();
+        const nombreConsultoria = manualValue('nombre_consultoria');
+        const cargoPropuesto = manualValue('cargo_propuesto');
+        const actividades = manualValue('actividades_consultoria');
 
-        let html = `<h1 class="cv-title">Resumen del CV del personal propuesto</h1>`;
+        const educationHtml = educacionFormal.length
+            ? `<ul class="cv-compact-list">${educacionFormal.map(item => `<li><strong>${isSelected('atestados', item.id, 'titulo') ? escapeHtml(item.titulo) : ''}</strong>${isSelected('atestados', item.id, 'institucion') && item.institucion ? ` — ${escapeHtml(item.institucion)}` : ''}${isSelected('atestados', item.id, 'fecha_fin') && item.fecha_fin ? ` (${escapeHtml(item.fecha_fin)})` : ''}</li>`).join('')}</ul>`
+            : emptyText();
 
-        html += `
-            <table class="cv-table">
-                <tr><th style="width:35%">Campo</th><th>Información a completar</th></tr>
-                <tr><td>Nombre del Oferente</td><td>Fundación Empresarial para el Desarrollo Educativo -FEPADE-</td></tr>
-                <tr><td>Nombre del profesional propuesto</td><td>${personal('nombre')}</td></tr>
-                <tr><td>Nacionalidad</td><td>${personal('nacionalidad')}</td></tr>
-                <tr><td>Educación</td><td>
-                    ${firstA && isSelected('atestados', firstA.id, 'titulo') ? 'Título: ' + escapeHtml(firstA.titulo) + '<br>' : ''}
-                    ${firstA && isSelected('atestados', firstA.id, 'institucion') ? 'Institución: ' + escapeHtml(firstA.institucion) : ''}
-                </td></tr>
-                <tr><td>Asociaciones profesionales a las que pertenece</td><td>
-                    ${data.areas.filter(a => isSelected('areas', a.id, 'nombre')).map(a => escapeHtml(a.nombre) + '<br>').join('') || '&nbsp;'}
-                </td></tr>
-                <tr><td>Otras especialidades</td><td>
-                    ${firstA && isSelected('atestados', firstA.id, 'titulo') ? 'Certificado: ' + escapeHtml(firstA.titulo) + '<br>' : ''}
-                    ${firstA && isSelected('atestados', firstA.id, 'institucion') ? 'Institución: ' + escapeHtml(firstA.institucion) : ''}
-                </td></tr>
-                <tr><td>Países donde tiene experiencia de trabajo</td><td>${personal('residencia')}</td></tr>
-                <tr><td>Trabajos que ha realizado</td><td>
-                    ${firstE && isSelected('experiencias', firstE.id, 'cargo') ? 'Cargo: ' + escapeHtml(firstE.cargo) + '<br>' : ''}
-                    ${firstE && isSelected('experiencias', firstE.id, 'empresa') ? 'Institución: ' + escapeHtml(firstE.empresa) : ''}
-                </td></tr>
-                <tr><td>Detalle de las actividades asignadas en esta consultoría</td><td>COMPLETADO POR FEPADE</td></tr>
-            </table>
+        const specialtyParts = [];
+        especialidades.forEach(item => {
+            specialtyParts.push(`<li><strong>${isSelected('atestados', item.id, 'titulo') ? escapeHtml(item.titulo) : ''}</strong>${isSelected('atestados', item.id, 'institucion') && item.institucion ? ` — ${escapeHtml(item.institucion)}` : ''}</li>`);
+        });
+        areas.forEach(area => {
+            specialtyParts.push(`<li><strong>${escapeHtml(area.nombre)}</strong>${area.habilidades.length ? `: ${area.habilidades.map(escapeHtml).join(', ')}` : ''}</li>`);
+        });
+
+        const jobsHtml = experiencias.length
+            ? `<ul class="cv-compact-list">${experiencias.map(item => `<li>${isSelected('experiencias', item.id, 'cargo') && item.cargo ? `<strong>${escapeHtml(item.cargo)}</strong>` : ''}${isSelected('experiencias', item.id, 'empresa') && item.empresa ? ` — ${escapeHtml(item.empresa)}` : ''}${(isSelected('experiencias', item.id, 'desde') || isSelected('experiencias', item.id, 'hasta')) ? ` <span class="cv-muted">(${isSelected('experiencias', item.id, 'desde') ? escapeHtml(item.desde) : ''}${isSelected('experiencias', item.id, 'hasta') && item.hasta ? ' – ' + escapeHtml(item.hasta) : ''})</span>` : ''}</li>`).join('')}</ul>`
+            : emptyText();
+
+        let html = `
+            <div class="cv-summary-document">
+                <div class="cv-summary-header">
+                    <div class="cv-summary-brand">FEPADE</div>
+                    <h1>RESUMEN DEL CV DEL PERSONAL PROPUESTO</h1>
+                    <p>Documento de síntesis para oferta o consultoría</p>
+                </div>
+
+                <div class="cv-summary-context">
+                    <div><strong>Consultoría o proceso</strong><span>${nombreConsultoria || 'Pendiente de completar por FEPADE'}</span></div>
+                    <div><strong>Cargo propuesto</strong><span>${cargoPropuesto || 'Pendiente de completar por FEPADE'}</span></div>
+                </div>
+
+                <table class="cv-table cv-summary-table">
+                    <tr class="cv-summary-section-row"><th colspan="2">Identificación</th></tr>
+                    <tr><th>Nombre del Oferente</th><td>Fundación Empresarial para el Desarrollo Educativo -FEPADE-</td></tr>
+                    <tr><th>Nombre del profesional propuesto</th><td>${personal('nombre') || '&nbsp;'}</td></tr>
+                    <tr><th>Nacionalidad</th><td>${personal('nacionalidad') || emptyText()}</td></tr>
+
+                    <tr class="cv-summary-section-row"><th colspan="2">Formación y experiencia</th></tr>
+                    <tr><th>Educación</th><td>${educationHtml}</td></tr>
+                    <tr><th>Asociaciones profesionales a las que pertenece</th><td>${emptyText()}</td></tr>
+                    <tr><th>Otras especialidades</th><td>${specialtyParts.length ? `<ul class="cv-compact-list">${specialtyParts.join('')}</ul>` : emptyText()}</td></tr>
+                    <tr><th>Países donde tiene experiencia de trabajo</th><td>${emptyText()}</td></tr>
+                    <tr><th>Trabajos que ha realizado</th><td>${jobsHtml}</td></tr>
+
+                    <tr class="cv-summary-section-row"><th colspan="2">Asignación de la consultoría</th></tr>
+                    <tr><th>Detalle de las actividades asignadas en esta consultoría</th><td class="cv-manual-value">${actividades || '<span class="cv-placeholder-text">Pendiente de completar por FEPADE</span>'}</td></tr>
+                </table>
+            </div>
         `;
 
         return html;
@@ -1386,11 +1790,98 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
+    const templateSections = {
+        fepade: [
+            'personal',
+            'emails',
+            'telefonos',
+            'experiencias',
+            'atestados',
+            'capacitaciones_fepade',
+            'areas',
+            'fepade_opciones'
+        ],
+
+        mineducyt_birf: [
+            'personal',
+            'emails',
+            'telefonos',
+            'experiencias',
+            'atestados',
+            'areas',
+            'idiomas'
+        ],
+
+        resumen_personal: [
+            'personal',
+            'experiencias',
+            'atestados',
+            'areas'
+        ],
+
+        profesional: [
+            'personal',
+            'emails',
+            'telefonos',
+            'experiencias',
+            'atestados',
+            'capacitaciones_fepade',
+            'areas',
+            'idiomas',
+            'referencias',
+            'disponibilidades'
+        ]
+    };
+
+    const configSectionCollapseMap = {
+        cvDatos: 'personal',
+        cvEmails: 'emails',
+        cvTelefonos: 'telefonos',
+        cvExperiencia: 'experiencias',
+        cvAtestados: 'atestados',
+        cvFepade: 'capacitaciones_fepade',
+        cvIdiomas: 'idiomas',
+        cvReferencias: 'referencias',
+        cvDisponibilidad: 'disponibilidades',
+        cvFepadeOpciones: 'fepade_opciones',
+        cvAreas: 'areas'
+    };
+
+    function initConfigSectionMetadata() {
+        Object.entries(configSectionCollapseMap).forEach(([collapseId, section]) => {
+            const collapse = document.getElementById(collapseId);
+            const item = collapse?.closest('.accordion-item');
+
+            if (item) {
+                item.dataset.cvSection = section;
+            }
+        });
+    }
+
+    function renderConfigSections() {
+        const allowedSections = templateSections[state.plantilla] || [];
+
+        document.querySelectorAll('#cvAccordion .accordion-item[data-cv-section]').forEach(item => {
+            const visible = allowedSections.includes(item.dataset.cvSection);
+            item.hidden = !visible;
+
+            if (!visible) {
+                const collapse = item.querySelector('.accordion-collapse.show');
+
+                if (collapse && window.bootstrap?.Collapse) {
+                    bootstrap.Collapse.getOrCreateInstance(collapse, { toggle: false }).hide();
+                }
+            }
+        });
+    }
+
     function render() {
         state.plantilla = plantillaSelect.value;
         templateName.textContent = window.cvPlantillas[state.plantilla];
         
         renderTemplateVisibility();
+        renderManualFieldsVisibility();
+        renderConfigSections();
 
         let html = '';
 
@@ -1406,6 +1897,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         preview.innerHTML = html;
         configInput.value = JSON.stringify(state);
+
     }
 
     function setAll(checked) {
@@ -1427,9 +1919,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     initSelections();
+    initConfigSectionMetadata();
+    updateTrajectoryFilterUi();
     render();
 
-    plantillaSelect.addEventListener('change', render);
+    plantillaSelect.addEventListener('change', () => render());
+
+    document.querySelectorAll('.cv-period-filter [data-years]').forEach(button => {
+        button.addEventListener('click', function () {
+            applyTrajectoryPeriodFilter(this.dataset.years);
+        });
+    });
+
+    document.querySelectorAll('.cv-manual-input').forEach(input => {
+        input.addEventListener('input', function () {
+            state.campos_manual[this.dataset.manualField] = this.value;
+            render();
+        });
+    });
 
     document.querySelectorAll('.cv-toggle').forEach(input => {
         input.addEventListener('change', function () {
@@ -1520,6 +2027,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+
     document.getElementById('btnGenerarPdf').addEventListener('click', function () {
         configInput.value = JSON.stringify(state);
         pdfForm.submit();
@@ -1528,6 +2036,131 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <style>
+
+    .cv-builder {
+        height: calc(100vh - 165px);
+        min-height: 680px;
+        overflow: hidden;
+    }
+
+    .cv-preview-panel,
+    .cv-config-panel {
+        min-height: 0;
+        height: 100%;
+    }
+
+    .cv-preview-panel {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cv-preview-toolbar {
+        flex: 0 0 auto;
+    }
+
+    .cv-paper-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+    }
+
+    .cv-config-sticky {
+        position: sticky;
+        top: 82px;
+        height: 100%;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding-right: 0;
+    }
+
+    .cv-config-toolbar {
+        flex: 0 0 auto;
+        max-height: 46%;
+        overflow-y: auto;
+        padding-right: .35rem;
+        scrollbar-gutter: stable;
+    }
+
+    .cv-config-sections {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+        padding-right: .35rem;
+        border-top: 1px solid var(--surface2);
+        padding-top: .75rem;
+    }
+
+    .cv-config-toolbar::-webkit-scrollbar,
+    .cv-config-sections::-webkit-scrollbar,
+    .cv-paper-wrap::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .cv-config-toolbar::-webkit-scrollbar-thumb,
+    .cv-config-sections::-webkit-scrollbar-thumb,
+    .cv-paper-wrap::-webkit-scrollbar-thumb {
+        background: rgba(101, 98, 100, .35);
+        border-radius: 999px;
+    }
+
+
+    [hidden] {
+        display: none !important;
+    }
+
+
+    .cv-config-panel {
+        min-width: 0;
+    }
+
+    .cv-config-sticky {
+        position: sticky;
+        top: 82px;
+        max-height: calc(100vh - 98px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+        padding-right: .35rem;
+    }
+
+    .cv-config-sticky::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .cv-config-sticky::-webkit-scrollbar-thumb {
+        background: rgba(101, 98, 100, .35);
+        border-radius: 999px;
+    }
+
+    .cv-filter-card,
+    .cv-template-manual-fields {
+        border-left: 4px solid var(--fepade-green, #00C896);
+    }
+
+    .cv-period-filter .btn {
+        white-space: nowrap;
+    }
+
+    .cv-manual-input {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .cv-manual-value {
+        white-space: pre-wrap;
+    }
+
+    .cv-placeholder-text {
+        color: #7a7f87;
+        font-style: italic;
+    }
     .cv-builder {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 390px;
@@ -2208,6 +2841,273 @@ document.addEventListener('DOMContentLoaded', function () {
         font-weight: bold;
         width: 220px;
     }
+
+    @media (max-width: 1199.98px) {
+        .cv-config-sticky {
+            position: static;
+            max-height: none;
+            overflow: visible;
+            padding-right: 0;
+        }
+    }
+
+
+
+    @media (max-width: 1199.98px) {
+        .cv-builder {
+            height: auto;
+            min-height: 0;
+            overflow: visible;
+        }
+
+        .cv-preview-panel,
+        .cv-config-panel {
+            height: auto;
+        }
+
+        .cv-paper-wrap {
+            max-height: none;
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        .cv-config-sticky {
+            position: static;
+            height: auto;
+            display: block;
+            overflow: visible;
+        }
+
+        .cv-config-toolbar,
+        .cv-config-sections {
+            max-height: none;
+            overflow: visible;
+            padding-right: 0;
+        }
+    }
+
+
+    @media (min-width: 1200px) {
+        .cv-builder {
+            height: calc(100vh - 165px);
+            min-height: 680px;
+            overflow: hidden;
+            align-items: stretch;
+        }
+
+        .cv-preview-panel,
+        .cv-config-panel {
+            height: 100%;
+            min-height: 0;
+        }
+
+        .cv-preview-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cv-paper-wrap {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .cv-config-sticky {
+            position: sticky;
+            top: 82px;
+            height: 100%;
+            max-height: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-right: 0;
+        }
+
+        .cv-config-toolbar {
+            flex: 0 0 auto;
+            max-height: 46%;
+            overflow-y: auto;
+        }
+
+        .cv-config-sections {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+        }
+    }
+    .cv-institutional-document,
+    .cv-summary-document {
+        color: #0D1B2A;
+        font-family: Arial, sans-serif;
+    }
+
+    .cv-institutional-header,
+    .cv-summary-header {
+        margin: -48px -48px 20px;
+        padding: 24px 48px 18px;
+        background: #0D1B2A;
+        border-bottom: 6px solid #00C896;
+        color: #fff;
+    }
+
+    .cv-institutional-brand,
+    .cv-summary-brand {
+        color: #00C896;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: .18em;
+    }
+
+    .cv-institutional-header h1,
+    .cv-summary-header h1 {
+        margin: 6px 0 4px;
+        color: #fff;
+        font-size: 21px;
+    }
+
+    .cv-institutional-header p,
+    .cv-summary-header p {
+        margin: 0;
+        color: #EEF2F8;
+        font-size: 10px;
+    }
+
+    .cv-institutional-process {
+        padding: 10px 12px;
+        margin-bottom: 16px;
+        background: #F7F9FC;
+        border-left: 4px solid #00C896;
+    }
+
+    .cv-numbered-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        margin: 17px 0 9px !important;
+        background: #162032;
+        border-left: 5px solid #00C896;
+        color: #fff !important;
+        font-size: 12px !important;
+    }
+
+    .cv-numbered-title span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #00C896;
+        color: #fff;
+    }
+
+    .cv-institutional-table thead th,
+    .cv-summary-section-row th {
+        background: #162032;
+        border-left: 5px solid #00C896;
+        color: #fff;
+    }
+
+    .cv-institutional-table tbody tr:nth-child(even) td {
+        background: #F7F9FC;
+    }
+
+    .cv-cell-reference {
+        margin-top: 6px;
+        padding-top: 5px;
+        border-top: 1px solid rgba(13, 27, 42, .16);
+        color: #6B7A90;
+        font-size: 10px;
+    }
+
+    .cv-inline-tag {
+        display: inline-block;
+        padding: 3px 7px;
+        margin: 2px 3px 2px 0;
+        border-radius: 10px;
+        background: #EEF2F8;
+        color: #0D1B2A;
+        font-size: 9px;
+        font-weight: 700;
+    }
+
+    .cv-inline-tag-muted {
+        background: #F7F9FC;
+        color: #0D1B2A;
+    }
+
+    .cv-signature-block {
+        display: grid;
+        grid-template-columns: 1.8fr 1fr 1fr;
+        gap: 14px;
+        margin-top: 34px;
+    }
+
+    .cv-signature-block > div {
+        padding-top: 7px;
+        border-top: 1px solid #0D1B2A;
+        text-align: center;
+        font-size: 9px;
+    }
+
+    .cv-signature-authority {
+        margin-top: 42px;
+    }
+
+    .cv-summary-context {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .cv-summary-context > div {
+        padding: 10px;
+        background: #F7F9FC;
+        border-top: 3px solid #00C896;
+    }
+
+    .cv-summary-context strong,
+    .cv-summary-context span {
+        display: block;
+    }
+
+    .cv-summary-context strong {
+        margin-bottom: 4px;
+        color: #0D1B2A;
+        font-size: 9px;
+        text-transform: uppercase;
+    }
+
+    .cv-summary-table th:first-child:not([colspan]) {
+        width: 34%;
+        background: #EEF2F8;
+        color: #0D1B2A;
+        text-align: left;
+    }
+
+    .cv-summary-section-row th {
+        padding: 8px 10px;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .cv-compact-list {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .cv-compact-list li {
+        margin-bottom: 5px;
+    }
+
+    .cv-muted {
+        color: #6B7A90;
+        font-size: 10px;
+    }
+
 </style>
 
 @endsection
