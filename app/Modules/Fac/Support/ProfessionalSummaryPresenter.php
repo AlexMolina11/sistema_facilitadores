@@ -131,7 +131,10 @@ class ProfessionalSummaryPresenter
 
     protected static function joinHuman(Collection $items): string
     {
-        $items = $items->values();
+        $items = $items
+            ->map(fn ($item) => trim((string) $item))
+            ->filter()
+            ->values();
 
         if ($items->count() === 0) {
             return '';
@@ -141,9 +144,49 @@ class ProfessionalSummaryPresenter
             return $items->first();
         }
 
-        $last = $items->pop();
+        $last = (string) $items->pop();
+        $conjunction = self::conjunctionBefore($last);
 
-        return $items->implode(', ') . ' y ' . $last;
+        return $items->implode(', ') . ' ' . $conjunction . ' ' . $last;
+    }
+
+    protected static function conjunctionBefore(string $word): string
+    {
+        $word = Str::lower(trim($word));
+
+        if ($word === '') {
+            return 'y';
+        }
+
+        /*
+        * Se mantiene "y" antes de palabras que comienzan con los
+        * diptongos hie- o hia-, porque no tienen sonido inicial de "i".
+        *
+        * Ejemplos:
+        * - agua y hielo
+        * - leones y hienas
+        */
+        if (Str::startsWith($word, ['hie', 'hia'])) {
+            return 'y';
+        }
+
+        /*
+        * Se utiliza "e" antes de palabras que comienzan con:
+        * - i
+        * - í
+        * - hi
+        * - hí
+        *
+        * Ejemplos:
+        * - Español e Inglés
+        * - Francés e Italiano
+        * - investigación e historia
+        */
+        if (Str::startsWith($word, ['i', 'í', 'hi', 'hí'])) {
+            return 'e';
+        }
+
+        return 'y';
     }
 
     protected static function plural(int $count, string $singular, string $plural): string
