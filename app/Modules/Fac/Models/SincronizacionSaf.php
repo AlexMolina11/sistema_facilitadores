@@ -6,6 +6,7 @@ use App\Modules\Seg\Models\Usuario;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class SincronizacionSaf extends Model
@@ -120,6 +121,26 @@ class SincronizacionSaf extends Model
             'usuario_ejecuta',
             'id_usuario'
         );
+    }
+
+    /**
+     * Errores individuales registrados durante la sincronización.
+     */
+    public function errores(): HasMany
+    {
+        return $this->hasMany(
+            SincronizacionSafError::class,
+            'id_sincronizacion_saf',
+            'id_sincronizacion_saf'
+        );
+    }
+
+    /**
+     * Errores que todavía no han sido resueltos.
+     */
+    public function erroresPendientes(): HasMany
+    {
+        return $this->errores()->where('resuelto', false);
     }
 
     /**
