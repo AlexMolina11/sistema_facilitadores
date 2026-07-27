@@ -10,6 +10,10 @@ class Consultor extends Model
 {
     use SoftDeletes;
 
+    public const ORIGEN_MANUAL = 'MANUAL';
+
+    public const ORIGEN_SAF = 'SAF';
+
     protected $table = 'tbl_consultor';
 
     protected $primaryKey = 'id_consultor';
@@ -36,6 +40,9 @@ class Consultor extends Model
         'vigente',
         'id_instructor',
         'id_entidad',
+        'origen_registro',
+        'fecha_ultima_sincronizacion_saf',
+        'hash_datos_saf',        
         'activo',
         'usuario_crea',
         'usuario_mod',
@@ -46,6 +53,7 @@ class Consultor extends Model
         'fecha_nacimiento' => 'date',
         'vigente' => 'boolean',
         'activo' => 'boolean',
+        'fecha_ultima_sincronizacion_saf' => 'datetime',
     ];
 
     public function getNombreCompletoAttribute(): string
@@ -331,6 +339,30 @@ class Consultor extends Model
             'puntos_dinamicos' => $puntosDinamicos,
             'todos' => $todosLosPuntos,
         ];
+    }
+
+    /**
+     * Determina si el consultor proviene del sistema SAF.
+     */
+    public function provieneDeSaf(): bool
+    {
+        return $this->origen_registro === self::ORIGEN_SAF;
+    }
+
+    /**
+     * Determina si el consultor fue creado manualmente.
+     */
+    public function esRegistroManual(): bool
+    {
+        return $this->origen_registro === self::ORIGEN_MANUAL;
+    }
+
+    /**
+     * Determina si el consultor posee un identificador externo de SAF.
+     */
+    public function tieneIdInstructorSaf(): bool
+    {
+        return filled($this->id_instructor);
     }
 
 }
