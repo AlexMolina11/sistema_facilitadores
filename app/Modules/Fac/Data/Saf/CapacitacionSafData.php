@@ -17,8 +17,7 @@ final readonly class CapacitacionSafData
         public string $nombre,
         public ?CarbonImmutable $fechaInicio = null,
         public ?CarbonImmutable $fechaFin = null,
-        public ?float $horas = null,
-        public ?string $estado = null,
+        public ?int $horas = null,
         public ?bool $activo = null,
     ) {
         if ($this->idInstructor <= 0) {
@@ -73,122 +72,115 @@ final readonly class CapacitacionSafData
                     'integer',
                     'min:1',
                 ],
+
                 'codigo_evento_externo' => [
                     'required',
                     'string',
-                    'max:150',
+                    'max:100',
                 ],
+
                 'nombre' => [
                     'required',
                     'string',
-                    'max:255',
+                    'max:250',
                 ],
+
                 'fecha_inicio' => [
                     'nullable',
                     'date_format:Y-m-d',
                 ],
+
                 'fecha_fin' => [
                     'nullable',
                     'date_format:Y-m-d',
                     'after_or_equal:fecha_inicio',
                 ],
+
                 'horas' => [
                     'nullable',
-                    'numeric',
+                    'integer',
                     'min:0',
                 ],
-                'estado' => [
-                    'nullable',
-                    'string',
-                    'max:100',
-                ],
+
                 'activo' => [
                     'nullable',
                     'boolean',
                 ],
             ],
             [
-                'id_instructor.required' =>
-                    'La capacitación no contiene id_instructor.',
+                'id_instructor.required' => 'La capacitación no contiene id_instructor.',
 
-                'codigo_evento_externo.required' =>
-                    'La capacitación no contiene codigo_evento_externo.',
+                'id_instructor.integer' => 'El id_instructor debe ser un número entero.',
 
-                'nombre.required' =>
-                    'La capacitación no contiene nombre.',
+                'id_instructor.min' => 'El id_instructor debe ser mayor que cero.',
 
-                'fecha_inicio.date_format' =>
-                    'La fecha de inicio debe tener el formato Y-m-d.',
+                'codigo_evento_externo.required' => 'La capacitación no contiene codigo_evento_externo.',
 
-                'fecha_fin.date_format' =>
-                    'La fecha de finalización debe tener el formato Y-m-d.',
+                'codigo_evento_externo.max' => 'El codigo_evento_externo no puede exceder los 100 caracteres.',
 
-                'fecha_fin.after_or_equal' =>
-                    'La fecha de finalización no puede ser anterior a la fecha de inicio.',
+                'nombre.required' => 'La capacitación no contiene nombre.',
 
-                'horas.numeric' =>
-                    'La cantidad de horas debe ser numérica.',
+                'nombre.max' => 'El nombre de la capacitación no puede exceder los 250 caracteres.',
 
-                'horas.min' =>
-                    'La cantidad de horas no puede ser negativa.',
+                'fecha_inicio.date_format' => 'La fecha de inicio debe tener el formato Y-m-d.',
+
+                'fecha_fin.date_format' => 'La fecha de finalización debe tener el formato Y-m-d.',
+
+                'fecha_fin.after_or_equal' => 'La fecha de finalización no puede ser anterior a la fecha de inicio.',
+
+                'horas.integer' => 'La cantidad de horas debe ser un número entero.',
+
+                'horas.min' => 'La cantidad de horas no puede ser negativa.',
+
+                'activo.boolean' => 'El estado activo debe ser verdadero o falso.',
             ]
         )->validate();
 
         return new self(
             idInstructor: (int) $normalized['id_instructor'],
 
-            codigoEventoExterno:
-                $normalized['codigo_evento_externo'],
+            codigoEventoExterno: $normalized['codigo_evento_externo'],
 
             nombre: $normalized['nombre'],
 
-            fechaInicio: self::toDate(
-                $normalized['fecha_inicio']
-            ),
+            fechaInicio: self::toDate($normalized['fecha_inicio']),
 
-            fechaFin: self::toDate(
-                $normalized['fecha_fin']
-            ),
+            fechaFin: self::toDate($normalized['fecha_fin']),
 
             horas: $normalized['horas'] !== null
-                ? (float) $normalized['horas']
-                : null,
-
-            estado: $normalized['estado'],
+                    ? (int) $normalized['horas']
+                    : null,
 
             activo: $normalized['activo'],
         );
     }
 
     /**
-     * Convierte el objeto a la nomenclatura SAF.
+     * Convierte el objeto a la nomenclatura utilizada por SAF.
      */
     public function toArray(): array
     {
         return [
             'id_instructor' => $this->idInstructor,
 
-            'codigo_evento_externo' =>
-                $this->codigoEventoExterno,
+            'codigo_evento_externo' => $this->codigoEventoExterno,
 
             'nombre' => $this->nombre,
 
-            'fecha_inicio' =>
-                $this->fechaInicio?->format('Y-m-d'),
+            'fecha_inicio' => $this->fechaInicio?->format('Y-m-d'),
 
-            'fecha_fin' =>
-                $this->fechaFin?->format('Y-m-d'),
+            'fecha_fin' => $this->fechaFin?->format('Y-m-d'),
 
             'horas' => $this->horas,
-
-            'estado' => $this->estado,
 
             'activo' => $this->activo,
         ];
     }
 
     /**
-     * Devuelve únicamente campos con valor.
+     * Devuelve únicamente los campos que tienen valor.
+     *
+     * Mantiene false y 0 como valores válidos.
      */
     public function toFilteredArray(): array
     {
@@ -206,8 +198,8 @@ final readonly class CapacitacionSafData
     public function externalId(): string
     {
         return $this->idInstructor
-            . ':'
-            . $this->codigoEventoExterno;
+            .':'
+            .$this->codigoEventoExterno;
     }
 
     /**
@@ -215,9 +207,19 @@ final readonly class CapacitacionSafData
      */
     public function hash(): string
     {
-        $algorithm = config('saf.hash.algorithm', 'sha256');
+        $algorithm = config(
+            'saf.hash.algorithm',
+            'sha256'
+        );
 
-        if (! in_array($algorithm, hash_algos(), true)) {
+        if (
+            ! is_string($algorithm)
+            || ! in_array(
+                $algorithm,
+                hash_algos(),
+                true
+            )
+        ) {
             $algorithm = 'sha256';
         }
 
@@ -237,67 +239,81 @@ final readonly class CapacitacionSafData
     }
 
     /**
-     * Normaliza la entrada.
+     * Normaliza los datos recibidos desde SAF.
      */
-    private static function normalizeInput(array $data): array
-    {
+    private static function normalizeInput(
+        array $data
+    ): array {
         return [
             'id_instructor' => self::normalizeInteger(
-                Arr::get($data, 'id_instructor')
+                Arr::get(
+                    $data,
+                    'id_instructor'
+                )
             ),
 
             'codigo_evento_externo' => self::normalizeText(
-                Arr::get($data, 'codigo_evento_externo')
+                Arr::get(
+                    $data,
+                    'codigo_evento_externo'
+                )
             ),
 
             'nombre' => self::normalizeText(
                 Arr::get($data, 'nombre')
-                    ?? Arr::get($data, 'nombre_evento')
+                    ?? Arr::get(
+                        $data,
+                        'nombre_evento'
+                    )
             ),
 
             'fecha_inicio' => self::normalizeDate(
-                Arr::get($data, 'fecha_inicio')
+                Arr::get(
+                    $data,
+                    'fecha_inicio'
+                )
             ),
 
             'fecha_fin' => self::normalizeDate(
-                Arr::get($data, 'fecha_fin')
+                Arr::get(
+                    $data,
+                    'fecha_fin'
+                )
             ),
 
-            'horas' => self::normalizeFloat(
-                Arr::get($data, 'horas')
-            ),
-
-            'estado' => self::normalizeNullableText(
-                Arr::get($data, 'estado')
+            'horas' => self::normalizeInteger(
+                Arr::get(
+                    $data,
+                    'horas'
+                )
             ),
 
             'activo' => self::normalizeBoolean(
-                Arr::get($data, 'activo')
+                Arr::get(
+                    $data,
+                    'activo'
+                )
             ),
         ];
     }
 
-    private static function normalizeText(mixed $value): string
-    {
+    /**
+     * Normaliza textos y elimina espacios repetidos.
+     */
+    private static function normalizeText(
+        mixed $value
+    ): string {
         return Str::of((string) $value)
             ->squish()
             ->toString();
     }
 
-    private static function normalizeNullableText(
+    /**
+     * Normaliza valores enteros recibidos como texto.
+     */
+    private static function normalizeInteger(
         mixed $value
-    ): ?string {
-        if ($value === null) {
-            return null;
-        }
-
-        $normalized = self::normalizeText($value);
-
-        return $normalized !== '' ? $normalized : null;
-    }
-
-    private static function normalizeInteger(mixed $value): mixed
-    {
+    ): mixed {
         if ($value === null || $value === '') {
             return null;
         }
@@ -308,7 +324,10 @@ final readonly class CapacitacionSafData
 
         if (
             is_string($value)
-            && preg_match('/^\d+$/', trim($value)) === 1
+            && preg_match(
+                '/^\d+$/',
+                trim($value)
+            ) === 1
         ) {
             return (int) trim($value);
         }
@@ -316,29 +335,12 @@ final readonly class CapacitacionSafData
         return $value;
     }
 
-    private static function normalizeFloat(mixed $value): mixed
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        if (is_float($value) || is_int($value)) {
-            return (float) $value;
-        }
-
-        if (is_string($value)) {
-            $normalized = str_replace(',', '.', trim($value));
-
-            if (is_numeric($normalized)) {
-                return (float) $normalized;
-            }
-        }
-
-        return $value;
-    }
-
-    private static function normalizeDate(mixed $value): mixed
-    {
+    /**
+     * Normaliza las fechas aceptadas por la integración.
+     */
+    private static function normalizeDate(
+        mixed $value
+    ): mixed {
         if ($value === null || $value === '') {
             return null;
         }
@@ -358,10 +360,11 @@ final readonly class CapacitacionSafData
 
         foreach ($formats as $format) {
             try {
-                $date = CarbonImmutable::createFromFormat(
-                    $format,
-                    $value
-                );
+                $date =
+                    CarbonImmutable::createFromFormat(
+                        $format,
+                        $value
+                    );
 
                 if ($date !== false) {
                     return $date->format('Y-m-d');
@@ -374,14 +377,23 @@ final readonly class CapacitacionSafData
         return $value;
     }
 
+    /**
+     * Convierte una fecha normalizada a CarbonImmutable.
+     */
     private static function toDate(
         ?string $value
     ): ?CarbonImmutable {
         return $value !== null
-            ? CarbonImmutable::createFromFormat('Y-m-d', $value)
+            ? CarbonImmutable::createFromFormat(
+                'Y-m-d',
+                $value
+            )
             : null;
     }
 
+    /**
+     * Normaliza valores booleanos recibidos desde SAF.
+     */
     private static function normalizeBoolean(
         mixed $value
     ): mixed {
@@ -402,7 +414,9 @@ final readonly class CapacitacionSafData
         }
 
         if (is_string($value)) {
-            return match (Str::lower(trim($value))) {
+            return match (
+                Str::lower(trim($value))
+            ) {
                 'true',
                 'si',
                 'sí',

@@ -15,8 +15,6 @@ final readonly class InstructorSafData
         public string $nombres,
         public string $apellidos,
         public ?string $dui = null,
-        public ?string $correo = null,
-        public ?string $telefono = null,
         public ?bool $activo = null,
     ) {
         if ($this->idInstructor <= 0) {
@@ -45,7 +43,7 @@ final readonly class InstructorSafData
     }
 
     /**
-     * Construye el objeto a partir de los datos recibidos desde SAF.
+     * Construye el DTO a partir de los datos recibidos desde SAF.
      *
      * @throws ValidationException
      */
@@ -61,36 +59,31 @@ final readonly class InstructorSafData
                     'integer',
                     'min:1',
                 ],
+
                 'id_entidad' => [
                     'required',
                     'integer',
                     'min:1',
                 ],
+
                 'nombres' => [
                     'required',
                     'string',
                     'max:150',
                 ],
+
                 'apellidos' => [
                     'required',
                     'string',
                     'max:150',
                 ],
+
                 'dui' => [
                     'nullable',
                     'string',
                     'max:25',
                 ],
-                'correo' => [
-                    'nullable',
-                    'email',
-                    'max:255',
-                ],
-                'telefono' => [
-                    'nullable',
-                    'string',
-                    'max:40',
-                ],
+
                 'activo' => [
                     'nullable',
                     'boolean',
@@ -103,20 +96,44 @@ final readonly class InstructorSafData
                 'id_instructor.integer' =>
                     'El id_instructor debe ser numérico.',
 
+                'id_instructor.min' =>
+                    'El id_instructor debe ser mayor que cero.',
+
                 'id_entidad.required' =>
                     'SAF no proporcionó el id_entidad.',
 
                 'id_entidad.integer' =>
                     'El id_entidad debe ser numérico.',
 
+                'id_entidad.min' =>
+                    'El id_entidad debe ser mayor que cero.',
+
                 'nombres.required' =>
                     'SAF no proporcionó los nombres del instructor.',
+
+                'nombres.string' =>
+                    'Los nombres del instructor deben ser texto.',
+
+                'nombres.max' =>
+                    'Los nombres del instructor no pueden superar los 150 caracteres.',
 
                 'apellidos.required' =>
                     'SAF no proporcionó los apellidos del instructor.',
 
-                'correo.email' =>
-                    'El correo proporcionado por SAF no es válido.',
+                'apellidos.string' =>
+                    'Los apellidos del instructor deben ser texto.',
+
+                'apellidos.max' =>
+                    'Los apellidos del instructor no pueden superar los 150 caracteres.',
+
+                'dui.string' =>
+                    'El DUI proporcionado por SAF debe ser texto.',
+
+                'dui.max' =>
+                    'El DUI proporcionado por SAF no puede superar los 25 caracteres.',
+
+                'activo.boolean' =>
+                    'El estado activo proporcionado por SAF no es válido.',
             ]
         )->validate();
 
@@ -126,14 +143,12 @@ final readonly class InstructorSafData
             nombres: $normalized['nombres'],
             apellidos: $normalized['apellidos'],
             dui: $normalized['dui'],
-            correo: $normalized['correo'],
-            telefono: $normalized['telefono'],
             activo: $normalized['activo'],
         );
     }
 
     /**
-     * Convierte el objeto a la nomenclatura utilizada por SAF.
+     * Convierte el DTO a la nomenclatura utilizada por SAF.
      */
     public function toArray(): array
     {
@@ -143,14 +158,14 @@ final readonly class InstructorSafData
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
             'dui' => $this->dui,
-            'correo' => $this->correo,
-            'telefono' => $this->telefono,
             'activo' => $this->activo,
         ];
     }
 
     /**
-     * Devuelve únicamente los campos con valor.
+     * Devuelve únicamente los campos que tienen valor.
+     *
+     * Mantiene false y 0 como valores válidos.
      */
     public function toFilteredArray(): array
     {
@@ -165,7 +180,9 @@ final readonly class InstructorSafData
      */
     public function nombreCompleto(): string
     {
-        return trim($this->nombres . ' ' . $this->apellidos);
+        return trim(
+            $this->nombres . ' ' . $this->apellidos
+        );
     }
 
     /**
@@ -177,11 +194,14 @@ final readonly class InstructorSafData
     }
 
     /**
-     * Determina si pertenece a la entidad configurada para FEPADE.
+     * Determina si el instructor pertenece a la entidad
+     * configurada para la integración con SAF.
      */
     public function perteneceAEntidadConfigurada(): bool
     {
-        $idEntidadConfigurada = config('saf.entity_id');
+        $idEntidadConfigurada = config(
+            'saf.entity_id'
+        );
 
         if (
             $idEntidadConfigurada === null
@@ -190,17 +210,29 @@ final readonly class InstructorSafData
             return true;
         }
 
-        return $this->idEntidad === (int) $idEntidadConfigurada;
+        return $this->idEntidad ===
+            (int) $idEntidadConfigurada;
     }
 
     /**
-     * Genera una representación estable para comparar datos.
+     * Genera una representación estable de los datos
+     * recibidos desde SAF.
      */
     public function hash(): string
     {
-        $algorithm = config('saf.hash.algorithm', 'sha256');
+        $algorithm = config(
+            'saf.hash.algorithm',
+            'sha256'
+        );
 
-        if (! in_array($algorithm, hash_algos(), true)) {
+        if (
+            ! is_string($algorithm)
+            || ! in_array(
+                $algorithm,
+                hash_algos(),
+                true
+            )
+        ) {
             $algorithm = 'sha256';
         }
 
@@ -220,49 +252,70 @@ final readonly class InstructorSafData
     }
 
     /**
-     * Normaliza las llaves y valores recibidos.
+     * Normaliza las llaves y valores recibidos desde SAF.
      */
-    private static function normalizeInput(array $data): array
-    {
+    private static function normalizeInput(
+        array $data
+    ): array {
         return [
-            'id_instructor' => self::normalizeInteger(
-                Arr::get($data, 'id_instructor')
-            ),
+            'id_instructor' =>
+                self::normalizeInteger(
+                    Arr::get(
+                        $data,
+                        'id_instructor'
+                    )
+                ),
 
-            'id_entidad' => self::normalizeInteger(
-                Arr::get($data, 'id_entidad')
-            ),
+            'id_entidad' =>
+                self::normalizeInteger(
+                    Arr::get(
+                        $data,
+                        'id_entidad'
+                    )
+                ),
 
-            'nombres' => self::normalizeText(
-                Arr::get($data, 'nombres')
-            ),
+            'nombres' =>
+                self::normalizeText(
+                    Arr::get(
+                        $data,
+                        'nombres'
+                    )
+                ),
 
-            'apellidos' => self::normalizeText(
-                Arr::get($data, 'apellidos')
-            ),
+            'apellidos' =>
+                self::normalizeText(
+                    Arr::get(
+                        $data,
+                        'apellidos'
+                    )
+                ),
 
-            'dui' => self::normalizeDui(
-                Arr::get($data, 'dui')
-                    ?? Arr::get($data, 'numero_identificacion')
-            ),
+            'dui' =>
+                self::normalizeDui(
+                    Arr::get($data, 'dui')
+                        ?? Arr::get(
+                            $data,
+                            'numero_identificacion'
+                        )
+                ),
 
-            'correo' => self::normalizeEmail(
-                Arr::get($data, 'correo')
-                    ?? Arr::get($data, 'email')
-            ),
-
-            'telefono' => self::normalizeNullableText(
-                Arr::get($data, 'telefono')
-            ),
-
-            'activo' => self::normalizeBoolean(
-                Arr::get($data, 'activo')
-            ),
+            'activo' =>
+                self::normalizeBoolean(
+                    Arr::get(
+                        $data,
+                        'activo'
+                    )
+                ),
         ];
     }
 
-    private static function normalizeInteger(mixed $value): mixed
-    {
+    /**
+     * Normaliza identificadores numéricos recibidos
+     * como enteros o cadenas numéricas.
+     */
+    private static function normalizeInteger(
+        mixed $value
+    ): mixed {
         if ($value === null || $value === '') {
             return null;
         }
@@ -273,7 +326,10 @@ final readonly class InstructorSafData
 
         if (
             is_string($value)
-            && preg_match('/^\d+$/', trim($value)) === 1
+            && preg_match(
+                '/^\d+$/',
+                trim($value)
+            ) === 1
         ) {
             return (int) trim($value);
         }
@@ -281,13 +337,20 @@ final readonly class InstructorSafData
         return $value;
     }
 
-    private static function normalizeText(mixed $value): string
-    {
+    /**
+     * Normaliza textos obligatorios.
+     */
+    private static function normalizeText(
+        mixed $value
+    ): string {
         return Str::of((string) $value)
             ->squish()
             ->toString();
     }
 
+    /**
+     * Normaliza textos opcionales.
+     */
     private static function normalizeNullableText(
         mixed $value
     ): ?string {
@@ -295,36 +358,45 @@ final readonly class InstructorSafData
             return null;
         }
 
-        $normalized = self::normalizeText($value);
+        $normalized = self::normalizeText(
+            $value
+        );
 
-        return $normalized !== '' ? $normalized : null;
-    }
-
-    private static function normalizeEmail(mixed $value): ?string
-    {
-        $normalized = self::normalizeNullableText($value);
-
-        return $normalized !== null
-            ? Str::lower($normalized)
+        return $normalized !== ''
+            ? $normalized
             : null;
     }
 
-    private static function normalizeDui(mixed $value): ?string
-    {
-        $normalized = self::normalizeNullableText($value);
+    /**
+     * Normaliza el número de identificación.
+     */
+    private static function normalizeDui(
+        mixed $value
+    ): ?string {
+        $normalized =
+            self::normalizeNullableText(
+                $value
+            );
 
         if ($normalized === null) {
             return null;
         }
 
         return Str::upper(
-            preg_replace('/\s+/', '', $normalized) ?? $normalized
+            preg_replace(
+                '/\s+/',
+                '',
+                $normalized
+            ) ?? $normalized
         );
     }
 
+    /**
+     * Normaliza el estado activo recibido desde SAF.
+     */
     private static function normalizeBoolean(
         mixed $value
-    ): ?bool {
+    ): mixed {
         if ($value === null || $value === '') {
             return null;
         }
@@ -342,7 +414,9 @@ final readonly class InstructorSafData
         }
 
         if (is_string($value)) {
-            return match (Str::lower(trim($value))) {
+            return match (
+                Str::lower(trim($value))
+            ) {
                 'true',
                 'si',
                 'sí',
