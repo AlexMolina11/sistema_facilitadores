@@ -8,6 +8,7 @@ use App\Modules\Fac\Models\SincronizacionSafError;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Validation\Rule;
 
 class BitacoraSafController extends Controller
 {
@@ -221,72 +222,92 @@ class BitacoraSafController extends Controller
         Request $request,
         SincronizacionSaf $sincronizacionSaf
     ): View {
-        $request->validate([
-            'tipo_registro' => [
-                'nullable',
-                'in:' . implode(',', [
-                    SincronizacionSafError::TIPO_REGISTRO_GENERAL,
-                    SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
-                    SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
-                ]),
-            ],
-            'estado_error' => [
-                'nullable',
-                'in:PENDIENTE,RESUELTO',
-            ],
+        $filtros = $request->validate([
             'q' => [
                 'nullable',
                 'string',
                 'max:150',
             ],
+
+            'tipo_registro' => [
+                'nullable',
+                Rule::in([
+                    SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
+                    SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
+                    SincronizacionSafError::TIPO_REGISTRO_GENERAL,
+                ]),
+            ],
+
+            'resuelto' => [
+                'nullable',
+                Rule::in([
+                    '0',
+                    '1',
+                ]),
+            ],
         ]);
 
         $sincronizacionSaf->load([
-            'usuarioEjecutor:id_usuario,nombres,apellidos,email',
+            'usuarioEjecutor',
         ]);
 
-        $errores = $sincronizacionSaf
+        $consultaErrores = $sincronizacionSaf
             ->errores()
-            ->with([
-                'usuarioResolutor:id_usuario,nombres,apellidos,email',
-            ])
-            ->when(
-                $request->filled('tipo_registro'),
-                fn (Builder $query): Builder => $query->where(
-                    'tipo_registro',
-                    $request->string('tipo_registro')->toString()
-                )
-            )
-            ->when(
-                $request->input('estado_error') === 'PENDIENTE',
-                fn (Builder $query): Builder => $query->pendientes()
-            )
-            ->when(
-                $request->input('estado_error') === 'RESUELTO',
-                fn (Builder $query): Builder => $query->resueltos()
-            )
-            ->when(
-                $request->filled('q'),
-                function (Builder $query) use ($request): void {
-                    $buscar = trim($request->string('q')->toString());
+            ->orderByDesc('id_sincronizacion_saf_error');
 
-                    $query->where(function (Builder $subquery) use ($buscar): void {
-                        $subquery
-                            ->where('id_registro_externo', 'like', "%{$buscar}%")
-                            ->orWhere('codigo_error', 'like', "%{$buscar}%")
-                            ->orWhere('mensaje', 'like', "%{$buscar}%")
-                            ->orWhere('tipo_operacion', 'like', "%{$buscar}%");
-                    });
-                }
-            )
-            ->latest('created_at')
-            ->latest('id_sincronizacion_saf_error')
-            ->paginate(20)
+        if (filled($filtros['q'] ?? null)) {
+            $busqueda = trim($filtros['q']);
+
+            $consultaErrores->where(function ($query) use ($busqueda) {
+                $query
+                    ->where(
+                        'mensaje_error',
+                        'like',
+                        "%{$busqueda}%"
+                    )
+                    ->orWhere(
+                        'codigo_error',
+                        'like',
+                        "%{$busqueda}%"
+                    )
+                    ->orWhere(
+                        'identificador_externo',
+                        'like',
+                        "%{$busqueda}%"
+                    )
+                    ->orWhere(
+                        'campo_error',
+                        'like',
+                        "%{$busqueda}%"
+                    );
+            });
+        }
+
+        if (filled($filtros['tipo_registro'] ?? null)) {
+            $consultaErrores->where(
+                'tipo_registro',
+                $filtros['tipo_registro']
+            );
+        }
+
+        if (
+            array_key_exists('resuelto', $filtros)
+            && $filtros['resuelto'] !== null
+            && $filtros['resuelto'] !== ''
+        ) {
+            $consultaErrores->where(
+                'resuelto',
+                (bool) ((int) $filtros['resuelto'])
+            );
+        }
+
+        $errores = $consultaErrores
+            ->paginate(15)
             ->withQueryString();
 
         $resumenErrores = $sincronizacionSaf
             ->errores()
-            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('COUNT(*) as total_errores')
             ->selectRaw(
                 'SUM(CASE WHEN resuelto = 0 THEN 1 ELSE 0 END) as pendientes'
             )
@@ -294,24 +315,42 @@ class BitacoraSafController extends Controller
                 'SUM(CASE WHEN resuelto = 1 THEN 1 ELSE 0 END) as resueltos'
             )
             ->selectRaw(
-                'SUM(CASE WHEN tipo_registro = ? THEN 1 ELSE 0 END) as consultores',
-                [SincronizacionSafError::TIPO_REGISTRO_CONSULTOR]
+                'SUM(CASE WHEN tipo_registro = ? THEN 1 ELSE 0 END) as errores_consultores',
+                [
+                    SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
+                ]
             )
             ->selectRaw(
-                'SUM(CASE WHEN tipo_registro = ? THEN 1 ELSE 0 END) as capacitaciones',
-                [SincronizacionSafError::TIPO_REGISTRO_CAPACITACION]
+                'SUM(CASE WHEN tipo_registro = ? THEN 1 ELSE 0 END) as errores_capacitaciones',
+                [
+                    SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
+                ]
             )
             ->selectRaw(
-                'SUM(CASE WHEN tipo_registro = ? THEN 1 ELSE 0 END) as generales',
-                [SincronizacionSafError::TIPO_REGISTRO_GENERAL]
+                'SUM(CASE WHEN tipo_registro = ? THEN 1 ELSE 0 END) as errores_generales',
+                [
+                    SincronizacionSafError::TIPO_REGISTRO_GENERAL,
+                ]
             )
             ->first();
 
-        return view('seg.bitacora-saf.show', compact(
-            'sincronizacionSaf',
-            'errores',
-            'resumenErrores'
-        ));
+        $tiposRegistro = [
+            SincronizacionSafError::TIPO_REGISTRO_CONSULTOR =>
+                'Consultor',
+
+            SincronizacionSafError::TIPO_REGISTRO_CAPACITACION =>
+                'Capacitación',
+
+            SincronizacionSafError::TIPO_REGISTRO_GENERAL =>
+                'General',
+        ];
+
+        return view('seg.bitacora-saf.show', [
+            'sincronizacionSaf' => $sincronizacionSaf,
+            'errores' => $errores,
+            'resumenErrores' => $resumenErrores,
+            'tiposRegistro' => $tiposRegistro,
+        ]);
     }
 
     /**
