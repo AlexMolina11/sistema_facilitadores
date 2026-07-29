@@ -29,6 +29,11 @@
             'route' => 'seg.bitacora.index',
             'permission' => 'seg.bitacora.ver',
         ],
+        [
+            'label' => 'Bitácora SAF',
+            'route' => 'seg.bitacora-saf.index',
+            'permission' => 'seg.bitacora-saf.ver',
+        ],
     ])->filter(fn ($item) => $usuario?->tienePermiso($item['permission']) && Route::has($item['route']))->values();
 @endphp
 

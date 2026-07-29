@@ -85,6 +85,8 @@ class SincronizacionSafError extends Model
         'resuelto' => 'boolean',
         'fecha_resolucion' => 'datetime',
         'usuario_resuelve' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
