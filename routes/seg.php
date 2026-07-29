@@ -6,6 +6,7 @@ use App\Modules\Seg\Controllers\UsuarioController;
 use App\Modules\Seg\Controllers\RolController;
 use App\Modules\Seg\Controllers\PermisoController;
 use App\Modules\Seg\Controllers\BitacoraAccesoController;
+use App\Modules\Seg\Controllers\BitacoraSafController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -44,4 +45,12 @@ Route::prefix('seg')
         Route::get('bitacora', [BitacoraAccesoController::class, 'index'])
             ->middleware('permission:seg.bitacora.ver')
             ->name('bitacora.index');
+
+        Route::get('bitacora-saf', [BitacoraSafController::class, 'index'])
+            ->middleware('permission:seg.bitacora-saf.ver')
+            ->name('bitacora-saf.index');
+
+        Route::get('bitacora-saf/{sincronizacionSaf}', [BitacoraSafController::class, 'show'])
+            ->middleware('permission:seg.bitacora-saf.ver')
+            ->name('bitacora-saf.show');
     });

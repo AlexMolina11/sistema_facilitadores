@@ -21,6 +21,7 @@ class SeguridadBaseSeeder extends Seeder
             ['codigo' => 'seg.roles.gestionar', 'nombre' => 'Gestionar roles', 'modulo' => 'SEG'],
             ['codigo' => 'seg.permisos.gestionar', 'nombre' => 'Gestionar permisos', 'modulo' => 'SEG'],
             ['codigo' => 'seg.bitacora.ver', 'nombre' => 'Ver bitácora de accesos', 'modulo' => 'SEG'],
+            ['codigo' => 'seg.bitacora-saf.ver', 'nombre' => 'Ver bitácora de sincronizaciones SAF', 'modulo' => 'SEG'],
             ['codigo' => 'seg.invitaciones.gestionar', 'nombre' => 'Gestionar invitaciones', 'modulo' => 'SEG'],
             ['codigo' => 'fac.busqueda.ver', 'nombre' => 'Ver búsqueda avanzada', 'modulo' => 'FAC'],
         ];
