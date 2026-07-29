@@ -266,11 +266,16 @@ class SafCapacitacionImportacionProcessor
                         'datos_recibidos' =>
                             $this->datosRecibidos($registro),
 
-                        'detalle_tecnico' => [
-                            'campo' => $campo,
-                            'id_importacion' =>
-                                $registro->id_importacion,
-                        ],
+                        'detalle_tecnico' => json_encode(
+                            [
+                                'campo' => $campo,
+                                'id_importacion' =>
+                                    $registro->id_importacion,
+                            ],
+                            JSON_UNESCAPED_UNICODE
+                            | JSON_UNESCAPED_SLASHES
+                            | JSON_THROW_ON_ERROR
+                        ),
                     ]
                 );
             }
