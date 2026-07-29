@@ -130,7 +130,13 @@ class SafCapacitacionImportacionProcessor
 
                     'codigo_evento_externo' => $registro->codigo_evento_externo,
 
-                    'nombre' => $registro->nombre,
+                    'nombre_evento' => $registro->nombre_evento,
+
+                    'tema' => $registro->tema,
+
+                    'institucion' => $registro->institucion,
+
+                    'modalidad' => $registro->modalidad,
 
                     'fecha_inicio' => $registro->fecha_inicio?->format('Y-m-d'),
 

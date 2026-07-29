@@ -14,7 +14,10 @@ final readonly class CapacitacionSafData
     public function __construct(
         public int $idInstructor,
         public string $codigoEventoExterno,
-        public string $nombre,
+        public string $nombreEvento,
+        public ?string $tema = null,
+        public ?string $institucion = null,
+        public ?string $modalidad = null,
         public ?CarbonImmutable $fechaInicio = null,
         public ?CarbonImmutable $fechaFin = null,
         public ?int $horas = null,
@@ -79,10 +82,28 @@ final readonly class CapacitacionSafData
                     'max:100',
                 ],
 
-                'nombre' => [
+                'nombre_evento' => [
                     'required',
                     'string',
                     'max:250',
+                ],
+
+                'tema' => [
+                    'nullable',
+                    'string',
+                    'max:250',
+                ],
+
+                'institucion' => [
+                    'nullable',
+                    'string',
+                    'max:250',
+                ],
+
+                'modalidad' => [
+                    'nullable',
+                    'string',
+                    'max:100',
                 ],
 
                 'fecha_inicio' => [
@@ -141,7 +162,19 @@ final readonly class CapacitacionSafData
 
             codigoEventoExterno: $normalized['codigo_evento_externo'],
 
-            nombre: $normalized['nombre'],
+            nombreEvento: $normalized['nombre_evento'],
+
+            tema: $normalized['tema'] !== ''
+                ? $normalized['tema']
+                : null,
+
+            institucion: $normalized['institucion'] !== ''
+                ? $normalized['institucion']
+                : null,
+
+            modalidad: $normalized['modalidad'] !== ''
+                ? $normalized['modalidad']
+                : null,
 
             fechaInicio: self::toDate($normalized['fecha_inicio']),
 
@@ -165,7 +198,13 @@ final readonly class CapacitacionSafData
 
             'codigo_evento_externo' => $this->codigoEventoExterno,
 
-            'nombre' => $this->nombre,
+            'nombre_evento' => $this->nombreEvento,
+
+            'tema' => $this->tema,
+
+            'institucion' => $this->institucion,
+
+            'modalidad' => $this->modalidad,
 
             'fecha_inicio' => $this->fechaInicio?->format('Y-m-d'),
 
@@ -259,12 +298,35 @@ final readonly class CapacitacionSafData
                 )
             ),
 
-            'nombre' => self::normalizeText(
-                Arr::get($data, 'nombre')
-                    ?? Arr::get(
-                        $data,
-                        'nombre_evento'
-                    )
+            'nombre_evento' => self::normalizeText(
+                Arr::get(
+                    $data,
+                    'nombre_evento'
+                ) ?? Arr::get(
+                    $data,
+                    'nombre'
+                )
+            ),
+
+            'tema' => self::normalizeText(
+                Arr::get(
+                    $data,
+                    'tema'
+                )
+            ),
+
+            'institucion' => self::normalizeText(
+                Arr::get(
+                    $data,
+                    'institucion'
+                )
+            ),
+
+            'modalidad' => self::normalizeText(
+                Arr::get(
+                    $data,
+                    'modalidad'
+                )
             ),
 
             'fecha_inicio' => self::normalizeDate(

@@ -8,6 +8,7 @@ use App\Modules\Fac\Models\SincronizacionSaf;
 use App\Modules\Fac\Models\SincronizacionSafError;
 use Illuminate\Support\Facades\DB;
 use Throwable;
+use App\Modules\Fac\Models\ConsultorCapacitacionFepade;
 
 class SafCapacitacionSyncService
 {
@@ -131,13 +132,13 @@ class SafCapacitacionSyncService
 
                 'codigo_evento_externo' => $capacitacion->codigoEventoExterno,
 
-                'nombre_evento' => $capacitacion->nombre,
+                'nombre_evento' => $capacitacion->nombreEvento,
 
-                'tema' => null,
+                'tema' => $capacitacion->tema,
 
-                'institucion' => null,
+                'institucion' => $capacitacion->institucion,
 
-                'modalidad' => null,
+                'modalidad' => $capacitacion->modalidad,
 
                 'fecha_inicio' => $capacitacion->fechaInicio?->format('Y-m-d'),
 
@@ -145,7 +146,7 @@ class SafCapacitacionSyncService
 
                 'horas' => $capacitacion->horas,
 
-                'fuente' => 'SAF',
+                'fuente' => ConsultorCapacitacionFepade::FUENTE_SAF,
 
                 'fecha_ultima_sincronizacion_saf' => $ahora,
 
@@ -233,7 +234,13 @@ class SafCapacitacionSyncService
                 $registro->id_capacitacion_fepade
             )
             ->update([
-                'nombre_evento' => $capacitacion->nombre,
+                'nombre_evento' => $capacitacion->nombreEvento,
+
+                'tema' => $capacitacion->tema,
+
+                'institucion' => $capacitacion->institucion,
+
+                'modalidad' => $capacitacion->modalidad,
 
                 'fecha_inicio' => $capacitacion->fechaInicio?->format('Y-m-d'),
 
@@ -241,7 +248,7 @@ class SafCapacitacionSyncService
 
                 'horas' => $capacitacion->horas,
 
-                'fuente' => 'SAF',
+                'fuente' => ConsultorCapacitacionFepade::FUENTE_SAF,
 
                 'fecha_ultima_sincronizacion_saf' => $ahora,
 
