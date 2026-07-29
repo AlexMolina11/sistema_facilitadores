@@ -35,7 +35,7 @@ final readonly class CapacitacionSafData
             );
         }
 
-        if ($this->nombre === '') {
+        if ($this->nombreEvento === '') {
             throw new InvalidArgumentException(
                 'El nombre de la capacitación es obligatorio.'
             );
