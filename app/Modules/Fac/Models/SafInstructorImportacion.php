@@ -8,11 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class SafInstructorImportacion extends Model
 {
     public const ESTADO_PENDIENTE = 'PENDIENTE';
-
     public const ESTADO_EN_PROCESO = 'EN_PROCESO';
-
     public const ESTADO_PROCESADO = 'PROCESADO';
-
     public const ESTADO_ERROR = 'ERROR';
 
     /**
@@ -37,6 +34,20 @@ class SafInstructorImportacion extends Model
 
     /**
      * Campos permitidos para asignación masiva.
+     *
+     * Los campos de control permanecen disponibles porque son administrados
+     * internamente por Laravel durante el procesamiento de importaciones.
+     *
+     * SAF no debe enviar ni actualizar estos campos directamente:
+     *
+     * - estado
+     * - intentos
+     * - mensaje_error
+     * - fecha_recepcion
+     * - fecha_procesamiento
+     * - id_sincronizacion
+     * - created_at
+     * - updated_at
      *
      * @var array<int, string>
      */
@@ -92,7 +103,8 @@ class SafInstructorImportacion extends Model
      */
     public function estaPendiente(): bool
     {
-        return $this->estado === self::ESTADO_PENDIENTE;
+        return $this->estadoNormalizado()
+            === self::ESTADO_PENDIENTE;
     }
 
     /**
@@ -100,7 +112,8 @@ class SafInstructorImportacion extends Model
      */
     public function estaEnProceso(): bool
     {
-        return $this->estado === self::ESTADO_EN_PROCESO;
+        return $this->estadoNormalizado()
+            === self::ESTADO_EN_PROCESO;
     }
 
     /**
@@ -108,7 +121,8 @@ class SafInstructorImportacion extends Model
      */
     public function fueProcesado(): bool
     {
-        return $this->estado === self::ESTADO_PROCESADO;
+        return $this->estadoNormalizado()
+            === self::ESTADO_PROCESADO;
     }
 
     /**
@@ -116,6 +130,17 @@ class SafInstructorImportacion extends Model
      */
     public function tieneError(): bool
     {
-        return $this->estado === self::ESTADO_ERROR;
+        return $this->estadoNormalizado()
+            === self::ESTADO_ERROR;
+    }
+
+    /**
+     * Devuelve el estado normalizado para comparaciones internas.
+     */
+    private function estadoNormalizado(): string
+    {
+        return strtoupper(
+            trim((string) $this->estado)
+        );
     }
 }
