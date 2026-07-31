@@ -10,7 +10,7 @@
 
 # 1. Objetivo
 
-El presente documento establece el contrato técnico que debe cumplir el Sistema de Administración de Facilitadores (SAF) para integrarse con el Sistema de Facilitadores FEPADE.
+El presente documento establece el contrato técnico que debe cumplir el Sistema de Administración de Financiero (SAF) para integrarse con el Sistema de Facilitadores FEPADE.
 
 Este contrato define la estructura de las tablas de importación, las reglas para el intercambio de información, los campos requeridos y las condiciones que deben cumplirse para que la sincronización sea procesada correctamente.
 
@@ -58,12 +58,12 @@ Recibir la información de instructores proveniente de SAF para posteriormente s
 
 | Campo                 | Tipo    | Obligatorio | Descripción                                      |
 | --------------------- | ------- | :---------: | ------------------------------------------------ |
-| id_instructor_externo | BIGINT  |     Sí      | Identificador único del instructor en SAF.       |
+| id_instructor         | BIGINT  |     Sí      | Identificador único del instructor en SAF.       |
 | nombres               | VARCHAR |     Sí      | Nombres del instructor.                          |
 | apellidos             | VARCHAR |     Sí      | Apellidos del instructor.                        |
-| dui                   | VARCHAR |     No      | Documento Único de Identidad.                    |
-| correo                | VARCHAR |     No      | Correo electrónico.                              |
-| telefono              | VARCHAR |     No      | Teléfono de contacto.                            |
+| tipo_identificacion   | INT     |     No      | Documento Único de Identidad.                    |
+| numero_identificacion | VARCHAR |     No      | Documento Único de Identidad.                    |
+| sexo                  | VARCHAR |     No      | Identificador para el sexo. (F o M)              |
 | id_entidad            | INT     |     Sí      | Identificador de la entidad a la que pertenece.  |
 | activo                | BOOLEAN |     Sí      | Indica si el instructor continúa vigente en SAF. |
 
