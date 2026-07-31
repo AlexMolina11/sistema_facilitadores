@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Modules\Seg\Notifications\ResetPasswordNotification;
 
 class Usuario extends Authenticatable
 {
@@ -120,5 +121,10 @@ class Usuario extends Authenticatable
     public function esConsultorPropietario(int $idConsultor): bool
     {
         return (int) $this->id_consultor === (int) $idConsultor;
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
