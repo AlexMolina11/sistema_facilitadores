@@ -12,45 +12,14 @@ class SafInstructorImportacion extends Model
     public const ESTADO_PROCESADO = 'PROCESADO';
     public const ESTADO_ERROR = 'ERROR';
 
-    /**
-     * Tabla asociada al modelo.
-     */
     protected $table = 'tbl_saf_instructor_importacion';
 
-    /**
-     * Llave primaria de la tabla.
-     */
     protected $primaryKey = 'id_importacion';
 
-    /**
-     * Indica si la llave primaria es incremental.
-     */
     public $incrementing = true;
 
-    /**
-     * Tipo de la llave primaria.
-     */
     protected $keyType = 'int';
 
-    /**
-     * Campos permitidos para asignación masiva.
-     *
-     * Los campos de control permanecen disponibles porque son administrados
-     * internamente por Laravel durante el procesamiento de importaciones.
-     *
-     * SAF no debe enviar ni actualizar estos campos directamente:
-     *
-     * - estado
-     * - intentos
-     * - mensaje_error
-     * - fecha_recepcion
-     * - fecha_procesamiento
-     * - id_sincronizacion
-     * - created_at
-     * - updated_at
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'id_instructor',
         'id_entidad',
@@ -58,19 +27,17 @@ class SafInstructorImportacion extends Model
         'apellidos',
         'dui',
         'activo',
+
         'estado',
+        'resultado_procesamiento',
         'intentos',
         'mensaje_error',
         'fecha_recepcion',
         'fecha_procesamiento',
         'id_sincronizacion',
+        'id_registro_local',
     ];
 
-    /**
-     * Conversiones automáticas de atributos.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -82,14 +49,12 @@ class SafInstructorImportacion extends Model
             'fecha_recepcion' => 'datetime',
             'fecha_procesamiento' => 'datetime',
             'id_sincronizacion' => 'integer',
+            'id_registro_local' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
     }
 
-    /**
-     * Limita la consulta a registros pendientes.
-     */
     public function scopePendientes(Builder $query): Builder
     {
         return $query->where(
@@ -98,45 +63,40 @@ class SafInstructorImportacion extends Model
         );
     }
 
-    /**
-     * Indica si el registro está pendiente.
-     */
+    public function scopeDeSincronizacion(
+        Builder $query,
+        int $idSincronizacion
+    ): Builder {
+        return $query->where(
+            'id_sincronizacion',
+            $idSincronizacion
+        );
+    }
+
     public function estaPendiente(): bool
     {
         return $this->estadoNormalizado()
             === self::ESTADO_PENDIENTE;
     }
 
-    /**
-     * Indica si el registro está en proceso.
-     */
     public function estaEnProceso(): bool
     {
         return $this->estadoNormalizado()
             === self::ESTADO_EN_PROCESO;
     }
 
-    /**
-     * Indica si el registro fue procesado.
-     */
     public function fueProcesado(): bool
     {
         return $this->estadoNormalizado()
             === self::ESTADO_PROCESADO;
     }
 
-    /**
-     * Indica si el registro terminó con error.
-     */
     public function tieneError(): bool
     {
         return $this->estadoNormalizado()
             === self::ESTADO_ERROR;
     }
 
-    /**
-     * Devuelve el estado normalizado para comparaciones internas.
-     */
     private function estadoNormalizado(): string
     {
         return strtoupper(

@@ -33,11 +33,13 @@ class SafCapacitacionImportacion extends Model
         'activo',
 
         'estado',
+        'resultado_procesamiento',
         'intentos',
         'mensaje_error',
         'fecha_recepcion',
         'fecha_procesamiento',
         'id_sincronizacion',
+        'id_registro_local',
     ];
 
     protected function casts(): array
@@ -45,21 +47,15 @@ class SafCapacitacionImportacion extends Model
         return [
             'id_importacion' => 'integer',
             'id_instructor' => 'integer',
-
             'fecha_inicio' => 'date',
             'fecha_fin' => 'date',
-
             'horas' => 'integer',
-
             'activo' => 'boolean',
-
             'intentos' => 'integer',
-
             'fecha_recepcion' => 'datetime',
             'fecha_procesamiento' => 'datetime',
-
             'id_sincronizacion' => 'integer',
-
+            'id_registro_local' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -71,6 +67,16 @@ class SafCapacitacionImportacion extends Model
         return $query->where(
             'estado',
             self::ESTADO_PENDIENTE
+        );
+    }
+
+    public function scopeDeSincronizacion(
+        Builder $query,
+        int $idSincronizacion
+    ): Builder {
+        return $query->where(
+            'id_sincronizacion',
+            $idSincronizacion
         );
     }
 

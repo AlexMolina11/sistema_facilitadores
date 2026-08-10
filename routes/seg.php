@@ -88,11 +88,31 @@ Route::prefix('seg')
             ->middleware('permission:seg.bitacora.ver')
             ->name('bitacora.index');
 
-        Route::get('bitacora-saf', [BitacoraSafController::class, 'index'])
+        Route::get(
+            'bitacora-saf',
+            [BitacoraSafController::class, 'index']
+        )
             ->middleware('permission:seg.bitacora-saf.ver')
             ->name('bitacora-saf.index');
 
-        Route::get('bitacora-saf/{sincronizacionSaf}', [BitacoraSafController::class, 'show'])
+        Route::get(
+            'bitacora-saf/{sincronizacionSaf}',
+            [BitacoraSafController::class, 'show']
+        )
             ->middleware('permission:seg.bitacora-saf.ver')
             ->name('bitacora-saf.show');
+
+        Route::post(
+            'bitacora-saf/{sincronizacionSaf}/errores/{error}/resolver',
+            [BitacoraSafController::class, 'resolverError']
+        )
+            ->middleware('permission:seg.bitacora-saf.ver')
+            ->name('bitacora-saf.errores.resolver');
+
+        Route::post(
+            'bitacora-saf/{sincronizacionSaf}/errores/{error}/reabrir',
+            [BitacoraSafController::class, 'reabrirError']
+        )
+            ->middleware('permission:seg.bitacora-saf.ver')
+            ->name('bitacora-saf.errores.reabrir');
     });

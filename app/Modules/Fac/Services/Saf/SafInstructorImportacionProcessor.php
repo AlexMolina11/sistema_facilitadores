@@ -5,26 +5,19 @@ namespace App\Modules\Fac\Services\Saf;
 use App\Modules\Fac\Data\Saf\InstructorSafData;
 use App\Modules\Fac\Models\SafInstructorImportacion;
 use App\Modules\Fac\Models\SincronizacionSaf;
+use App\Modules\Fac\Models\SincronizacionSafError;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class SafInstructorImportacionProcessor
 {
     public function __construct(
-        private readonly SafInstructorSyncService $sincronizacion
+        private readonly SafInstructorSyncService $sincronizacion,
+        private readonly SafAuditService $auditoria
     ) {}
 
-    /**
-     * Procesa los instructores SAF pendientes.
-     *
-     * @return array{
-     *     detectados: int,
-     *     procesados: int,
-     *     exitosos: int,
-     *     con_error: int
-     * }
-     */
     public function procesar(
         SincronizacionSaf $ejecucion,
         ?int $limite = null
@@ -75,9 +68,6 @@ class SafInstructorImportacionProcessor
         return $resumen;
     }
 
-    /**
-     * Reserva un registro pendiente para esta ejecución.
-     */
     private function tomarRegistro(
         int $idImportacion,
         SincronizacionSaf $ejecucion
@@ -99,15 +89,22 @@ class SafInstructorImportacionProcessor
                 }
 
                 $registro->forceFill([
-                    'estado' => SafInstructorImportacion::ESTADO_EN_PROCESO,
+                    'estado' =>
+                        SafInstructorImportacion::ESTADO_EN_PROCESO,
 
-                    'intentos' => (int) $registro->intentos + 1,
+                    'resultado_procesamiento' => null,
+
+                    'intentos' =>
+                        (int) $registro->intentos + 1,
 
                     'mensaje_error' => null,
 
                     'fecha_procesamiento' => null,
 
-                    'id_sincronizacion' => $ejecucion->getKey(),
+                    'id_sincronizacion' =>
+                        $ejecucion->getKey(),
+
+                    'id_registro_local' => null,
                 ])->save();
 
                 return $registro->fresh();
@@ -115,26 +112,29 @@ class SafInstructorImportacionProcessor
         );
     }
 
-    /**
-     * Convierte y sincroniza un registro de importación.
-     */
     private function procesarRegistro(
         SafInstructorImportacion $registro,
         SincronizacionSaf $ejecucion
     ): bool {
         try {
             $instructor = InstructorSafData::fromArray([
-                'id_instructor' => $registro->id_instructor,
+                'id_instructor' =>
+                    $registro->id_instructor,
 
-                'id_entidad' => $registro->id_entidad,
+                'id_entidad' =>
+                    $registro->id_entidad,
 
-                'nombres' => $registro->nombres,
+                'nombres' =>
+                    $registro->nombres,
 
-                'apellidos' => $registro->apellidos,
+                'apellidos' =>
+                    $registro->apellidos,
 
-                'dui' => $registro->dui,
+                'dui' =>
+                    $registro->dui,
 
-                'activo' => $registro->activo,
+                'activo' =>
+                    $registro->activo,
             ]);
 
             $resultado = $this->sincronizacion->sincronizar(
@@ -153,69 +153,243 @@ class SafInstructorImportacionProcessor
                     true
                 )
             ) {
-                $this->marcarProcesado($registro);
+                $this->marcarProcesado(
+                    registro: $registro,
+                    resultado: $resultado['resultado'],
+                    idRegistroLocal:
+                        $resultado['consultor']?->getKey()
+                );
 
                 return true;
             }
 
             $this->marcarError(
-                $registro,
-                $resultado['mensaje']
-                    ?? 'El instructor no pudo ser sincronizado.'
+                registro: $registro,
+
+                mensaje:
+                    $resultado['mensaje']
+                    ?? 'El instructor no pudo ser sincronizado.',
+
+                resultado:
+                    $resultado['resultado']
+                    ?? SafInstructorSyncService::RESULTADO_ERROR
             );
 
             return false;
         } catch (ValidationException $exception) {
+            $mensaje = $this->mensajeValidacion(
+                $exception
+            );
+
             $this->marcarError(
+                registro: $registro,
+                mensaje: $mensaje,
+                resultado:
+                    SafInstructorSyncService::RESULTADO_ERROR
+            );
+
+            $this->registrarErroresValidacion(
                 $registro,
-                $this->mensajeValidacion($exception)
+                $ejecucion,
+                $exception
             );
 
             return false;
         } catch (Throwable $exception) {
             $this->marcarError(
+                registro: $registro,
+                mensaje: $exception->getMessage(),
+                resultado:
+                    SafInstructorSyncService::RESULTADO_ERROR
+            );
+
+            $this->registrarExcepcion(
                 $registro,
-                $exception->getMessage()
+                $ejecucion,
+                $exception
             );
 
             return false;
         }
     }
 
-    /**
-     * Marca el registro como procesado correctamente.
-     */
-    private function marcarProcesado(
+    private function registrarErroresValidacion(
+        SafInstructorImportacion $registro,
+        SincronizacionSaf $ejecucion,
+        ValidationException $exception
+    ): void {
+        $this->auditoria->registrarConsultorConError(
+            $ejecucion
+        );
+
+        foreach ($exception->errors() as $campo => $mensajes) {
+            foreach ($mensajes as $mensaje) {
+                $this->auditoria->registrarError(
+                    sincronizacion: $ejecucion,
+
+                    tipoRegistro:
+                        SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
+
+                    tipoOperacion:
+                        SincronizacionSafError::OPERACION_VALIDAR,
+
+                    mensaje: (string) $mensaje,
+
+                    opciones: [
+                        'id_registro_externo' =>
+                            (string) $registro->id_instructor,
+
+                        'id_registro_local' =>
+                            $registro->id_importacion,
+
+                        'codigo_error' =>
+                            $this->codigoErrorValidacion(
+                                $campo
+                            ),
+
+                        'datos_recibidos' =>
+                            $this->datosRecibidos(
+                                $registro
+                            ),
+
+                        'detalle_tecnico' =>
+                            json_encode(
+                                [
+                                    'campo' => $campo,
+
+                                    'id_importacion' =>
+                                        $registro->id_importacion,
+                                ],
+                                JSON_UNESCAPED_UNICODE
+                                | JSON_UNESCAPED_SLASHES
+                                | JSON_THROW_ON_ERROR
+                            ),
+                    ]
+                );
+            }
+        }
+    }
+
+    private function registrarExcepcion(
+        SafInstructorImportacion $registro,
+        SincronizacionSaf $ejecucion,
+        Throwable $exception
+    ): void {
+        $this->auditoria->registrarConsultorConError(
+            $ejecucion
+        );
+
+        $this->auditoria->registrarExcepcion(
+            sincronizacion: $ejecucion,
+
+            exception: $exception,
+
+            tipoRegistro:
+                SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
+
+            tipoOperacion:
+                SincronizacionSafError::OPERACION_PROCESAR,
+
+            datosRecibidos:
+                $this->datosRecibidos($registro),
+
+            idRegistroExterno:
+                (string) $registro->id_instructor,
+
+            idRegistroLocal:
+                $registro->id_importacion
+        );
+    }
+
+    private function codigoErrorValidacion(
+        string $campo
+    ): string {
+        $campoNormalizado = Str::of($campo)
+            ->upper()
+            ->replace('.', '_')
+            ->replace('-', '_')
+            ->toString();
+
+        return mb_substr(
+            'VALIDACION_' . $campoNormalizado,
+            0,
+            100
+        );
+    }
+
+    private function datosRecibidos(
         SafInstructorImportacion $registro
+    ): array {
+        return [
+            'id_importacion' =>
+                $registro->id_importacion,
+
+            'id_instructor' =>
+                $registro->id_instructor,
+
+            'id_entidad' =>
+                $registro->id_entidad,
+
+            'nombres' =>
+                $registro->nombres,
+
+            'apellidos' =>
+                $registro->apellidos,
+
+            'dui' =>
+                $registro->dui,
+
+            'activo' =>
+                $registro->activo,
+        ];
+    }
+
+    private function marcarProcesado(
+        SafInstructorImportacion $registro,
+        string $resultado,
+        ?int $idRegistroLocal
     ): void {
         $registro->forceFill([
-            'estado' => SafInstructorImportacion::ESTADO_PROCESADO,
+            'estado' =>
+                SafInstructorImportacion::ESTADO_PROCESADO,
 
-            'mensaje_error' => null,
+            'resultado_procesamiento' =>
+                $resultado,
 
-            'fecha_procesamiento' => now(),
+            'mensaje_error' =>
+                null,
+
+            'fecha_procesamiento' =>
+                now(),
+
+            'id_registro_local' =>
+                $idRegistroLocal,
         ])->save();
     }
 
-    /**
-     * Marca el registro con error.
-     */
     private function marcarError(
         SafInstructorImportacion $registro,
-        string $mensaje
+        string $mensaje,
+        string $resultado
     ): void {
         $registro->forceFill([
-            'estado' => SafInstructorImportacion::ESTADO_ERROR,
+            'estado' =>
+                SafInstructorImportacion::ESTADO_ERROR,
 
-            'mensaje_error' => mb_substr($mensaje, 0, 65535),
+            'resultado_procesamiento' =>
+                $resultado,
 
-            'fecha_procesamiento' => now(),
+            'mensaje_error' =>
+                mb_substr($mensaje, 0, 65535),
+
+            'fecha_procesamiento' =>
+                now(),
+
+            'id_registro_local' =>
+                null,
         ])->save();
     }
 
-    /**
-     * Obtiene el primer mensaje de una validación.
-     */
     private function mensajeValidacion(
         ValidationException $exception
     ): string {
