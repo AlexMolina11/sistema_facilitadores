@@ -4,11 +4,11 @@ namespace App\Modules\Fac\Services\Saf;
 
 use App\Modules\Fac\Data\Saf\CapacitacionSafData;
 use App\Modules\Fac\Models\Consultor;
+use App\Modules\Fac\Models\ConsultorCapacitacionFepade;
 use App\Modules\Fac\Models\SincronizacionSaf;
 use App\Modules\Fac\Models\SincronizacionSafError;
 use Illuminate\Support\Facades\DB;
 use Throwable;
-use App\Modules\Fac\Models\ConsultorCapacitacionFepade;
 
 class SafCapacitacionSyncService
 {
@@ -18,6 +18,12 @@ class SafCapacitacionSyncService
 
     public const RESULTADO_SIN_CAMBIOS = 'SIN_CAMBIOS';
 
+    /*
+     * Se conserva temporalmente por compatibilidad con
+     * SafCapacitacionImportacionProcessor del Bloque 3.
+     *
+     * El nuevo servicio ya NO devolverá este resultado.
+     */
     public const RESULTADO_DESACTIVADO = 'DESACTIVADO';
 
     public const RESULTADO_ERROR = 'ERROR';
@@ -40,6 +46,10 @@ class SafCapacitacionSyncService
         SincronizacionSaf $sincronizacion
     ): array {
         try {
+            /*
+             * La capacitación solamente puede sincronizarse
+             * cuando ya existe el consultor asociado.
+             */
             $consultor = Consultor::query()
                 ->where(
                     'id_instructor',
@@ -59,6 +69,11 @@ class SafCapacitacionSyncService
                     $capacitacion,
                     $consultor
                 ): array {
+                    /*
+                     * Identidad funcional conservada:
+                     *
+                     * id_consultor + codigo_evento
+                     */
                     $registro = DB::table(
                         'tbl_consultor_capacitacion_fepade'
                     )
@@ -67,8 +82,8 @@ class SafCapacitacionSyncService
                             $consultor->id_consultor
                         )
                         ->where(
-                            'codigo_evento_externo',
-                            $capacitacion->codigoEventoExterno
+                            'codigo_evento',
+                            $capacitacion->codigoEvento
                         )
                         ->lockForUpdate()
                         ->first();
@@ -94,23 +109,40 @@ class SafCapacitacionSyncService
 
             return $resultado;
         } catch (Throwable $exception) {
-            $this->auditoria->registrarCapacitacionConError(
-                $sincronizacion
-            );
+            $this->auditoria
+                ->registrarCapacitacionConError(
+                    $sincronizacion
+                );
 
             $this->auditoria->registrarExcepcion(
-                sincronizacion: $sincronizacion,
-                exception: $exception,
-                tipoRegistro: SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
-                tipoOperacion: SincronizacionSafError::OPERACION_PROCESAR,
-                datosRecibidos: $capacitacion->toArray(),
-                idRegistroExterno: $capacitacion->externalId()
+                sincronizacion:
+                    $sincronizacion,
+
+                exception:
+                    $exception,
+
+                tipoRegistro:
+                    SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
+
+                tipoOperacion:
+                    SincronizacionSafError::OPERACION_PROCESAR,
+
+                datosRecibidos:
+                    $capacitacion->toArray(),
+
+                idRegistroExterno:
+                    $capacitacion->externalId()
             );
 
             return [
-                'resultado' => self::RESULTADO_ERROR,
-                'capacitacion' => null,
-                'mensaje' => $exception->getMessage(),
+                'resultado' =>
+                    self::RESULTADO_ERROR,
+
+                'capacitacion' =>
+                    null,
+
+                'mensaje' =>
+                    $exception->getMessage(),
             ];
         }
     }
@@ -128,76 +160,137 @@ class SafCapacitacionSyncService
             'tbl_consultor_capacitacion_fepade'
         )->insertGetId(
             [
-                'id_consultor' => $consultor->id_consultor,
+                'id_consultor' =>
+                    $consultor->id_consultor,
 
-                'codigo_evento_externo' => $capacitacion->codigoEventoExterno,
+                'programa_curso_id' =>
+                    $capacitacion->programaCursoId,
 
-                'nombre_evento' => $capacitacion->nombreEvento,
+                'codigo_evento' =>
+                    $capacitacion->codigoEvento,
 
-                'tema' => $capacitacion->tema,
+                'curso_nombre' =>
+                    $capacitacion->cursoNombre,
 
-                'institucion' => $capacitacion->institucion,
+                'fecha_inicio' =>
+                    $capacitacion->fechaInicio
+                        ?->format('Y-m-d'),
 
-                'modalidad' => $capacitacion->modalidad,
+                'fecha_fin' =>
+                    $capacitacion->fechaFin
+                        ?->format('Y-m-d'),
 
-                'fecha_inicio' => $capacitacion->fechaInicio?->format('Y-m-d'),
+                'estado_curso_nombre' =>
+                    $capacitacion->estadoCursoNombre,
 
-                'fecha_fin' => $capacitacion->fechaFin?->format('Y-m-d'),
+                'no_horas_real' =>
+                    $capacitacion->noHorasReal,
 
-                'horas' => $capacitacion->horas,
+                'modalidad' =>
+                    $capacitacion->modalidad,
 
-                'fuente' => ConsultorCapacitacionFepade::FUENTE_SAF,
+                'tipo_evento_nombre' =>
+                    $capacitacion->tipoEventoNombre,
 
-                'fecha_ultima_sincronizacion_saf' => $ahora,
+                'cliente' =>
+                    $capacitacion->cliente,
 
-                'hash_datos_saf' => $capacitacion->hash(),
+                'encuesta_id' =>
+                    $capacitacion->encuestaId,
 
-                'activo' => $capacitacion->activo ?? true,
+                'encuesta_nombre' =>
+                    $capacitacion->encuestaNombre,
 
-                'usuario_crea' => $this->resolverUsuarioId(),
+                'promedio_encuesta' =>
+                    $capacitacion->promedioEncuesta,
 
-                'usuario_mod' => null,
+                'fecha_evaluacion' =>
+                    $capacitacion->fechaEvaluacion
+                        ?->format('Y-m-d H:i:s'),
 
-                'usuario_elim' => null,
+                /*
+                 |--------------------------------------------------------------------------
+                 | Datos internos de Facilitadores
+                 |--------------------------------------------------------------------------
+                 */
+                'fuente' =>
+                    ConsultorCapacitacionFepade::FUENTE_SAF,
 
-                'created_at' => $ahora,
+                'fecha_ultima_sincronizacion_saf' =>
+                    $ahora,
 
-                'updated_at' => $ahora,
+                'hash_datos_saf' =>
+                    $capacitacion->hash(),
 
-                'deleted_at' => null,
+                /*
+                 * Una capacitación nueva se crea activa.
+                 *
+                 * A partir de aquí SAF NO controla este campo.
+                 */
+                'activo' =>
+                    true,
+
+                'usuario_crea' =>
+                    $this->resolverUsuarioId(),
+
+                'usuario_mod' =>
+                    null,
+
+                'usuario_elim' =>
+                    null,
+
+                'created_at' =>
+                    $ahora,
+
+                'updated_at' =>
+                    $ahora,
+
+                'deleted_at' =>
+                    null,
             ],
             'id_capacitacion_fepade'
         );
 
         return [
-            'resultado' => self::RESULTADO_CREADO,
+            'resultado' =>
+                self::RESULTADO_CREADO,
 
-            'capacitacion' => DB::table(
-                'tbl_consultor_capacitacion_fepade'
-            )
-                ->where(
-                    'id_capacitacion_fepade',
+            'capacitacion' =>
+                $this->buscarCapacitacion(
                     $id
-                )
-                ->first(),
+                ),
 
-            'mensaje' => 'La capacitación fue creada.',
+            'mensaje' =>
+                'La capacitación fue creada.',
         ];
     }
 
     /**
      * Actualiza una capacitación existente.
+     *
+     * IMPORTANTE:
+     *
+     * SAF NO modifica:
+     *
+     * - activo
+     * - deleted_at
+     * - usuario_elim
+     *
+     * Esos campos pertenecen al control interno
+     * del Sistema de Facilitadores.
      */
     private function actualizarCapacitacion(
         object $registro,
         CapacitacionSafData $capacitacion
     ): array {
-        $nuevoHash = $capacitacion->hash();
-        $ahora = now();
+        $nuevoHash =
+            $capacitacion->hash();
+
+        $ahora =
+            now();
 
         if (
             $registro->hash_datos_saf === $nuevoHash
-            && $registro->deleted_at === null
         ) {
             DB::table(
                 'tbl_consultor_capacitacion_fepade'
@@ -207,24 +300,26 @@ class SafCapacitacionSyncService
                     $registro->id_capacitacion_fepade
                 )
                 ->update([
-                    'fecha_ultima_sincronizacion_saf' => $ahora,
+                    'fecha_ultima_sincronizacion_saf' =>
+                        $ahora,
 
-                    'updated_at' => $ahora,
+                    'updated_at' =>
+                        $ahora,
                 ]);
 
             return [
-                'resultado' => self::RESULTADO_SIN_CAMBIOS,
+                'resultado' =>
+                    self::RESULTADO_SIN_CAMBIOS,
 
-                'capacitacion' => $this->buscarCapacitacion(
-                    $registro->id_capacitacion_fepade
-                ),
+                'capacitacion' =>
+                    $this->buscarCapacitacion(
+                        $registro->id_capacitacion_fepade
+                    ),
 
-                'mensaje' => 'La capacitación no presentó cambios.',
+                'mensaje' =>
+                    'La capacitación no presentó cambios.',
             ];
         }
-
-        $activoAnterior = (bool) $registro->activo;
-        $activoNuevo = $capacitacion->activo ?? true;
 
         DB::table(
             'tbl_consultor_capacitacion_fepade'
@@ -234,51 +329,86 @@ class SafCapacitacionSyncService
                 $registro->id_capacitacion_fepade
             )
             ->update([
-                'nombre_evento' => $capacitacion->nombreEvento,
+                'programa_curso_id' =>
+                    $capacitacion->programaCursoId,
 
-                'tema' => $capacitacion->tema,
+                'codigo_evento' =>
+                    $capacitacion->codigoEvento,
 
-                'institucion' => $capacitacion->institucion,
+                'curso_nombre' =>
+                    $capacitacion->cursoNombre,
 
-                'modalidad' => $capacitacion->modalidad,
+                'fecha_inicio' =>
+                    $capacitacion->fechaInicio
+                        ?->format('Y-m-d'),
 
-                'fecha_inicio' => $capacitacion->fechaInicio?->format('Y-m-d'),
+                'fecha_fin' =>
+                    $capacitacion->fechaFin
+                        ?->format('Y-m-d'),
 
-                'fecha_fin' => $capacitacion->fechaFin?->format('Y-m-d'),
+                'estado_curso_nombre' =>
+                    $capacitacion->estadoCursoNombre,
 
-                'horas' => $capacitacion->horas,
+                'no_horas_real' =>
+                    $capacitacion->noHorasReal,
 
-                'fuente' => ConsultorCapacitacionFepade::FUENTE_SAF,
+                'modalidad' =>
+                    $capacitacion->modalidad,
 
-                'fecha_ultima_sincronizacion_saf' => $ahora,
+                'tipo_evento_nombre' =>
+                    $capacitacion->tipoEventoNombre,
 
-                'hash_datos_saf' => $nuevoHash,
+                'cliente' =>
+                    $capacitacion->cliente,
 
-                'activo' => $activoNuevo,
+                'encuesta_id' =>
+                    $capacitacion->encuestaId,
 
-                'usuario_mod' => $this->resolverUsuarioId(),
+                'encuesta_nombre' =>
+                    $capacitacion->encuestaNombre,
 
-                'usuario_elim' => null,
+                'promedio_encuesta' =>
+                    $capacitacion->promedioEncuesta,
 
-                'updated_at' => $ahora,
+                'fecha_evaluacion' =>
+                    $capacitacion->fechaEvaluacion
+                        ?->format('Y-m-d H:i:s'),
 
-                'deleted_at' => null,
+                'fuente' =>
+                    ConsultorCapacitacionFepade::FUENTE_SAF,
+
+                'fecha_ultima_sincronizacion_saf' =>
+                    $ahora,
+
+                'hash_datos_saf' =>
+                    $nuevoHash,
+
+                'usuario_mod' =>
+                    $this->resolverUsuarioId(),
+
+                'updated_at' =>
+                    $ahora,
+
+                /*
+                 * Deliberadamente NO modificamos:
+                 *
+                 * activo
+                 * deleted_at
+                 * usuario_elim
+                 */
             ]);
 
-        $resultado = $activoAnterior && ! $activoNuevo
-            ? self::RESULTADO_DESACTIVADO
-            : self::RESULTADO_ACTUALIZADO;
-
         return [
-            'resultado' => $resultado,
+            'resultado' =>
+                self::RESULTADO_ACTUALIZADO,
 
-            'capacitacion' => $this->buscarCapacitacion(
-                $registro->id_capacitacion_fepade
-            ),
+            'capacitacion' =>
+                $this->buscarCapacitacion(
+                    $registro->id_capacitacion_fepade
+                ),
 
-            'mensaje' => $resultado === self::RESULTADO_DESACTIVADO
-                    ? 'La capacitación fue desactivada.'
-                    : 'La capacitación fue actualizada.',
+            'mensaje' =>
+                'La capacitación fue actualizada.',
         ];
     }
 
@@ -294,32 +424,45 @@ class SafCapacitacionSyncService
             $capacitacion->idInstructor
         );
 
-        $this->auditoria->registrarCapacitacionConError(
-            $sincronizacion
-        );
+        $this->auditoria
+            ->registrarCapacitacionConError(
+                $sincronizacion
+            );
 
         $this->auditoria->registrarError(
-            sincronizacion: $sincronizacion,
+            sincronizacion:
+                $sincronizacion,
 
-            tipoRegistro: SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
+            tipoRegistro:
+                SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
 
-            tipoOperacion: SincronizacionSafError::OPERACION_VALIDAR,
+            tipoOperacion:
+                SincronizacionSafError::OPERACION_VALIDAR,
 
-            mensaje: $mensaje,
+            mensaje:
+                $mensaje,
 
             opciones: [
-                'id_registro_externo' => $capacitacion->externalId(),
+                'id_registro_externo' =>
+                    $capacitacion->externalId(),
 
-                'codigo_error' => 'CONSULTOR_NO_ENCONTRADO',
+                'codigo_error' =>
+                    'CONSULTOR_NO_ENCONTRADO',
 
-                'datos_recibidos' => $capacitacion->toArray(),
+                'datos_recibidos' =>
+                    $capacitacion->toArray(),
             ]
         );
 
         return [
-            'resultado' => self::RESULTADO_ERROR,
-            'capacitacion' => null,
-            'mensaje' => $mensaje,
+            'resultado' =>
+                self::RESULTADO_ERROR,
+
+            'capacitacion' =>
+                null,
+
+            'mensaje' =>
+                $mensaje,
         ];
     }
 
@@ -331,25 +474,29 @@ class SafCapacitacionSyncService
         string $resultado
     ): void {
         match ($resultado) {
-            self::RESULTADO_CREADO => $this->auditoria
-                ->registrarCapacitacionCreada(
-                    $sincronizacion
-                ),
+            self::RESULTADO_CREADO =>
+                $this->auditoria
+                    ->registrarCapacitacionCreada(
+                        $sincronizacion
+                    ),
 
-            self::RESULTADO_ACTUALIZADO => $this->auditoria
-                ->registrarCapacitacionActualizada(
-                    $sincronizacion
-                ),
+            self::RESULTADO_ACTUALIZADO =>
+                $this->auditoria
+                    ->registrarCapacitacionActualizada(
+                        $sincronizacion
+                    ),
 
-            self::RESULTADO_SIN_CAMBIOS => $this->auditoria
-                ->registrarCapacitacionSinCambios(
-                    $sincronizacion
-                ),
+            self::RESULTADO_SIN_CAMBIOS =>
+                $this->auditoria
+                    ->registrarCapacitacionSinCambios(
+                        $sincronizacion
+                    ),
 
-            self::RESULTADO_DESACTIVADO => $this->auditoria
-                ->registrarCapacitacionDesactivada(
-                    $sincronizacion
-                ),
+            /*
+             * RESULTADO_DESACTIVADO ya no se genera.
+             * La constante queda únicamente por compatibilidad
+             * durante esta etapa de la migración.
+             */
 
             default => null,
         };
