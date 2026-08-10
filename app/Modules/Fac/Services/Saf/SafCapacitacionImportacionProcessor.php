@@ -177,7 +177,17 @@ class SafCapacitacionImportacionProcessor
                     true
                 )
             ) {
-                $this->marcarProcesado($registro);
+                $this->marcarProcesado(
+                    registro: $registro,
+
+                    resultado:
+                        $resultado['resultado'],
+
+                    idRegistroLocal:
+                        isset($resultado['capacitacion']->id_capacitacion_fepade)
+                            ? (int) $resultado['capacitacion']->id_capacitacion_fepade
+                            : null
+                );
 
                 return true;
             }
@@ -402,15 +412,25 @@ class SafCapacitacionImportacionProcessor
      * Marca el registro como procesado.
      */
     private function marcarProcesado(
-        SafCapacitacionImportacion $registro
+        SafCapacitacionImportacion $registro,
+        string $resultado,
+        ?int $idRegistroLocal
     ): void {
         $registro->forceFill([
             'estado' =>
                 SafCapacitacionImportacion::ESTADO_PROCESADO,
 
-            'mensaje_error' => null,
+            'resultado_procesamiento' =>
+                $resultado,
 
-            'fecha_procesamiento' => now(),
+            'mensaje_error' =>
+                null,
+
+            'fecha_procesamiento' =>
+                now(),
+
+            'id_registro_local' =>
+                $idRegistroLocal,
         ])->save();
     }
 
@@ -425,10 +445,17 @@ class SafCapacitacionImportacionProcessor
             'estado' =>
                 SafCapacitacionImportacion::ESTADO_ERROR,
 
+            'resultado_procesamiento' =>
+                SafCapacitacionSyncService::RESULTADO_ERROR,
+
             'mensaje_error' =>
                 mb_substr($mensaje, 0, 65535),
 
-            'fecha_procesamiento' => now(),
+            'fecha_procesamiento' =>
+                now(),
+
+            'id_registro_local' =>
+                null,
         ])->save();
     }
 
