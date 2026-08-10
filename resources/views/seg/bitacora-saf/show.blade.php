@@ -236,7 +236,28 @@
                         </td>
 
                         <td>
-                            {{ $registro->dui ?? '—' }}
+                            @php
+                                $tipoDocumentoSaf =
+                                    match (
+                                        (int) $registro->tipo_identificacion
+                                    ) {
+                                        2 => 'NIT',
+                                        4 => 'Pasaporte',
+                                        5 => 'Licencia de conducir',
+                                        7 => 'DUI',
+                                        default => 'No identificado',
+                                    };
+                            @endphp
+
+                            <div>
+                                {{ $registro->numero_identificacion ?? '—' }}
+                            </div>
+
+                            @if($registro->tipo_identificacion)
+                                <small class="text-muted">
+                                    {{ $tipoDocumentoSaf }}
+                                </small>
+                            @endif
                         </td>
 
                         <td>
@@ -320,8 +341,7 @@
                     <tr>
                         <td>
                             <strong>
-                                {{ $registro
-                                    ->codigo_evento_externo }}
+                                {{ $registro->codigo_evento }}
                             </strong>
                         </td>
 
@@ -331,12 +351,18 @@
 
                         <td>
                             <div class="fw-semibold">
-                                {{ $registro->nombre_evento }}
+                                {{ $registro->curso_nombre }}
                             </div>
 
-                            @if($registro->tema)
-                                <small class="text-muted">
-                                    {{ $registro->tema }}
+                            @if($registro->cliente)
+                                <small class="text-muted d-block">
+                                    {{ $registro->cliente }}
+                                </small>
+                            @endif
+
+                            @if($registro->tipo_evento_nombre)
+                                <small class="text-muted d-block">
+                                    {{ $registro->tipo_evento_nombre }}
                                 </small>
                             @endif
                         </td>

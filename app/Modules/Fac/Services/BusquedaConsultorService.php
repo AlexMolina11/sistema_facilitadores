@@ -32,6 +32,10 @@ class BusquedaConsultorService
                 'atestados' => fn ($q) => $q
                     ->where('activo', true)
                     ->with(['tipoFormacion', 'tipoAtestado', 'nivelAcademico', 'pais']),
+                'documentos' => fn ($q) =>
+                    $q
+                        ->where('activo', true)
+                        ->with('tipoDocumento'),
             ])
             ->where('activo', true);
 
@@ -82,6 +86,17 @@ class BusquedaConsultorService
                     ->orWhere('nacionalidad', 'like', $like)
                     ->orWhere('tipo_identificacion', 'like', $like)
                     ->orWhere('numero_identificacion', 'like', $like)
+                    ->orWhereHas(
+                            'documentos',
+                            fn (Builder $documento) =>
+                                $documento
+                                    ->where('activo', true)
+                                    ->where(
+                                        'numero',
+                                        'like',
+                                        $like
+                                    )
+                        )
                     ->orWhere('nit', 'like', $like)
                     ->orWhere('nrc', 'like', $like)
                     ->orWhere('direccion_residencia', 'like', $like)
@@ -122,6 +137,47 @@ class BusquedaConsultorService
                                 ->orWhereHas('tipoAtestado', fn (Builder $atestado) => $atestado->where('nombre', 'like', $like))
                                 ->orWhereHas('pais', fn (Builder $pais) => $pais->where('nombre_pais', 'like', $like));
                         }))
+                    ->orWhereHas(
+                            'capacitacionesFepade',
+                            fn (Builder $capacitacion) =>
+                                $capacitacion
+                                    ->where('activo', true)
+                                    ->where(
+                                        function (Builder $c) use ($like) {
+                                            $c
+                                                ->where(
+                                                    'codigo_evento',
+                                                    'like',
+                                                    $like
+                                                )
+                                                ->orWhere(
+                                                    'curso_nombre',
+                                                    'like',
+                                                    $like
+                                                )
+                                                ->orWhere(
+                                                    'cliente',
+                                                    'like',
+                                                    $like
+                                                )
+                                                ->orWhere(
+                                                    'modalidad',
+                                                    'like',
+                                                    $like
+                                                )
+                                                ->orWhere(
+                                                    'tipo_evento_nombre',
+                                                    'like',
+                                                    $like
+                                                )
+                                                ->orWhere(
+                                                    'estado_curso_nombre',
+                                                    'like',
+                                                    $like
+                                                );
+                                        }
+                                    )
+                        )
                     ->orWhereHas('areasEspecializacion', function (Builder $area) use ($like) {
                             $area->where('activo', true)
                                 ->where(function (Builder $a) use ($like) {

@@ -265,12 +265,29 @@
             </tr>
         </thead>
         <tbody>
-            @forelse(collect($cvData['capacitaciones_fepade'])->filter(fn($item) => $visible('capacitaciones_fepade', $item, ['nombre_evento', 'fecha_inicio', 'fecha_fin', 'institucion'])) as $item)
+            @forelse(
+                    collect(
+                        $cvData['capacitaciones_fepade']
+                    )->filter(
+                        fn ($item) =>
+                            $visible(
+                                'capacitaciones_fepade',
+                                $item,
+                                [
+                                    'curso_nombre',
+                                    'fecha_inicio',
+                                    'fecha_fin',
+                                    'cliente'
+                                ]
+                            )
+                    )
+                    as $item
+                )
                 <tr>
-                    <td>{{ $cell('capacitaciones_fepade', $item, 'nombre_evento') }}</td>
+                    <td>{{ $cell('capacitaciones_fepade', $item, 'curso_nombre') }}</td>
                     <td>{{ $cell('capacitaciones_fepade', $item, 'fecha_inicio') }}</td>
                     <td>{{ $cell('capacitaciones_fepade', $item, 'fecha_fin') }}</td>
-                    <td>{{ $cell('capacitaciones_fepade', $item, 'institucion') }}</td>
+                    <td>{{ $cell('capacitaciones_fepade', $item, 'cliente') }}</td>
                 </tr>
             @empty
                 <tr><td colspan="4">&nbsp;</td></tr>

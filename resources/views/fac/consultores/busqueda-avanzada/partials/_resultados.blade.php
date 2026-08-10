@@ -114,7 +114,18 @@
                     <div class="busqueda-consultor-meta">
                         <div>
                             <i class="fas fa-id-card"></i>
-                            <span>{{ $consultor->numero_identificacion ?: 'Documento no registrado' }}</span>
+                            @php
+                                $numeroDocumentoBusqueda =
+                                    $consultor->documentos
+                                        ->where('activo', true)
+                                        ->first()
+                                        ?->numero
+                                    ?? $consultor->numero_identificacion;
+                            @endphp
+
+                            <span>
+                                {{ $numeroDocumentoBusqueda ?: 'Documento no registrado' }}
+                            </span>
                         </div>
                         <div>
                             <i class="fas fa-phone"></i>

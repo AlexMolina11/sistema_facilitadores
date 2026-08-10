@@ -33,10 +33,43 @@
     $correoPrincipal = $consultor->emails->firstWhere('principal', true) ?? $consultor->emails->first();
     $telefonoPrincipal = $consultor->telefonos->first();
 
-    $documentoIdentificacion = $consultor->documentos->first(function ($documento) use ($tiposDocumento, $consultor) {
-        $tipo = $tiposDocumento->get($documento->id_tipo_documento);
-        return $tipo && strtolower($tipo->nombre) === strtolower($consultor->tipo_identificacion ?? '');
-    });
+    $documentoIdentificacion =
+        $consultor->documentos
+            ->first(function ($documento) use ($tiposDocumento) {
+                $tipo =
+                    $tiposDocumento->get(
+                        $documento->id_tipo_documento
+                    );
+
+                if (! $tipo) {
+                    return false;
+                }
+
+                return ! in_array(
+                    strtoupper(
+                        trim($tipo->nombre)
+                    ),
+                    [
+                        'NIT',
+                        'NRC',
+                    ],
+                    true
+                );
+            });
+
+    $tipoIdentificacionMostrado =
+        $documentoIdentificacion
+            ? $tiposDocumento
+                ->get(
+                    $documentoIdentificacion
+                        ->id_tipo_documento
+                )
+                ?->nombre
+            : $consultor->tipo_identificacion;
+
+    $numeroIdentificacionMostrado =
+        $documentoIdentificacion?->numero
+        ?? $consultor->numero_identificacion;
 
     $documentoNit = $consultor->documentos->first(function ($documento) use ($tiposDocumento) {
         $tipo = $tiposDocumento->get($documento->id_tipo_documento);
@@ -285,8 +318,8 @@
                     <div class="expediente-info-item"><span>Estado civil</span><strong>{{ $consultor->estado_civil ?? 'No registrado' }}</strong></div>
                     <div class="expediente-info-item"><span>Nacionalidad</span><strong>{{ $consultor->nacionalidad ?? 'No registrada' }}</strong></div>
                     <div class="expediente-info-item"><span>Sexo</span><strong>{{ $consultor->sexoCatalogo?->nombre ?? 'No registrado' }}</strong></div>
-                    <div class="expediente-info-item"><span>Tipo de identificación</span><strong>{{ $consultor->tipo_identificacion ?? 'No registrado' }}</strong></div>
-                    <div class="expediente-info-item"><span>Número de identificación</span><strong>{{ $consultor->numero_identificacion ?? 'No registrado' }}</strong></div>
+                    <div class="expediente-info-item"><span>Tipo de identificación</span><strong>{{ $tipoIdentificacionMostrado ?? 'No registrado' }}</strong></div>
+                    <div class="expediente-info-item"><span>Número de identificación</span><strong>{{ $numeroIdentificacionMostrado ?? 'No registrado' }}</strong></div>
                     <div class="expediente-info-item"><span>NIT</span><strong>{{ $consultor->nit ?? 'No registrado' }}</strong></div>
                     <div class="expediente-info-item"><span>NRC</span><strong>{{ $consultor->nrc ?? 'No registrado' }}</strong></div>
                     <div class="expediente-info-item"><span>Fecha de nacimiento</span><strong>{{ $consultor->fecha_nacimiento ? $consultor->fecha_nacimiento->format('d/m/Y') : 'No registrada' }}</strong></div>
@@ -310,8 +343,8 @@
 
                 <div class="expediente-cards-grid">
                     <div class="expediente-mini-card expediente-ux-doc-card">
-                        <h5>{{ $consultor->tipo_identificacion ?? 'Documento de identificación' }}</h5>
-                        <p>Número: {{ $consultor->numero_identificacion ?? 'No registrado' }}</p>
+                        <h5>{{ $tipoIdentificacionMostrado ?? 'Documento de identificación' }}</h5>
+                        <p>Número:{{ $numeroIdentificacionMostrado ?? 'No registrado' }}</p>
                         @if($documentoIdentificacion?->url_archivo)
                             <a href="{{ Storage::url($documentoIdentificacion->url_archivo) }}" target="_blank" class="expediente-file-link">Ver documento</a>
                         @else
@@ -454,16 +487,52 @@
                 <div class="expediente-ux-timeline">
                     @forelse($capacitacionesFepade as $capacitacion)
                         <article class="expediente-timeline-card">
-                            <h5>{{ $capacitacion->nombre_evento ?? 'Capacitación no registrada' }}</h5>
+
+                            <h5>
+                                {{ $capacitacion->curso_nombre
+                                    ?? 'Capacitación no registrada' }}
+                            </h5>
+
                             <p>
-                                {{ $capacitacion->tema ?? 'Tema no registrado' }}
-                                @if($capacitacion->institucion) · {{ $capacitacion->institucion }} @endif
+                                @if($capacitacion->cliente)
+                                    {{ $capacitacion->cliente }}
+                                @else
+                                    Cliente no registrado
+                                @endif
                             </p>
 
                             <div class="expediente-tag-row">
-                                <span>{{ $capacitacion->modalidad ?? 'Modalidad no registrada' }}</span>
-                                @if($capacitacion->horas)<span>{{ $capacitacion->horas }} horas</span>@endif
-                                @if($capacitacion->fuente)<span>{{ $capacitacion->fuente }}</span>@endif
+
+                                @if($capacitacion->modalidad)
+                                    <span>
+                                        {{ $capacitacion->modalidad }}
+                                    </span>
+                                @endif
+
+                                @if($capacitacion->tipo_evento_nombre)
+                                    <span>
+                                        {{ $capacitacion->tipo_evento_nombre }}
+                                    </span>
+                                @endif
+
+                                @if($capacitacion->estado_curso_nombre)
+                                    <span>
+                                        {{ $capacitacion->estado_curso_nombre }}
+                                    </span>
+                                @endif
+
+                                @if($capacitacion->no_horas_real !== null)
+                                    <span>
+                                        {{ $capacitacion->no_horas_real }}
+                                        horas
+                                    </span>
+                                @endif
+
+                                @if($capacitacion->fuente)
+                                    <span>
+                                        {{ $capacitacion->fuente }}
+                                    </span>
+                                @endif
                             </div>
 
                             <span class="expediente-date">
@@ -661,7 +730,7 @@
                             @if($atestado)
                                 Atestado: {{ $atestado->titulo ?? $atestado->descripcion ?? 'Atestado registrado' }}
                             @elseif($capacitacion)
-                                Capacitación FEPADE: {{ $capacitacion->nombre_evento ?? 'Evento registrado' }}
+                                Capacitación FEPADE: {{ $capacitacion->curso_nombre ?? 'Evento registrado' }}
                             @else
                                 Sin evidencia vinculada.
                             @endif
