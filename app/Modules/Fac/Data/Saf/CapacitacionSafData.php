@@ -3,7 +3,7 @@
 namespace App\Modules\Fac\Data\Saf;
 
 use Carbon\CarbonImmutable;
-use Carbon\Exceptions\InvalidFormatException;
+use DateTimeInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -13,15 +13,20 @@ final readonly class CapacitacionSafData
 {
     public function __construct(
         public int $idInstructor,
-        public string $codigoEventoExterno,
-        public string $nombreEvento,
-        public ?string $tema = null,
-        public ?string $institucion = null,
-        public ?string $modalidad = null,
+        public int $programaCursoId,
+        public string $codigoEvento,
+        public string $cursoNombre,
         public ?CarbonImmutable $fechaInicio = null,
         public ?CarbonImmutable $fechaFin = null,
-        public ?int $horas = null,
-        public ?bool $activo = null,
+        public ?string $estadoCursoNombre = null,
+        public ?int $noHorasReal = null,
+        public ?string $modalidad = null,
+        public ?string $tipoEventoNombre = null,
+        public ?string $cliente = null,
+        public ?int $encuestaId = null,
+        public ?string $encuestaNombre = null,
+        public ?string $promedioEncuesta = null,
+        public ?CarbonImmutable $fechaEvaluacion = null,
     ) {
         if ($this->idInstructor <= 0) {
             throw new InvalidArgumentException(
@@ -29,43 +34,57 @@ final readonly class CapacitacionSafData
             );
         }
 
-        if ($this->codigoEventoExterno === '') {
+        if ($this->programaCursoId <= 0) {
             throw new InvalidArgumentException(
-                'El codigo_evento_externo es obligatorio.'
+                'El programa_curso_id debe ser mayor que cero.'
             );
         }
 
-        if ($this->nombreEvento === '') {
+        if ($this->codigoEvento === '') {
             throw new InvalidArgumentException(
-                'El nombre de la capacitación es obligatorio.'
+                'El codigo_evento es obligatorio.'
+            );
+        }
+
+        if ($this->cursoNombre === '') {
+            throw new InvalidArgumentException(
+                'El curso_nombre es obligatorio.'
             );
         }
 
         if (
             $this->fechaInicio !== null
             && $this->fechaFin !== null
-            && $this->fechaFin->isBefore($this->fechaInicio)
+            && $this->fechaFin->isBefore(
+                $this->fechaInicio
+            )
         ) {
             throw new InvalidArgumentException(
                 'La fecha de finalización no puede ser anterior a la fecha de inicio.'
             );
         }
 
-        if ($this->horas !== null && $this->horas < 0) {
+        if (
+            $this->noHorasReal !== null
+            && $this->noHorasReal < 0
+        ) {
             throw new InvalidArgumentException(
-                'La cantidad de horas no puede ser negativa.'
+                'La cantidad de horas reales no puede ser negativa.'
             );
         }
     }
 
     /**
-     * Construye el objeto a partir de datos provenientes de SAF.
+     * Construye el DTO a partir de datos provenientes de SAF.
      *
      * @throws ValidationException
      */
-    public static function fromArray(array $data): self
-    {
-        $normalized = self::normalizeInput($data);
+    public static function fromArray(
+        array $data
+    ): self {
+        $normalized = self::normalizeInput(
+            $data
+        );
 
         validator(
             $normalized,
@@ -76,34 +95,22 @@ final readonly class CapacitacionSafData
                     'min:1',
                 ],
 
-                'codigo_evento_externo' => [
+                'programa_curso_id' => [
+                    'required',
+                    'integer',
+                    'min:1',
+                ],
+
+                'codigo_evento' => [
                     'required',
                     'string',
-                    'max:100',
+                    'max:50',
                 ],
 
-                'nombre_evento' => [
+                'curso_nombre' => [
                     'required',
                     'string',
                     'max:250',
-                ],
-
-                'tema' => [
-                    'nullable',
-                    'string',
-                    'max:250',
-                ],
-
-                'institucion' => [
-                    'nullable',
-                    'string',
-                    'max:250',
-                ],
-
-                'modalidad' => [
-                    'nullable',
-                    'string',
-                    'max:100',
                 ],
 
                 'fecha_inicio' => [
@@ -117,128 +124,306 @@ final readonly class CapacitacionSafData
                     'after_or_equal:fecha_inicio',
                 ],
 
-                'horas' => [
+                'estado_curso_nombre' => [
+                    'nullable',
+                    'string',
+                    'max:30',
+                ],
+
+                'no_horas_real' => [
                     'nullable',
                     'integer',
                     'min:0',
                 ],
 
-                'activo' => [
+                'modalidad' => [
                     'nullable',
-                    'boolean',
+                    'string',
+                    'max:50',
+                ],
+
+                'tipo_evento_nombre' => [
+                    'nullable',
+                    'string',
+                    'max:30',
+                ],
+
+                'cliente' => [
+                    'nullable',
+                    'string',
+                    'max:300',
+                ],
+
+                'encuesta_id' => [
+                    'nullable',
+                    'integer',
+                    'min:1',
+                ],
+
+                'encuesta_nombre' => [
+                    'nullable',
+                    'string',
+                    'max:100',
+                ],
+
+                'promedio_encuesta' => [
+                    'nullable',
+                    'numeric',
+                ],
+
+                'fecha_evaluacion' => [
+                    'nullable',
+                    'date_format:Y-m-d H:i:s',
                 ],
             ],
             [
-                'id_instructor.required' => 'La capacitación no contiene id_instructor.',
+                'id_instructor.required' =>
+                    'La capacitación no contiene id_instructor.',
 
-                'id_instructor.integer' => 'El id_instructor debe ser un número entero.',
+                'id_instructor.integer' =>
+                    'El id_instructor debe ser un número entero.',
 
-                'id_instructor.min' => 'El id_instructor debe ser mayor que cero.',
+                'id_instructor.min' =>
+                    'El id_instructor debe ser mayor que cero.',
 
-                'codigo_evento_externo.required' => 'La capacitación no contiene codigo_evento_externo.',
+                'programa_curso_id.required' =>
+                    'La capacitación no contiene programa_curso_id.',
 
-                'codigo_evento_externo.max' => 'El codigo_evento_externo no puede exceder los 100 caracteres.',
+                'programa_curso_id.integer' =>
+                    'El programa_curso_id debe ser un número entero.',
 
-                'nombre.required' => 'La capacitación no contiene nombre.',
+                'programa_curso_id.min' =>
+                    'El programa_curso_id debe ser mayor que cero.',
 
-                'nombre.max' => 'El nombre de la capacitación no puede exceder los 250 caracteres.',
+                'codigo_evento.required' =>
+                    'La capacitación no contiene codigo_evento.',
 
-                'fecha_inicio.date_format' => 'La fecha de inicio debe tener el formato Y-m-d.',
+                'codigo_evento.string' =>
+                    'El codigo_evento debe ser texto.',
 
-                'fecha_fin.date_format' => 'La fecha de finalización debe tener el formato Y-m-d.',
+                'codigo_evento.max' =>
+                    'El codigo_evento no puede exceder los 50 caracteres.',
 
-                'fecha_fin.after_or_equal' => 'La fecha de finalización no puede ser anterior a la fecha de inicio.',
+                'curso_nombre.required' =>
+                    'La capacitación no contiene curso_nombre.',
 
-                'horas.integer' => 'La cantidad de horas debe ser un número entero.',
+                'curso_nombre.string' =>
+                    'El curso_nombre debe ser texto.',
 
-                'horas.min' => 'La cantidad de horas no puede ser negativa.',
+                'curso_nombre.max' =>
+                    'El curso_nombre no puede exceder los 250 caracteres.',
 
-                'activo.boolean' => 'El estado activo debe ser verdadero o falso.',
+                'fecha_inicio.date_format' =>
+                    'La fecha de inicio debe tener el formato Y-m-d.',
+
+                'fecha_fin.date_format' =>
+                    'La fecha de finalización debe tener el formato Y-m-d.',
+
+                'fecha_fin.after_or_equal' =>
+                    'La fecha de finalización no puede ser anterior a la fecha de inicio.',
+
+                'estado_curso_nombre.string' =>
+                    'El estado del curso debe ser texto.',
+
+                'estado_curso_nombre.max' =>
+                    'El estado del curso no puede exceder los 30 caracteres.',
+
+                'no_horas_real.integer' =>
+                    'La cantidad de horas reales debe ser un número entero.',
+
+                'no_horas_real.min' =>
+                    'La cantidad de horas reales no puede ser negativa.',
+
+                'modalidad.string' =>
+                    'La modalidad debe ser texto.',
+
+                'modalidad.max' =>
+                    'La modalidad no puede exceder los 50 caracteres.',
+
+                'tipo_evento_nombre.string' =>
+                    'El tipo de evento debe ser texto.',
+
+                'tipo_evento_nombre.max' =>
+                    'El tipo de evento no puede exceder los 30 caracteres.',
+
+                'cliente.string' =>
+                    'El cliente debe ser texto.',
+
+                'cliente.max' =>
+                    'El cliente no puede exceder los 300 caracteres.',
+
+                'encuesta_id.integer' =>
+                    'El encuesta_id debe ser un número entero.',
+
+                'encuesta_id.min' =>
+                    'El encuesta_id debe ser mayor que cero.',
+
+                'encuesta_nombre.string' =>
+                    'El nombre de la encuesta debe ser texto.',
+
+                'encuesta_nombre.max' =>
+                    'El nombre de la encuesta no puede exceder los 100 caracteres.',
+
+                'promedio_encuesta.numeric' =>
+                    'El promedio de la encuesta debe ser un valor numérico.',
+
+                'fecha_evaluacion.date_format' =>
+                    'La fecha de evaluación debe tener el formato Y-m-d H:i:s.',
             ]
         )->validate();
 
         return new self(
-            idInstructor: (int) $normalized['id_instructor'],
+            idInstructor:
+                (int) $normalized['id_instructor'],
 
-            codigoEventoExterno: $normalized['codigo_evento_externo'],
+            programaCursoId:
+                (int) $normalized['programa_curso_id'],
 
-            nombreEvento: $normalized['nombre_evento'],
+            codigoEvento:
+                $normalized['codigo_evento'],
 
-            tema: $normalized['tema'] !== ''
-                ? $normalized['tema']
-                : null,
+            cursoNombre:
+                $normalized['curso_nombre'],
 
-            institucion: $normalized['institucion'] !== ''
-                ? $normalized['institucion']
-                : null,
+            fechaInicio:
+                self::toDate(
+                    $normalized['fecha_inicio']
+                ),
 
-            modalidad: $normalized['modalidad'] !== ''
-                ? $normalized['modalidad']
-                : null,
+            fechaFin:
+                self::toDate(
+                    $normalized['fecha_fin']
+                ),
 
-            fechaInicio: self::toDate($normalized['fecha_inicio']),
+            estadoCursoNombre:
+                $normalized['estado_curso_nombre'],
 
-            fechaFin: self::toDate($normalized['fecha_fin']),
-
-            horas: $normalized['horas'] !== null
-                    ? (int) $normalized['horas']
+            noHorasReal:
+                $normalized['no_horas_real'] !== null
+                    ? (int) $normalized['no_horas_real']
                     : null,
 
-            activo: $normalized['activo'],
+            modalidad:
+                $normalized['modalidad'],
+
+            tipoEventoNombre:
+                $normalized['tipo_evento_nombre'],
+
+            cliente:
+                $normalized['cliente'],
+
+            encuestaId:
+                $normalized['encuesta_id'] !== null
+                    ? (int) $normalized['encuesta_id']
+                    : null,
+
+            encuestaNombre:
+                $normalized['encuesta_nombre'],
+
+            promedioEncuesta:
+                $normalized['promedio_encuesta'],
+
+            fechaEvaluacion:
+                self::toDateTime(
+                    $normalized['fecha_evaluacion']
+                ),
         );
     }
 
     /**
-     * Convierte el objeto a la nomenclatura utilizada por SAF.
+     * Convierte el DTO a la nomenclatura utilizada
+     * en la tabla staging SAF.
      */
     public function toArray(): array
     {
         return [
-            'id_instructor' => $this->idInstructor,
+            'id_instructor' =>
+                $this->idInstructor,
 
-            'codigo_evento_externo' => $this->codigoEventoExterno,
+            'programa_curso_id' =>
+                $this->programaCursoId,
 
-            'nombre_evento' => $this->nombreEvento,
+            'codigo_evento' =>
+                $this->codigoEvento,
 
-            'tema' => $this->tema,
+            'curso_nombre' =>
+                $this->cursoNombre,
 
-            'institucion' => $this->institucion,
+            'fecha_inicio' =>
+                $this->fechaInicio?->format(
+                    'Y-m-d'
+                ),
 
-            'modalidad' => $this->modalidad,
+            'fecha_fin' =>
+                $this->fechaFin?->format(
+                    'Y-m-d'
+                ),
 
-            'fecha_inicio' => $this->fechaInicio?->format('Y-m-d'),
+            'estado_curso_nombre' =>
+                $this->estadoCursoNombre,
 
-            'fecha_fin' => $this->fechaFin?->format('Y-m-d'),
+            'no_horas_real' =>
+                $this->noHorasReal,
 
-            'horas' => $this->horas,
+            'modalidad' =>
+                $this->modalidad,
 
-            'activo' => $this->activo,
+            'tipo_evento_nombre' =>
+                $this->tipoEventoNombre,
+
+            'cliente' =>
+                $this->cliente,
+
+            'encuesta_id' =>
+                $this->encuestaId,
+
+            'encuesta_nombre' =>
+                $this->encuestaNombre,
+
+            'promedio_encuesta' =>
+                $this->promedioEncuesta,
+
+            'fecha_evaluacion' =>
+                $this->fechaEvaluacion?->format(
+                    'Y-m-d H:i:s'
+                ),
         ];
     }
 
     /**
      * Devuelve únicamente los campos que tienen valor.
      *
-     * Mantiene false y 0 como valores válidos.
+     * Mantiene 0 como un valor válido.
      */
     public function toFilteredArray(): array
     {
         return array_filter(
             $this->toArray(),
-            static fn (mixed $value): bool => $value !== null
+            static fn (mixed $value): bool =>
+                $value !== null
         );
     }
 
     /**
-     * Identificador compuesto de la capacitación.
-     *
-     * El código del evento puede repetirse para distintos instructores.
+     * Identificador compuesto de una capacitación SAF.
      */
     public function externalId(): string
     {
         return $this->idInstructor
-            .':'
-            .$this->codigoEventoExterno;
+            . ':'
+            . $this->codigoEvento;
+    }
+
+    /**
+     * Determina si la capacitación contiene
+     * información de encuesta.
+     */
+    public function tieneEncuesta(): bool
+    {
+        return $this->encuestaId !== null
+            || filled($this->encuestaNombre)
+            || $this->promedioEncuesta !== null
+            || $this->fechaEvaluacion !== null;
     }
 
     /**
@@ -284,83 +469,130 @@ final readonly class CapacitacionSafData
         array $data
     ): array {
         return [
-            'id_instructor' => self::normalizeInteger(
-                Arr::get(
-                    $data,
-                    'id_instructor'
-                )
-            ),
+            'id_instructor' =>
+                self::normalizeInteger(
+                    Arr::get(
+                        $data,
+                        'id_instructor'
+                    )
+                ),
 
-            'codigo_evento_externo' => self::normalizeText(
-                Arr::get(
-                    $data,
-                    'codigo_evento_externo'
-                )
-            ),
+            'programa_curso_id' =>
+                self::normalizeInteger(
+                    Arr::get(
+                        $data,
+                        'programa_curso_id'
+                    )
+                ),
 
-            'nombre_evento' => self::normalizeText(
-                Arr::get(
-                    $data,
-                    'nombre_evento'
-                ) ?? Arr::get(
-                    $data,
-                    'nombre'
-                )
-            ),
+            'codigo_evento' =>
+                self::normalizeText(
+                    Arr::get(
+                        $data,
+                        'codigo_evento'
+                    )
+                ),
 
-            'tema' => self::normalizeText(
-                Arr::get(
-                    $data,
-                    'tema'
-                )
-            ),
+            'curso_nombre' =>
+                self::normalizeText(
+                    Arr::get(
+                        $data,
+                        'curso_nombre'
+                    )
+                ),
 
-            'institucion' => self::normalizeText(
-                Arr::get(
-                    $data,
-                    'institucion'
-                )
-            ),
+            'fecha_inicio' =>
+                self::normalizeDate(
+                    Arr::get(
+                        $data,
+                        'fecha_inicio'
+                    )
+                ),
 
-            'modalidad' => self::normalizeText(
-                Arr::get(
-                    $data,
-                    'modalidad'
-                )
-            ),
+            'fecha_fin' =>
+                self::normalizeDate(
+                    Arr::get(
+                        $data,
+                        'fecha_fin'
+                    )
+                ),
 
-            'fecha_inicio' => self::normalizeDate(
-                Arr::get(
-                    $data,
-                    'fecha_inicio'
-                )
-            ),
+            'estado_curso_nombre' =>
+                self::normalizeNullableText(
+                    Arr::get(
+                        $data,
+                        'estado_curso_nombre'
+                    )
+                ),
 
-            'fecha_fin' => self::normalizeDate(
-                Arr::get(
-                    $data,
-                    'fecha_fin'
-                )
-            ),
+            'no_horas_real' =>
+                self::normalizeInteger(
+                    Arr::get(
+                        $data,
+                        'no_horas_real'
+                    )
+                ),
 
-            'horas' => self::normalizeInteger(
-                Arr::get(
-                    $data,
-                    'horas'
-                )
-            ),
+            'modalidad' =>
+                self::normalizeNullableText(
+                    Arr::get(
+                        $data,
+                        'modalidad'
+                    )
+                ),
 
-            'activo' => self::normalizeBoolean(
-                Arr::get(
-                    $data,
-                    'activo'
-                )
-            ),
+            'tipo_evento_nombre' =>
+                self::normalizeNullableText(
+                    Arr::get(
+                        $data,
+                        'tipo_evento_nombre'
+                    )
+                ),
+
+            'cliente' =>
+                self::normalizeNullableText(
+                    Arr::get(
+                        $data,
+                        'cliente'
+                    )
+                ),
+
+            'encuesta_id' =>
+                self::normalizeInteger(
+                    Arr::get(
+                        $data,
+                        'encuesta_id'
+                    )
+                ),
+
+            'encuesta_nombre' =>
+                self::normalizeNullableText(
+                    Arr::get(
+                        $data,
+                        'encuesta_nombre'
+                    )
+                ),
+
+            'promedio_encuesta' =>
+                self::normalizeDecimal(
+                    Arr::get(
+                        $data,
+                        'promedio_encuesta'
+                    )
+                ),
+
+            'fecha_evaluacion' =>
+                self::normalizeDateTime(
+                    Arr::get(
+                        $data,
+                        'fecha_evaluacion'
+                    )
+                ),
         ];
     }
 
     /**
-     * Normaliza textos y elimina espacios repetidos.
+     * Normaliza textos obligatorios.
      */
     private static function normalizeText(
         mixed $value
@@ -368,6 +600,25 @@ final readonly class CapacitacionSafData
         return Str::of((string) $value)
             ->squish()
             ->toString();
+    }
+
+    /**
+     * Normaliza textos opcionales.
+     */
+    private static function normalizeNullableText(
+        mixed $value
+    ): ?string {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = Str::of((string) $value)
+            ->squish()
+            ->toString();
+
+        return $normalized !== ''
+            ? $normalized
+            : null;
     }
 
     /**
@@ -398,7 +649,34 @@ final readonly class CapacitacionSafData
     }
 
     /**
-     * Normaliza las fechas aceptadas por la integración.
+     * Normaliza valores decimales sin introducir
+     * errores de precisión binaria.
+     */
+    private static function normalizeDecimal(
+        mixed $value
+    ): mixed {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (
+            is_int($value)
+            || is_float($value)
+            || is_numeric($value)
+        ) {
+            return number_format(
+                (float) $value,
+                2,
+                '.',
+                ''
+            );
+        }
+
+        return $value;
+    }
+
+    /**
+     * Normaliza fechas provenientes de SAF.
      */
     private static function normalizeDate(
         mixed $value
@@ -407,11 +685,15 @@ final readonly class CapacitacionSafData
             return null;
         }
 
-        if ($value instanceof CarbonImmutable) {
-            return $value->format('Y-m-d');
+        if ($value instanceof DateTimeInterface) {
+            return CarbonImmutable::instance(
+                $value
+            )->format('Y-m-d');
         }
 
-        $value = trim((string) $value);
+        $value = trim(
+            (string) $value
+        );
 
         $formats = [
             'Y-m-d',
@@ -422,16 +704,17 @@ final readonly class CapacitacionSafData
 
         foreach ($formats as $format) {
             try {
-                $date =
-                    CarbonImmutable::createFromFormat(
-                        $format,
-                        $value
-                    );
+                $date = CarbonImmutable::createFromFormat(
+                    $format,
+                    $value
+                );
 
                 if ($date !== false) {
-                    return $date->format('Y-m-d');
+                    return $date->format(
+                        'Y-m-d'
+                    );
                 }
-            } catch (InvalidFormatException) {
+            } catch (\Throwable) {
                 // Se intenta el siguiente formato.
             }
         }
@@ -440,60 +723,82 @@ final readonly class CapacitacionSafData
     }
 
     /**
-     * Convierte una fecha normalizada a CarbonImmutable.
+     * Normaliza fecha y hora de evaluación.
      */
-    private static function toDate(
-        ?string $value
-    ): ?CarbonImmutable {
-        return $value !== null
-            ? CarbonImmutable::createFromFormat(
-                'Y-m-d',
-                $value
-            )
-            : null;
-    }
-
-    /**
-     * Normaliza valores booleanos recibidos desde SAF.
-     */
-    private static function normalizeBoolean(
+    private static function normalizeDateTime(
         mixed $value
     ): mixed {
         if ($value === null || $value === '') {
             return null;
         }
 
-        if (is_bool($value)) {
-            return $value;
+        if ($value instanceof DateTimeInterface) {
+            return CarbonImmutable::instance(
+                $value
+            )->format('Y-m-d H:i:s');
         }
 
-        if ($value === 1 || $value === '1') {
-            return true;
-        }
+        $value = trim(
+            (string) $value
+        );
 
-        if ($value === 0 || $value === '0') {
-            return false;
-        }
+        $formats = [
+            'Y-m-d H:i:s',
+            'Y-m-d H:i',
+            'd/m/Y H:i:s',
+            'd/m/Y H:i',
+            'Y-m-d',
+        ];
 
-        if (is_string($value)) {
-            return match (
-                Str::lower(trim($value))
-            ) {
-                'true',
-                'si',
-                'sí',
-                'activo',
-                'active' => true,
+        foreach ($formats as $format) {
+            try {
+                $date = CarbonImmutable::createFromFormat(
+                    $format,
+                    $value
+                );
 
-                'false',
-                'no',
-                'inactivo',
-                'inactive' => false,
-
-                default => $value,
-            };
+                if ($date !== false) {
+                    return $date->format(
+                        'Y-m-d H:i:s'
+                    );
+                }
+            } catch (\Throwable) {
+                // Se intenta el siguiente formato.
+            }
         }
 
         return $value;
+    }
+
+    /**
+     * Convierte fecha normalizada a CarbonImmutable.
+     */
+    private static function toDate(
+        mixed $value
+    ): ?CarbonImmutable {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return CarbonImmutable::createFromFormat(
+            'Y-m-d',
+            (string) $value
+        );
+    }
+
+    /**
+     * Convierte fecha y hora normalizada a CarbonImmutable.
+     */
+    private static function toDateTime(
+        mixed $value
+    ): ?CarbonImmutable {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return CarbonImmutable::createFromFormat(
+            'Y-m-d H:i:s',
+            (string) $value
+        );
     }
 }

@@ -21,13 +21,25 @@ class SafInstructorImportacion extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
+        /*
+        |--------------------------------------------------------------------------
+        | Datos recibidos desde SAF
+        |--------------------------------------------------------------------------
+        */
         'id_instructor',
         'id_entidad',
         'nombres',
         'apellidos',
-        'dui',
+        'tipo_identificacion',
+        'numero_identificacion',
+        'correo_saf',
         'activo',
 
+        /*
+        |--------------------------------------------------------------------------
+        | Campos internos de procesamiento
+        |--------------------------------------------------------------------------
+        */
         'estado',
         'resultado_procesamiento',
         'intentos',
@@ -44,19 +56,23 @@ class SafInstructorImportacion extends Model
             'id_importacion' => 'integer',
             'id_instructor' => 'integer',
             'id_entidad' => 'integer',
+            'tipo_identificacion' => 'integer',
             'activo' => 'boolean',
+
             'intentos' => 'integer',
             'fecha_recepcion' => 'datetime',
             'fecha_procesamiento' => 'datetime',
             'id_sincronizacion' => 'integer',
             'id_registro_local' => 'integer',
+
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
     }
 
-    public function scopePendientes(Builder $query): Builder
-    {
+    public function scopePendientes(
+        Builder $query
+    ): Builder {
         return $query->where(
             'estado',
             self::ESTADO_PENDIENTE
