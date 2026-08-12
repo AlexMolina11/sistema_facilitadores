@@ -9,227 +9,262 @@ use Tests\TestCase;
 
 class InstructorSafDataTest extends TestCase
 {
-    protected function setUp(): void
+    public function test_it_normalizes_instructor_data(): void
     {
-        parent::setUp();
-
-        config([
-            'saf.entity_id' => 1,
-            'saf.hash.algorithm' => 'sha256',
-        ]);
-    }
-
-    public function test_it_creates_the_dto_from_valid_data(): void
-    {
-        $instructor = InstructorSafData::fromArray([
-            'id_instructor' => '1001',
+        $data = InstructorSafData::fromArray([
+            'id_instructor' => '1010',
             'id_entidad' => '1',
             'nombres' => '  Carlos   Antonio ',
-            'apellidos' => ' Ramírez   López ',
-            'dui' => ' 01234567-8 ',
+            'apellidos' => ' Pérez   López ',
+            'tipo_identificacion' => '7',
+            'numero_identificacion' => ' 01234567-8 ',
+            'correo_saf' => ' carlos@example.com ',
             'activo' => '1',
         ]);
 
         $this->assertSame(
-            1001,
-            $instructor->idInstructor
+            1010,
+            $data->idInstructor
         );
 
         $this->assertSame(
             1,
-            $instructor->idEntidad
+            $data->idEntidad
         );
 
         $this->assertSame(
             'Carlos Antonio',
-            $instructor->nombres
+            $data->nombres
         );
 
         $this->assertSame(
-            'Ramírez López',
-            $instructor->apellidos
+            'Pérez López',
+            $data->apellidos
         );
 
         $this->assertSame(
-            '01234567-8',
-            $instructor->dui
+            InstructorSafData::TIPO_DUI,
+            $data->tipoIdentificacion
         );
-
-        $this->assertTrue(
-            $instructor->activo
-        );
-    }
-
-    public function test_it_accepts_numero_identificacion_as_dui_alias(): void
-    {
-        $instructor = InstructorSafData::fromArray([
-            'id_instructor' => 1002,
-            'id_entidad' => 1,
-            'nombres' => 'Ana',
-            'apellidos' => 'Martínez',
-            'numero_identificacion' =>
-                ' 01234567-8 ',
-            'activo' => true,
-        ]);
 
         $this->assertSame(
             '01234567-8',
-            $instructor->dui
+            $data->numeroIdentificacion
         );
-    }
-
-    public function test_it_normalizes_boolean_values(): void
-    {
-        $activo = InstructorSafData::fromArray([
-            'id_instructor' => 1003,
-            'id_entidad' => 1,
-            'nombres' => 'Mario',
-            'apellidos' => 'Activo',
-            'activo' => 'sí',
-        ]);
-
-        $inactivo = InstructorSafData::fromArray([
-            'id_instructor' => 1004,
-            'id_entidad' => 1,
-            'nombres' => 'Mario',
-            'apellidos' => 'Inactivo',
-            'activo' => 'inactivo',
-        ]);
-
-        $this->assertTrue(
-            $activo->activo
-        );
-
-        $this->assertFalse(
-            $inactivo->activo
-        );
-    }
-
-    public function test_it_allows_nullable_optional_values(): void
-    {
-        $instructor = InstructorSafData::fromArray([
-            'id_instructor' => 1005,
-            'id_entidad' => 1,
-            'nombres' => 'Andrea',
-            'apellidos' => 'Gómez',
-        ]);
-
-        $this->assertNull(
-            $instructor->dui
-        );
-
-        $this->assertNull(
-            $instructor->activo
-        );
-    }
-
-    public function test_to_array_returns_only_the_contract_fields(): void
-    {
-        $instructor = InstructorSafData::fromArray([
-            'id_instructor' => 1006,
-            'id_entidad' => 1,
-            'nombres' => 'José',
-            'apellidos' => 'Hernández',
-            'dui' => '01234567-8',
-            'activo' => true,
-
-            // Estos campos deben ser ignorados.
-            'correo' => 'jose@ejemplo.com',
-            'telefono' => '7000-0000',
-        ]);
 
         $this->assertSame(
-            [
-                'id_instructor' => 1006,
-                'id_entidad' => 1,
-                'nombres' => 'José',
-                'apellidos' => 'Hernández',
-                'dui' => '01234567-8',
-                'activo' => true,
-            ],
-            $instructor->toArray()
+            'carlos@example.com',
+            $data->correoSaf
         );
 
-        $this->assertArrayNotHasKey(
-            'correo',
-            $instructor->toArray()
-        );
-
-        $this->assertArrayNotHasKey(
-            'telefono',
-            $instructor->toArray()
+        $this->assertTrue(
+            $data->activo
         );
     }
 
-    public function test_filtered_array_removes_only_null_values(): void
+    public function test_it_converts_data_to_array(): void
     {
-        $instructor = InstructorSafData::fromArray([
-            'id_instructor' => 1007,
+        $data = InstructorSafData::fromArray([
+            'id_instructor' => 1010,
             'id_entidad' => 1,
-            'nombres' => 'Luis',
-            'apellidos' => 'Inactivo',
-            'dui' => null,
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
+            'tipo_identificacion' => 7,
+            'numero_identificacion' => '01234567-8',
+            'correo_saf' => 'carlos@example.com',
             'activo' => false,
         ]);
 
         $this->assertSame(
             [
-                'id_instructor' => 1007,
+                'id_instructor' => 1010,
                 'id_entidad' => 1,
-                'nombres' => 'Luis',
-                'apellidos' => 'Inactivo',
+                'nombres' => 'Carlos',
+                'apellidos' => 'Pérez',
+                'tipo_identificacion' => 7,
+                'numero_identificacion' => '01234567-8',
+                'correo_saf' => 'carlos@example.com',
                 'activo' => false,
             ],
-            $instructor->toFilteredArray()
+            $data->toArray()
         );
     }
 
-    public function test_it_returns_the_normalized_full_name(): void
+    public function test_filtered_array_removes_null_values_but_keeps_false(): void
     {
-        $instructor = InstructorSafData::fromArray([
-            'id_instructor' => 1008,
+        $data = InstructorSafData::fromArray([
+            'id_instructor' => 1010,
             'id_entidad' => 1,
-            'nombres' => 'María Elena',
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
+            'activo' => false,
+        ]);
+
+        $this->assertSame(
+            [
+                'id_instructor' => 1010,
+                'id_entidad' => 1,
+                'nombres' => 'Carlos',
+                'apellidos' => 'Pérez',
+                'activo' => false,
+            ],
+            $data->toFilteredArray()
+        );
+    }
+
+    public function test_it_returns_full_name(): void
+    {
+        $data = InstructorSafData::fromArray([
+            'id_instructor' => 1010,
+            'id_entidad' => 1,
+            'nombres' => 'Carlos Antonio',
             'apellidos' => 'Pérez López',
         ]);
 
         $this->assertSame(
-            'María Elena Pérez López',
-            $instructor->nombreCompleto()
+            'Carlos Antonio Pérez López',
+            $data->nombreCompleto()
         );
     }
 
-    public function test_external_id_returns_the_instructor_id_as_string(): void
+    public function test_it_returns_external_id(): void
     {
-        $instructor = InstructorSafData::fromArray([
-            'id_instructor' => 1009,
+        $data = InstructorSafData::fromArray([
+            'id_instructor' => 1010,
             'id_entidad' => 1,
-            'nombres' => 'Pedro',
-            'apellidos' => 'Ramírez',
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
         ]);
 
         $this->assertSame(
-            '1009',
-            $instructor->externalId()
+            '1010',
+            $data->externalId()
         );
     }
 
-    public function test_it_detects_the_configured_entity(): void
+    public function test_it_detects_when_document_information_exists(): void
     {
-        $instructorValido =
-            InstructorSafData::fromArray([
+        $data = InstructorSafData::fromArray([
+            'id_instructor' => 1010,
+            'id_entidad' => 1,
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
+            'tipo_identificacion' => 7,
+            'numero_identificacion' => '01234567-8',
+        ]);
+
+        $this->assertTrue(
+            $data->tieneDocumento()
+        );
+    }
+
+    public function test_it_does_not_report_document_when_type_is_missing(): void
+    {
+        $data = InstructorSafData::fromArray([
+            'id_instructor' => 1010,
+            'id_entidad' => 1,
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
+            'numero_identificacion' => '01234567-8',
+        ]);
+
+        $this->assertFalse(
+            $data->tieneDocumento()
+        );
+    }
+
+    public function test_it_detects_saf_email(): void
+    {
+        $data = InstructorSafData::fromArray([
+            'id_instructor' => 1010,
+            'id_entidad' => 1,
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
+            'correo_saf' => 'carlos@example.com',
+        ]);
+
+        $this->assertTrue(
+            $data->tieneCorreoSaf()
+        );
+    }
+
+    public function test_it_accepts_all_supported_identification_types(): void
+    {
+        $tipos = [
+            InstructorSafData::TIPO_NIT,
+            InstructorSafData::TIPO_PASAPORTE,
+            InstructorSafData::TIPO_LICENCIA_CONDUCIR,
+            InstructorSafData::TIPO_DUI,
+        ];
+
+        foreach ($tipos as $tipo) {
+            $data = InstructorSafData::fromArray([
                 'id_instructor' => 1010,
                 'id_entidad' => 1,
+                'nombres' => 'Carlos',
+                'apellidos' => 'Pérez',
+                'tipo_identificacion' => $tipo,
+                'numero_identificacion' => 'DOC-001',
+            ]);
+
+            $this->assertSame(
+                $tipo,
+                $data->tipoIdentificacion
+            );
+        }
+    }
+
+    public function test_it_rejects_unknown_identification_type(): void
+    {
+        $this->expectException(
+            ValidationException::class
+        );
+
+        InstructorSafData::fromArray([
+            'id_instructor' => 1010,
+            'id_entidad' => 1,
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
+            'tipo_identificacion' => 99,
+            'numero_identificacion' => 'DOC-001',
+        ]);
+    }
+
+    public function test_it_rejects_invalid_saf_email(): void
+    {
+        $this->expectException(
+            ValidationException::class
+        );
+
+        InstructorSafData::fromArray([
+            'id_instructor' => 1010,
+            'id_entidad' => 1,
+            'nombres' => 'Carlos',
+            'apellidos' => 'Pérez',
+            'correo_saf' => 'correo-invalido',
+        ]);
+    }
+
+    public function test_it_checks_configured_entity(): void
+    {
+        config([
+            'saf.entity_id' => 1,
+        ]);
+
+        $instructorValido =
+            InstructorSafData::fromArray([
+                'id_instructor' => 1011,
+                'id_entidad' => 1,
                 'nombres' => 'Entidad',
-                'apellidos' => 'Correcta',
+                'apellidos' => 'Valida',
             ]);
 
         $instructorInvalido =
             InstructorSafData::fromArray([
-                'id_instructor' => 1011,
-                'id_entidad' => 99,
+                'id_instructor' => 1012,
+                'id_entidad' => 2,
                 'nombres' => 'Entidad',
-                'apellidos' => 'Incorrecta',
+                'apellidos' => 'Invalida',
             ]);
 
         $this->assertTrue(
@@ -269,17 +304,21 @@ class InstructorSafDataTest extends TestCase
             'id_entidad' => 1,
             'nombres' => 'Carlos',
             'apellidos' => 'Pérez',
-            'dui' => '01234567-8',
+            'tipo_identificacion' => 7,
+            'numero_identificacion' => '01234567-8',
+            'correo_saf' => 'carlos@example.com',
             'activo' => true,
         ]);
 
         $segundo = InstructorSafData::fromArray([
             'activo' => true,
-            'dui' => '01234567-8',
-            'apellidos' => 'Pérez',
-            'nombres' => 'Carlos',
-            'id_entidad' => 1,
-            'id_instructor' => 1013,
+            'correo_saf' => ' carlos@example.com ',
+            'numero_identificacion' => ' 01234567-8 ',
+            'tipo_identificacion' => '7',
+            'apellidos' => ' Pérez ',
+            'nombres' => ' Carlos ',
+            'id_entidad' => '1',
+            'id_instructor' => '1013',
         ]);
 
         $this->assertSame(

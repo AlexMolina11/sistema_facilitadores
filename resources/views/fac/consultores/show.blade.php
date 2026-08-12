@@ -124,7 +124,16 @@
         'idiomas' => $routeIfExists('fac.consultores.idiomas.edit', $consultor),
         'referencias' => $routeIfExists('fac.consultores.referencias.edit', $consultor),
         'disponibilidad' => $routeIfExists('fac.consultores.disponibilidad.edit', $consultor),
-        'documentos' => $routeIfExists('fac.consultores.documentos.edit', $consultor),
+        'documentos' =>
+            $routeIfExists(
+                'fac.consultores.edit',
+                $consultor
+            )
+                ? route(
+                    'fac.consultores.edit',
+                    $consultor
+                ) . '#documentos-identificacion'
+                : null,
         'index' => $routeIfExists('fac.consultores.index'),
     ];
 
