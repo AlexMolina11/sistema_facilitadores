@@ -21,17 +21,32 @@ class SafCapacitacionImportacion extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
+        /*
+        |--------------------------------------------------------------------------
+        | Datos recibidos desde SAF
+        |--------------------------------------------------------------------------
+        */
         'id_instructor',
-        'codigo_evento_externo',
-        'nombre_evento',
-        'tema',
-        'institucion',
-        'modalidad',
+        'programa_curso_id',
+        'codigo_evento',
+        'curso_nombre',
         'fecha_inicio',
         'fecha_fin',
-        'horas',
-        'activo',
+        'estado_curso_nombre',
+        'no_horas_real',
+        'modalidad',
+        'tipo_evento_nombre',
+        'cliente',
+        'encuesta_id',
+        'encuesta_nombre',
+        'promedio_encuesta',
+        'fecha_evaluacion',
 
+        /*
+        |--------------------------------------------------------------------------
+        | Campos internos de procesamiento
+        |--------------------------------------------------------------------------
+        */
         'estado',
         'resultado_procesamiento',
         'intentos',
@@ -46,16 +61,25 @@ class SafCapacitacionImportacion extends Model
     {
         return [
             'id_importacion' => 'integer',
+
             'id_instructor' => 'integer',
+            'programa_curso_id' => 'integer',
+
             'fecha_inicio' => 'date',
             'fecha_fin' => 'date',
-            'horas' => 'integer',
-            'activo' => 'boolean',
+
+            'no_horas_real' => 'integer',
+
+            'encuesta_id' => 'integer',
+            'promedio_encuesta' => 'decimal:2',
+            'fecha_evaluacion' => 'datetime',
+
             'intentos' => 'integer',
             'fecha_recepcion' => 'datetime',
             'fecha_procesamiento' => 'datetime',
             'id_sincronizacion' => 'integer',
             'id_registro_local' => 'integer',
+
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

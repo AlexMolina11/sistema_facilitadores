@@ -9,12 +9,22 @@ use InvalidArgumentException;
 
 final readonly class InstructorSafData
 {
+    /**
+     * Tipos de identificación utilizados por SAF.
+     */
+    public const TIPO_NIT = 2;
+    public const TIPO_PASAPORTE = 4;
+    public const TIPO_LICENCIA_CONDUCIR = 5;
+    public const TIPO_DUI = 7;
+
     public function __construct(
         public int $idInstructor,
         public int $idEntidad,
         public string $nombres,
         public string $apellidos,
-        public ?string $dui = null,
+        public ?int $tipoIdentificacion = null,
+        public ?string $numeroIdentificacion = null,
+        public ?string $correoSaf = null,
         public ?bool $activo = null,
     ) {
         if ($this->idInstructor <= 0) {
@@ -38,6 +48,19 @@ final readonly class InstructorSafData
         if ($this->apellidos === '') {
             throw new InvalidArgumentException(
                 'Los apellidos del instructor son obligatorios.'
+            );
+        }
+
+        if (
+            $this->tipoIdentificacion !== null
+            && ! in_array(
+                $this->tipoIdentificacion,
+                self::tiposIdentificacionPermitidos(),
+                true
+            )
+        ) {
+            throw new InvalidArgumentException(
+                'El tipo de identificación proporcionado por SAF no es válido.'
             );
         }
     }
@@ -78,10 +101,22 @@ final readonly class InstructorSafData
                     'max:150',
                 ],
 
-                'dui' => [
+                'tipo_identificacion' => [
+                    'nullable',
+                    'integer',
+                    'in:2,4,5,7',
+                ],
+
+                'numero_identificacion' => [
                     'nullable',
                     'string',
-                    'max:25',
+                    'max:50',
+                ],
+
+                'correo_saf' => [
+                    'nullable',
+                    'email',
+                    'max:50',
                 ],
 
                 'activo' => [
@@ -126,11 +161,23 @@ final readonly class InstructorSafData
                 'apellidos.max' =>
                     'Los apellidos del instructor no pueden superar los 150 caracteres.',
 
-                'dui.string' =>
-                    'El DUI proporcionado por SAF debe ser texto.',
+                'tipo_identificacion.integer' =>
+                    'El tipo de identificación proporcionado por SAF debe ser numérico.',
 
-                'dui.max' =>
-                    'El DUI proporcionado por SAF no puede superar los 25 caracteres.',
+                'tipo_identificacion.in' =>
+                    'El tipo de identificación proporcionado por SAF no es reconocido. Los valores permitidos son 2, 4, 5 y 7.',
+
+                'numero_identificacion.string' =>
+                    'El número de identificación proporcionado por SAF debe ser texto.',
+
+                'numero_identificacion.max' =>
+                    'El número de identificación proporcionado por SAF no puede superar los 50 caracteres.',
+
+                'correo_saf.email' =>
+                    'El correo proporcionado por SAF no tiene un formato válido.',
+
+                'correo_saf.max' =>
+                    'El correo proporcionado por SAF no puede superar los 50 caracteres.',
 
                 'activo.boolean' =>
                     'El estado activo proporcionado por SAF no es válido.',
@@ -139,16 +186,31 @@ final readonly class InstructorSafData
 
         return new self(
             idInstructor: (int) $normalized['id_instructor'],
+
             idEntidad: (int) $normalized['id_entidad'],
+
             nombres: $normalized['nombres'],
+
             apellidos: $normalized['apellidos'],
-            dui: $normalized['dui'],
-            activo: $normalized['activo'],
+
+            tipoIdentificacion:
+                $normalized['tipo_identificacion'] !== null
+                    ? (int) $normalized['tipo_identificacion']
+                    : null,
+
+            numeroIdentificacion:
+                $normalized['numero_identificacion'],
+
+            correoSaf:
+                $normalized['correo_saf'],
+
+            activo:
+                $normalized['activo'],
         );
     }
 
     /**
-     * Convierte el DTO a la nomenclatura utilizada por SAF.
+     * Convierte el DTO a la nomenclatura de la tabla staging SAF.
      */
     public function toArray(): array
     {
@@ -157,7 +219,9 @@ final readonly class InstructorSafData
             'id_entidad' => $this->idEntidad,
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
-            'dui' => $this->dui,
+            'tipo_identificacion' => $this->tipoIdentificacion,
+            'numero_identificacion' => $this->numeroIdentificacion,
+            'correo_saf' => $this->correoSaf,
             'activo' => $this->activo,
         ];
     }
@@ -191,6 +255,23 @@ final readonly class InstructorSafData
     public function externalId(): string
     {
         return (string) $this->idInstructor;
+    }
+
+    /**
+     * Indica si SAF proporcionó información de documento.
+     */
+    public function tieneDocumento(): bool
+    {
+        return $this->tipoIdentificacion !== null
+            && filled($this->numeroIdentificacion);
+    }
+
+    /**
+     * Indica si SAF proporcionó correo electrónico.
+     */
+    public function tieneCorreoSaf(): bool
+    {
+        return filled($this->correoSaf);
     }
 
     /**
@@ -252,6 +333,19 @@ final readonly class InstructorSafData
     }
 
     /**
+     * Tipos de identificación que SAF puede proporcionar.
+     */
+    public static function tiposIdentificacionPermitidos(): array
+    {
+        return [
+            self::TIPO_NIT,
+            self::TIPO_PASAPORTE,
+            self::TIPO_LICENCIA_CONDUCIR,
+            self::TIPO_DUI,
+        ];
+    }
+
+    /**
      * Normaliza las llaves y valores recibidos desde SAF.
      */
     private static function normalizeInput(
@@ -290,13 +384,28 @@ final readonly class InstructorSafData
                     )
                 ),
 
-            'dui' =>
-                self::normalizeDui(
-                    Arr::get($data, 'dui')
-                        ?? Arr::get(
-                            $data,
-                            'numero_identificacion'
-                        )
+            'tipo_identificacion' =>
+                self::normalizeInteger(
+                    Arr::get(
+                        $data,
+                        'tipo_identificacion'
+                    )
+                ),
+
+            'numero_identificacion' =>
+                self::normalizeNullableText(
+                    Arr::get(
+                        $data,
+                        'numero_identificacion'
+                    )
+                ),
+
+            'correo_saf' =>
+                self::normalizeNullableText(
+                    Arr::get(
+                        $data,
+                        'correo_saf'
+                    )
                 ),
 
             'activo' =>
@@ -358,9 +467,9 @@ final readonly class InstructorSafData
             return null;
         }
 
-        $normalized = self::normalizeText(
-            $value
-        );
+        $normalized = Str::of((string) $value)
+            ->squish()
+            ->toString();
 
         return $normalized !== ''
             ? $normalized
@@ -368,31 +477,7 @@ final readonly class InstructorSafData
     }
 
     /**
-     * Normaliza el número de identificación.
-     */
-    private static function normalizeDui(
-        mixed $value
-    ): ?string {
-        $normalized =
-            self::normalizeNullableText(
-                $value
-            );
-
-        if ($normalized === null) {
-            return null;
-        }
-
-        return Str::upper(
-            preg_replace(
-                '/\s+/',
-                '',
-                $normalized
-            ) ?? $normalized
-        );
-    }
-
-    /**
-     * Normaliza el estado activo recibido desde SAF.
+     * Normaliza booleanos provenientes de MySQL/SAF.
      */
     private static function normalizeBoolean(
         mixed $value
@@ -415,18 +500,19 @@ final readonly class InstructorSafData
 
         if (is_string($value)) {
             return match (
-                Str::lower(trim($value))
+                strtolower(
+                    trim($value)
+                )
             ) {
                 'true',
                 'si',
                 'sí',
-                'activo',
-                'active' => true,
+                'yes',
+                'activo' => true,
 
                 'false',
                 'no',
-                'inactivo',
-                'inactive' => false,
+                'inactivo' => false,
 
                 default => $value,
             };

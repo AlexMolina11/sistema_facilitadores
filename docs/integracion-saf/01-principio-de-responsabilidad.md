@@ -2,19 +2,17 @@
 
 ## Sistema de Facilitadores FEPADE 2026
 
-**Versión:** 2.0.0  
+**Versión:** 2.1.0  
 **Estado:** Vigente  
-**Última actualización:** Julio 2026
+**Última actualización:** Agosto 2026
 
 ---
 
 # 1. Objetivo
 
-Este documento define la separación de responsabilidades entre el Sistema de Administración de Facilitadores (SAF) y el Sistema de Facilitadores FEPADE durante el proceso de sincronización de información.
+Este documento define la separación de responsabilidades entre SAF y el Sistema de Facilitadores FEPADE durante el intercambio, validación y sincronización de información de instructores y capacitaciones.
 
-El objetivo principal es establecer una arquitectura desacoplada, segura y mantenible, donde cada sistema sea responsable únicamente de las funciones que le corresponden.
-
-Esta separación evita dependencias innecesarias, facilita el mantenimiento de ambas aplicaciones y reduce el riesgo de inconsistencias en la información compartida.
+El objetivo es mantener una integración desacoplada, auditable y segura, donde SAF sea responsable de los datos de origen y Laravel sea responsable de su procesamiento dentro del Sistema de Facilitadores.
 
 ---
 
@@ -22,225 +20,339 @@ Esta separación evita dependencias innecesarias, facilita el mantenimiento de a
 
 La integración se basa en el siguiente principio:
 
-> **SAF es propietario de los datos de negocio.**  
-> **Laravel es propietario del proceso de sincronización.**
+> **SAF es propietario de los datos de negocio que origina.**  
+> **Laravel es propietario del proceso de recepción, validación, sincronización, auditoría y gestión interna.**
 
-Esto significa que SAF únicamente proporciona la información que describe al instructor y sus capacitaciones, mientras que el Sistema de Facilitadores controla completamente el procesamiento, validación, auditoría y sincronización de dicha información.
+SAF no escribe directamente sobre el expediente funcional de un consultor. La información llega primero a tablas intermedias de importación y Laravel decide cómo incorporarla a las tablas funcionales.
 
 ---
 
 # 3. Responsabilidad de SAF
 
-SAF es el sistema origen de la información y tiene la responsabilidad de mantener actualizados los datos de negocio.
+SAF es responsable de:
 
-Entre sus responsabilidades se encuentran:
+- mantener actualizados los datos de instructores y capacitaciones en su sistema de origen;
+- enviar registros a las tablas intermedias definidas para la integración;
+- utilizar los nombres, tipos, longitudes y valores establecidos en el contrato técnico;
+- mantener consistentes los identificadores externos;
+- enviar una nueva recepción cuando un dato previamente enviado cambie;
+- enviar únicamente información de negocio y los valores mínimos de recepción acordados técnicamente;
+- respetar la semántica del campo `Inactivo` de SAF y convertirlo al campo `activo` utilizado por la tabla de importación de instructores.
 
-- generar los registros de instructores;
-- generar los registros de capacitaciones;
-- insertar nuevos registros en las tablas de importación;
-- actualizar la información previamente enviada cuando existan cambios;
-- mantener identificadores externos consistentes;
-- enviar únicamente información de negocio;
-- respetar los tipos y longitudes definidos para cada campo;
-- indicar mediante el campo **activo** si un registro continúa vigente.
+SAF no debe:
 
-SAF **no realiza ningún proceso de sincronización**, únicamente deposita la información en las tablas intermedias.
+- escribir directamente sobre `tbl_consultor`;
+- escribir directamente sobre `tbl_consultor_documento`;
+- escribir directamente sobre `tbl_consultor_email`;
+- escribir directamente sobre `tbl_consultor_capacitacion_fepade`;
+- modificar resultados de procesamiento;
+- modificar errores generados por Laravel;
+- alterar sincronizaciones históricas;
+- reutilizar una fila histórica de staging para representar una recepción posterior.
 
 ---
 
 # 4. Responsabilidad del Sistema de Facilitadores
 
-Laravel es responsable de administrar completamente el ciclo de procesamiento de la información recibida.
-
-Entre sus responsabilidades se encuentran:
+Laravel es responsable de:
 
 - detectar registros pendientes;
-- reservar registros para procesamiento;
+- reservar cada registro antes de procesarlo;
 - validar la información recibida;
-- construir los DTO de negocio;
-- sincronizar los datos con las tablas funcionales;
-- crear registros nuevos;
-- actualizar registros existentes;
-- desactivar registros cuando corresponda;
-- evitar duplicidades;
-- registrar auditoría de cada ejecución;
-- registrar auditoría de errores individuales;
-- actualizar los estados del proceso;
-- mantener la integridad transaccional.
-
-Toda la lógica de sincronización reside exclusivamente dentro del Sistema de Facilitadores.
+- normalizar datos mediante DTO;
+- traducir los códigos externos cuando los catálogos SAF y Facilitadores no coinciden;
+- crear o actualizar consultores;
+- registrar documentos en `tbl_consultor_documento`;
+- registrar el correo SAF en `tbl_consultor_email` como correo principal;
+- crear o actualizar capacitaciones FEPADE;
+- preservar campos internos que SAF no administra;
+- evitar duplicados funcionales;
+- ejecutar cambios dentro de transacciones;
+- registrar auditoría de ejecución;
+- registrar errores individuales;
+- mantener el historial de cada recepción.
 
 ---
 
 # 5. Separación de responsabilidades
 
-La siguiente tabla resume la responsabilidad de cada sistema.
-
-| Funcionalidad                     | SAF | Sistema de Facilitadores |
-| --------------------------------- | :-: | :----------------------: |
-| Mantener instructores             |  ✔  |                          |
-| Mantener capacitaciones           |  ✔  |                          |
-| Escribir en tablas de importación |  ✔  |                          |
-| Validar información               |     |            ✔             |
-| Crear consultores                 |     |            ✔             |
-| Actualizar consultores            |     |            ✔             |
-| Crear capacitaciones FEPADE       |     |            ✔             |
-| Actualizar capacitaciones FEPADE  |     |            ✔             |
-| Desactivar registros              |     |            ✔             |
-| Evitar duplicados                 |     |            ✔             |
-| Auditoría                         |     |            ✔             |
-| Registro de errores               |     |            ✔             |
-| Control de estados                |     |            ✔             |
-
----
-
-# 6. Campos administrados por SAF
-
-SAF administra únicamente los campos que representan información de negocio.
-
-Por ejemplo:
-
-- nombres;
-- apellidos;
-- DUI;
-- estado activo;
-- nombre del evento;
-- tema;
-- institución;
-- modalidad;
-- fechas;
-- horas.
-
-Estos campos pueden insertarse o actualizarse cuando exista un cambio en la información de origen.
+| Funcionalidad | SAF | Facilitadores |
+|---|:---:|:---:|
+| Mantener datos de origen de instructores | ✔ | |
+| Mantener datos de origen de capacitaciones | ✔ | |
+| Insertar nuevas recepciones en staging | ✔ | |
+| Validar datos recibidos | | ✔ |
+| Traducir catálogos SAF → Facilitadores | | ✔ |
+| Crear/actualizar `tbl_consultor` | | ✔ |
+| Crear/actualizar `tbl_consultor_documento` | | ✔ |
+| Crear/actualizar `tbl_consultor_email` | | ✔ |
+| Crear/actualizar `tbl_consultor_capacitacion_fepade` | | ✔ |
+| Administrar `activo` interno de una capacitación | | ✔ |
+| Calcular hashes de sincronización | | ✔ |
+| Gestionar estados de procesamiento | | ✔ |
+| Registrar auditoría y errores | | ✔ |
+| Resolver incidencias de datos en origen | ✔ | |
+| Marcar incidencias de Bitácora como atendidas | | ✔ |
 
 ---
 
-# 7. Campos administrados por Laravel
+# 6. Datos de instructor administrados por SAF
 
-Laravel administra todos los campos relacionados con el procesamiento interno.
+SAF proporciona los siguientes datos de negocio:
 
-Entre ellos:
+- `id_instructor`;
+- `id_entidad`;
+- `nombres`;
+- `apellidos`;
+- `tipo_identificacion`;
+- `numero_identificacion`;
+- `correo_saf`;
+- estado de vigencia del instructor.
 
-- estado;
-- intentos;
-- fecha_recepcion;
-- fecha_procesamiento;
-- mensaje_error;
-- id_sincronizacion;
-- fecha_ultima_sincronizacion_saf;
-- hash_datos_saf;
-- fuente.
+En SAF el estado original se recibe como `Inactivo` y debe traducirse antes de escribir la tabla de importación:
 
-Estos campos forman parte del mecanismo interno de sincronización y **no deben ser modificados por SAF**.
+```text
+SAF Inactivo = 0  → staging activo = 1
+SAF Inactivo = 1  → staging activo = 0
+```
 
----
-
-# 8. Tablas funcionales
-
-SAF nunca escribe directamente sobre las tablas funcionales del Sistema de Facilitadores.
-
-Las tablas funcionales son administradas exclusivamente por Laravel.
-
-Actualmente incluyen:
-
-- **tbl_consultor**
-- **tbl_consultor_capacitacion_fepade**
-
-Toda modificación sobre estas tablas es realizada por los servicios de sincronización.
+Laravel utiliza ese valor para actualizar `activo` y `vigente` del consultor.
 
 ---
 
-# 9. Flujo de responsabilidades
+# 7. Documento del instructor
 
-El flujo completo de procesamiento es el siguiente:
+La identificación proveniente de SAF no se guarda en los campos legacy de `tbl_consultor`.
+
+Laravel la sincroniza en:
+
+```text
+tbl_consultor_documento
+```
+
+con la siguiente correspondencia:
+
+| SAF `tipo_identificacion` | Documento SAF | `tbl_tipo_documento.id_tipo_documento` |
+|---:|---|---:|
+| 2 | NIT | 1 |
+| 4 | Pasaporte | 4 |
+| 5 | Licencia de conducir | 6 |
+| 7 | DUI | 2 |
+
+El número recibido en `numero_identificacion` se almacena en `tbl_consultor_documento.numero`.
+
+Los campos legacy `tipo_identificacion` y `numero_identificacion` de `tbl_consultor` se mantienen temporalmente por compatibilidad con el flujo manual de consultores, pero la integración SAF no los utiliza como destino.
+
+---
+
+# 8. Correo del instructor
+
+El campo `correo_saf` se sincroniza en:
+
+```text
+tbl_consultor_email
+```
+
+Laravel lo registra como:
+
+```text
+principal = 1
+activo    = 1
+```
+
+Si existe otro correo principal, se conserva pero deja de ser principal. Si el correo SAF ya existe, se reutiliza y se restaura si se encontraba eliminado mediante Soft Delete.
+
+---
+
+# 9. Datos de capacitación administrados por SAF
+
+SAF proporciona:
+
+- `id_instructor`;
+- `programa_curso_id`;
+- `codigo_evento`;
+- `curso_nombre`;
+- `fecha_inicio`;
+- `fecha_fin`;
+- `estado_curso_nombre`;
+- `no_horas_real`;
+- `modalidad`;
+- `tipo_evento_nombre`;
+- `cliente`;
+- `encuesta_id`;
+- `encuesta_nombre`;
+- `promedio_encuesta`;
+- `fecha_evaluacion`.
+
+Los campos de encuesta pueden ser nulos mientras la capacitación todavía no haya sido evaluada.
+
+---
+
+# 10. Gestión interna de las capacitaciones
+
+SAF ya no envía el campo `activo` para capacitaciones.
+
+Cuando Laravel crea una capacitación SAF en `tbl_consultor_capacitacion_fepade`, la crea activa. A partir de ese momento, los siguientes campos son propiedad exclusiva de Facilitadores:
+
+- `activo`;
+- `deleted_at`;
+- `usuario_elim`.
+
+Por lo tanto, una recepción posterior de SAF puede actualizar los datos del curso o la encuesta, pero no reactiva, desactiva ni restaura automáticamente una capacitación cuya gestión interna haya sido modificada en Facilitadores.
+
+---
+
+# 11. Campos administrados exclusivamente por Laravel
+
+En las tablas de importación existen campos técnicos que no forman parte del contrato de negocio de SAF, entre ellos:
+
+- `estado`;
+- `resultado_procesamiento`;
+- `intentos`;
+- `mensaje_error`;
+- `fecha_recepcion`;
+- `fecha_procesamiento`;
+- `id_sincronizacion`;
+- `id_registro_local`.
+
+En las tablas funcionales también existen campos internos como:
+
+- `fuente`;
+- `fecha_ultima_sincronizacion_saf`;
+- `hash_datos_saf`;
+- campos de auditoría;
+- `activo` interno de la capacitación;
+- `deleted_at`.
+
+SAF no debe modificar estos valores después de que Laravel inicia el procesamiento.
+
+---
+
+# 12. Tablas funcionales
+
+Las tablas funcionales administradas por Laravel que intervienen actualmente son:
+
+- `tbl_consultor`;
+- `tbl_consultor_documento`;
+- `tbl_consultor_email`;
+- `tbl_consultor_capacitacion_fepade`.
+
+SAF nunca escribe directamente sobre ellas.
+
+---
+
+# 13. Tablas intermedias como historial de recepciones
+
+Las tablas:
+
+```text
+tbl_saf_instructor_importacion
+tbl_saf_capacitacion_importacion
+```
+
+se utilizan como historial de entradas.
+
+Cada envío o cambio recibido debe generar una nueva fila. No existe una restricción única que impida recibir nuevamente el mismo instructor o el mismo evento.
+
+Esto permite conservar un historial como:
+
+```text
+Instructor 990001 → recepción 1 → CREADO
+Instructor 990001 → recepción 2 → ACTUALIZADO
+Instructor 990001 → recepción 3 → SIN_CAMBIOS
+```
+
+La misma regla aplica para capacitaciones.
+
+---
+
+# 14. Flujo de responsabilidades
 
 ```text
 SAF
  │
- │ Inserta o actualiza datos de negocio
+ │ Nueva recepción de datos de negocio
  ▼
 tbl_saf_instructor_importacion
 tbl_saf_capacitacion_importacion
  │
  ▼
-Laravel detecta registros pendientes
+Laravel detecta PENDIENTES
  │
  ▼
-Validación
+Reserva EN_PROCESO
  │
  ▼
-DTO
+DTO + validaciones
  │
  ▼
 Servicios de sincronización
  │
- ▼
-Auditoría
+ ├── tbl_consultor
+ ├── tbl_consultor_documento
+ ├── tbl_consultor_email
+ └── tbl_consultor_capacitacion_fepade
  │
  ▼
-Tablas funcionales
+Auditoría / Bitácora SAF
+ │
+ ▼
+PROCESADO o ERROR
 ```
 
-Cada etapa tiene una responsabilidad claramente definida y ninguna de ellas invade las funciones de la etapa anterior.
+---
+
+# 15. Manejo de errores
+
+Cuando un registro presenta un error:
+
+- la fila queda con estado `ERROR`;
+- se almacena `resultado_procesamiento = ERROR`;
+- se registra un mensaje funcional;
+- se registra el detalle en la Bitácora SAF;
+- el resto de registros continúa procesándose.
+
+Si el problema corresponde a un dato de origen, la corrección debe realizarse en SAF y enviarse como una nueva recepción.
+
+No se deben sobrescribir ni eliminar los registros históricos con error.
 
 ---
 
-# 10. Manejo de errores
+# 16. Integridad transaccional
 
-Cuando un registro presenta errores de validación o de sincronización:
+La sincronización de un instructor se realiza de forma atómica. La creación o actualización del consultor, documento y correo forma parte de una misma transacción.
 
-- el procesamiento del resto de registros continúa;
-- el registro se marca con estado **ERROR**;
-- se almacena el mensaje correspondiente en la tabla de importación;
-- se registra un detalle individual en la auditoría;
-- la ejecución general continúa hasta finalizar todos los registros pendientes.
+Esto evita estados parciales como:
 
-Este comportamiento garantiza que un único error no interrumpa el procesamiento completo de la sincronización.
+```text
+consultor creado
++ documento creado
++ correo falló
+```
 
----
-
-# 11. Escalabilidad
-
-La arquitectura implementada permite incorporar nuevos tipos de información sin modificar el principio de responsabilidad.
-
-En futuras fases podrán agregarse nuevas tablas de importación, tales como:
-
-- experiencias laborales;
-- idiomas;
-- certificaciones;
-- especialidades;
-- documentos;
-- disponibilidad;
-- cualquier otro conjunto de datos administrado por SAF.
-
-Cada nueva integración deberá respetar exactamente el mismo principio:
-
-- SAF administra datos de negocio.
-- Laravel administra el procesamiento.
+Ante una excepción, la transacción se revierte y la incidencia queda registrada.
 
 ---
 
-# 12. Beneficios de la arquitectura
+# 17. Beneficios del diseño
 
-La separación de responsabilidades proporciona los siguientes beneficios:
+Este principio proporciona:
 
-- menor acoplamiento entre sistemas;
-- mayor facilidad de mantenimiento;
-- procesamiento transaccional;
+- desacoplamiento entre sistemas;
+- protección del expediente funcional;
+- trazabilidad por recepción;
 - validación centralizada;
-- auditoría completa;
-- recuperación sencilla ante errores;
-- prevención de modificaciones directas sobre el expediente del consultor;
-- posibilidad de ampliar la integración sin afectar el diseño existente.
+- procesamiento transaccional;
+- detección de cambios mediante hash;
+- prevención de duplicados funcionales;
+- recuperación ante errores;
+- mantenimiento más simple;
+- facilidad para ampliar la integración.
 
 ---
 
-# 13. Conclusión
+# 18. Conclusión
 
-La integración entre SAF y el Sistema de Facilitadores FEPADE se basa en una arquitectura donde cada sistema mantiene una única responsabilidad claramente definida.
+SAF es responsable de entregar datos de negocio correctos y consistentes. Laravel es responsable de decidir cómo esos datos se incorporan al Sistema de Facilitadores, cómo se validan, cómo se auditan y qué información interna debe preservarse.
 
-SAF es responsable de proporcionar información de negocio actualizada mediante las tablas de importación.
-
-El Sistema de Facilitadores es responsable de validar, sincronizar, auditar y mantener la integridad de la información almacenada en las tablas funcionales.
-
-Este principio constituye la base técnica sobre la cual deberán desarrollarse todas las futuras integraciones entre ambos sistemas.
+Esta separación constituye la regla base de toda integración presente o futura entre SAF y el Sistema de Facilitadores FEPADE.

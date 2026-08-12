@@ -79,11 +79,7 @@
     subtitle="Filtra la actividad de sincronización por fecha o resultado."
     class="mb-4 dashboard-print-hide"
 >
-    <form
-        method="GET"
-        action="{{ route('seg.bitacora-saf.index') }}"
-        class="row g-3 align-items-end"
-    >
+    <form method="GET" action="{{ route('seg.bitacora-saf.index') }}" class="row g-3 align-items-end">
         <div class="col-md-3">
             <label class="form-label">
                 Fecha inicio
@@ -155,10 +151,7 @@
     </form>
 </x-ui.filter-card>
 
-<x-ui.dashboard-grid
-    :columns="3"
-    class="mb-4"
->
+<x-ui.dashboard-grid :columns="3" class="mb-4">
     <div class="col">
         <x-ui.stat-card
             label="Consultores ingresados"
@@ -336,11 +329,6 @@
         </tbody>
     </table>
 
-    @if($sincronizaciones->hasPages())
-        <div class="mt-4">
-            {{ $sincronizaciones->links() }}
-        </div>
-    @endif
 </x-ui.table-card>
 
 <x-ui.table-card

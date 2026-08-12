@@ -1,139 +1,128 @@
 # Manual de uso — Bitácora de Sincronización SAF
 
-## 1. Objetivo
+## Sistema de Facilitadores FEPADE 2026
 
-La **Bitácora SAF** permite supervisar las sincronizaciones realizadas entre SAF y el Sistema de Facilitadores FEPADE.
-
-Su propósito principal es permitir identificar de forma rápida:
-
-- cuándo se realizó una sincronización;
-- cuántos consultores fueron incorporados;
-- qué consultores fueron creados, actualizados o procesados;
-- qué capacitaciones fueron procesadas;
-- qué registros presentaron errores;
-- por qué un registro no pudo procesarse;
-- qué acción se recomienda para solucionar un error;
-- cuáles incidencias ya fueron atendidas.
-
-La Bitácora SAF debe utilizarse principalmente como una herramienta de **seguimiento y control operativo de la integración**, no como una herramienta para modificar información proveniente de SAF.
+**Versión:** 2.1.0  
+**Estado:** Vigente  
+**Última actualización:** Agosto 2026
 
 ---
 
-# 2. Flujo general de la integración
+# 1. Objetivo
 
-La integración funciona bajo el siguiente esquema:
+La Bitácora SAF permite supervisar las sincronizaciones realizadas entre SAF y el Sistema de Facilitadores FEPADE.
+
+Permite identificar:
+
+- cuándo se ejecutó una sincronización;
+- qué instructores participaron;
+- qué consultores fueron creados o actualizados;
+- qué capacitaciones fueron procesadas;
+- qué registros no presentaron cambios;
+- qué registros fallaron;
+- cuál fue la causa de cada error;
+- qué acción se recomienda para resolver una incidencia;
+- qué incidencias ya fueron atendidas.
+
+La Bitácora es una herramienta de seguimiento y auditoría. No es una pantalla para corregir datos provenientes de SAF.
+
+---
+
+# 2. Flujo general
 
 ```text
 SAF
  ↓
-Tablas intermedias de importación
+Tablas de importación
  ↓
-Laravel valida los registros
+Laravel valida
  ↓
-Procesamiento
+Laravel sincroniza
  ↓
-┌───────────────────┬───────────────────┐
-│                   │                   │
-ÉXITO              ERROR
-│                   │
-↓                   ↓
-Sistema de         Bitácora SAF
-Facilitadores      registra incidencia
+┌──────────────────────┬──────────────────────┐
+│ ÉXITO                │ ERROR                │
+│                      │                      │
+▼                      ▼
+Expediente             Bitácora registra
+actualizado             incidencia
 ```
 
-Las tablas intermedias utilizadas son:
+Tablas de entrada:
 
 ```text
 tbl_saf_instructor_importacion
 tbl_saf_capacitacion_importacion
 ```
 
-Laravel procesa estos registros y sincroniza la información válida con:
+Tablas funcionales principales:
 
 ```text
 tbl_consultor
+tbl_consultor_documento
+tbl_consultor_email
 tbl_consultor_capacitacion_fepade
 ```
 
-Cada ejecución genera además un registro de sincronización que permite consultar posteriormente qué ocurrió.
+---
+
+# 3. Historial de recepciones
+
+Cada envío de SAF genera una fila independiente en staging.
+
+Por ejemplo, el mismo instructor puede aparecer en distintas sincronizaciones:
+
+```text
+Sincronización 15 → CREADO
+Sincronización 18 → ACTUALIZADO
+Sincronización 25 → SIN_CAMBIOS
+```
+
+Esto es normal y permite reconstruir la historia completa del registro.
 
 ---
 
-# 3. Acceso a la Bitácora SAF
+# 4. Acceso
 
-La Bitácora se encuentra dentro del módulo:
+La Bitácora se encuentra en:
 
 ```text
 Seguridad
 → Bitácora SAF
 ```
 
-El usuario debe contar con el permiso:
+El usuario debe poseer el permiso correspondiente, actualmente:
 
 ```text
 seg.bitacora-saf.ver
 ```
 
-para poder acceder.
-
 ---
 
-# 4. Dashboard de Bitácora SAF
+# 5. Dashboard
 
-La pantalla principal presenta un resumen de la actividad de integración.
+La pantalla principal resume la actividad de integración del período seleccionado.
 
-El objetivo del dashboard no es mostrar todos los detalles técnicos de una ejecución, sino permitir detectar rápidamente el comportamiento de las sincronizaciones.
+Permite observar:
 
-## 4.1. Actividad por día
-
-El gráfico **Actividad SAF por día** permite visualizar la evolución de las importaciones.
-
-Presenta información sobre:
-
+- actividad por día;
 - consultores ingresados;
-- capacitaciones creadas;
-- registros con error.
+- capacitaciones procesadas;
+- sincronizaciones con error;
+- registros individuales con error.
 
-Esto permite identificar visualmente:
-
-- días con mayor cantidad de importaciones;
-- periodos sin actividad;
-- incrementos importantes de registros;
-- días en los que ocurrieron errores.
-
----
-
-# 5. Indicadores principales
-
-El dashboard muestra indicadores relacionados con el periodo seleccionado.
-
-Entre ellos:
-
-### Consultores ingresados
-
-Cantidad de nuevos consultores creados mediante SAF.
-
-### Sincronizaciones con error
-
-Cantidad de ejecuciones que finalizaron con errores o fallaron.
-
-### Registros con error
-
-Cantidad de registros individuales que no pudieron procesarse correctamente.
-
-Estos indicadores cambian según los filtros aplicados.
+El objetivo es detectar rápidamente días sin actividad, incrementos inesperados o incidencias recurrentes.
 
 ---
 
 # 6. Filtros
 
-La Bitácora permite filtrar las sincronizaciones utilizando:
+La Bitácora permite filtrar por criterios como:
 
 - fecha inicial;
 - fecha final;
-- resultado de la sincronización.
+- resultado de sincronización.
 
-Los estados principales son:
+Estados generales habituales:
 
 ```text
 Completada
@@ -141,39 +130,27 @@ Completada con errores
 Fallida
 ```
 
-Después de seleccionar los criterios se debe presionar:
-
-```text
-Aplicar
-```
-
-Para regresar al historial completo se puede utilizar:
-
-```text
-Limpiar
-```
+`Aplicar` ejecuta el filtro y `Limpiar` restaura la consulta general.
 
 ---
 
 # 7. Historial de sincronizaciones
 
-La tabla **Sincronizaciones** muestra las ejecuciones realizadas.
+Cada ejecución muestra información como:
 
-Por cada ejecución se puede visualizar:
-
-- fecha y hora;
+- fecha/hora;
 - resultado;
 - consultores procesados;
 - capacitaciones procesadas;
 - cantidad de errores.
 
-Cuando una sincronización finalizó correctamente aparece la acción:
+Según el resultado puede mostrarse una acción como:
 
 ```text
 Ver registros
 ```
 
-Cuando contiene incidencias aparece:
+o:
 
 ```text
 Revisar errores
@@ -181,9 +158,9 @@ Revisar errores
 
 ---
 
-# 8. Consultar una sincronización
+# 8. Detalle de una sincronización
 
-Al ingresar al detalle de una sincronización existen tres vistas principales:
+El detalle se organiza principalmente en:
 
 ```text
 Consultores
@@ -191,117 +168,174 @@ Capacitaciones
 Errores
 ```
 
-Cada una permite revisar los registros asociados específicamente a esa ejecución.
+Cada pestaña muestra únicamente los registros asociados a esa ejecución mediante `id_sincronizacion`.
 
 ---
 
 # 9. Consultores procesados
 
-La pestaña **Consultores** muestra los instructores provenientes de SAF que fueron procesados durante la sincronización.
+La pestaña Consultores puede mostrar:
 
-La información incluye:
-
-- identificador del instructor en SAF;
+- `id_instructor` SAF;
 - nombre del consultor;
-- DUI;
-- resultado del procesamiento;
-- fecha y hora de procesamiento;
-- acceso al expediente local cuando corresponda.
+- tipo y número de identificación recibido;
+- resultado individual;
+- fecha de procesamiento;
+- enlace al expediente local.
 
-Los posibles resultados incluyen:
+La identificación ya no se limita a DUI. Puede corresponder a:
+
+```text
+NIT
+Pasaporte
+Licencia de conducir
+DUI
+```
+
+---
+
+# 10. Resultados de consultor
+
+## CREADO
+
+El `id_instructor` no tenía un consultor relacionado y Laravel creó un nuevo expediente.
+
+También puede haber creado el documento y correo SAF correspondiente.
+
+## ACTUALIZADO
+
+El consultor ya existía y al menos un dato SAF requirió actualización, por ejemplo:
+
+- nombres;
+- apellidos;
+- documento;
+- correo;
+- activo/vigente.
+
+## SIN_CAMBIOS
+
+La recepción fue válida, pero la información coincidía con lo ya sincronizado.
+
+No representa un error.
+
+## ERROR
+
+La recepción no pudo procesarse.
+
+Debe revisarse la pestaña Errores.
+
+## OMITIDO
+
+La recepción fue descartada por una condición funcional, por ejemplo una entidad no permitida.
+
+---
+
+# 11. Expediente del consultor
+
+Cuando existe `id_registro_local`, la Bitácora puede ofrecer acceso al expediente.
+
+La identificación SAF se consulta en la sección de documentos del consultor y el correo SAF en sus correos de contacto.
+
+La Bitácora no modifica estos datos.
+
+---
+
+# 12. Capacitaciones procesadas
+
+La pestaña Capacitaciones utiliza el contrato vigente y puede mostrar:
+
+- `codigo_evento`;
+- instructor relacionado;
+- `curso_nombre`;
+- cliente;
+- fechas;
+- estado del curso;
+- modalidad;
+- tipo de evento;
+- horas reales;
+- resultado;
+- fecha de procesamiento.
+
+Ya no se utilizan los campos anteriores:
+
+```text
+codigo_evento_externo
+nombre_evento
+tema
+institucion
+horas
+```
+
+---
+
+# 13. Resultados de capacitación
+
+Los resultados vigentes son:
 
 ```text
 CREADO
 ACTUALIZADO
 SIN_CAMBIOS
 ERROR
-OMITIDO
 ```
 
 ## CREADO
 
-Significa que el instructor proveniente de SAF no existía en Facilitadores y se creó un nuevo expediente.
+Se creó una nueva capacitación funcional.
 
 ## ACTUALIZADO
 
-Significa que el consultor ya existía y su información fue actualizada.
+El evento ya existía, pero cambió algún dato SAF. Puede ser, por ejemplo, que posteriormente llegara una encuesta.
 
 ## SIN_CAMBIOS
 
-Significa que el consultor ya existía y la información recibida no requería modificaciones.
+El evento recibido coincide con la información ya sincronizada.
 
 ## ERROR
 
-Significa que el registro no pudo procesarse.
+No pudo procesarse. Debe revisarse el detalle de la incidencia.
 
-La causa debe revisarse desde la pestaña **Errores**.
-
-## OMITIDO
-
-Significa que el registro fue descartado debido a alguna condición funcional definida por la integración.
+`DESACTIVADO` ya no forma parte del contrato vigente porque SAF dejó de administrar `activo` para capacitaciones.
 
 ---
 
-# 10. Expediente del consultor
+# 14. Encuestas de capacitación
 
-Cuando un instructor fue procesado correctamente y existe un consultor relacionado, la Bitácora muestra la acción:
+Una capacitación puede registrarse inicialmente sin encuesta y actualizarse posteriormente con:
 
-```text
-Expediente
-```
+- `encuesta_id`;
+- `encuesta_nombre`;
+- `promedio_encuesta`;
+- `fecha_evaluacion`.
 
-Esta opción permite abrir directamente el expediente del consultor dentro del Sistema de Facilitadores.
-
-La Bitácora no modifica el expediente; únicamente facilita su consulta.
-
----
-
-# 11. Capacitaciones procesadas
-
-La pestaña **Capacitaciones** muestra las capacitaciones provenientes de SAF que participaron en la sincronización.
-
-Se puede consultar:
-
-- código externo del evento;
-- instructor relacionado;
-- nombre de la capacitación;
-- tema;
-- fecha;
-- resultado;
-- fecha de procesamiento.
-
-Los principales resultados son:
-
-```text
-CREADO
-ACTUALIZADO
-SIN_CAMBIOS
-DESACTIVADO
-ERROR
-```
-
-Esto permite identificar exactamente qué capacitaciones fueron incorporadas o modificadas durante cada ejecución.
+Si esto ocurre, una nueva recepción del mismo evento aparecerá normalmente como `ACTUALIZADO`.
 
 ---
 
-# 12. Errores de sincronización
+# 15. Activo interno de capacitación
 
-La pestaña **Errores** contiene las incidencias detectadas durante el procesamiento.
+El campo `activo` de `tbl_consultor_capacitacion_fepade` es interno.
 
-Esta es una de las secciones más importantes de la Bitácora SAF.
+Por lo tanto, una sincronización SAF no debe reactivar una capacitación que fue desactivada desde Facilitadores ni desactivarla por información externa.
 
-Cada incidencia permite identificar:
+La Bitácora puede mostrar una actualización de datos SAF sin que cambie el estado interno `activo`.
+
+---
+
+# 16. Errores de sincronización
+
+La pestaña Errores permite identificar:
 
 - tipo de registro;
 - identificador externo;
-- mensaje del error;
-- código del error;
-- fecha del incidente;
+- código de error;
+- mensaje;
+- fecha;
+- detalle técnico;
 - estado de resolución;
-- recomendación para resolverlo;
-- información técnica adicional.
+- observación de resolución.
 
-Los errores pueden corresponder a:
+Tipos generales:
 
 ```text
 CONSULTOR
@@ -311,415 +345,302 @@ GENERAL
 
 ---
 
-# 13. Cómo interpretar un error
-
-Cada error debe analizarse principalmente mediante tres elementos.
-
-## Registro afectado
-
-Permite identificar qué instructor o capacitación presentó el problema.
-
-Ejemplo:
-
-```text
-Tipo: CONSULTOR
-Registro SAF: 999999
-```
-
-## Motivo
-
-Describe por qué Laravel no pudo procesar el registro.
-
-Ejemplo:
-
-```text
-El campo nombres es obligatorio.
-```
-
-## Cómo resolverlo
-
-La Bitácora presenta una recomendación funcional según el tipo de incidencia.
-
-Ejemplo:
-
-```text
-El registro contiene un dato que no cumple las validaciones
-del sistema.
-
-Revisar el campo indicado y corregirlo en SAF.
-
-Después de la corrección, el registro debe volver a enviarse
-para procesamiento.
-```
-
----
-
-# 14. Principio fundamental para resolver errores
-
-Los datos provenientes de SAF **no deben corregirse directamente desde la Bitácora SAF**.
-
-El principio de responsabilidad de la integración es:
-
-```text
-SAF
-es responsable de los datos de origen.
-
-Laravel
-es responsable de validar y procesar los datos.
-
-Bitácora SAF
-es responsable de registrar y explicar el resultado.
-```
-
-Por lo tanto, si existe un dato incorrecto como:
-
-- nombre;
-- apellido;
-- DUI;
-- entidad;
-- código;
-- capacitación;
-- fecha;
-- instructor relacionado;
-
-la corrección debe realizarse en el sistema de origen correspondiente.
-
----
-
-# 15. Flujo para resolver una incidencia
-
-Cuando se detecta un error debe seguirse este procedimiento:
-
-```text
-1. Revisar la incidencia en Bitácora SAF.
-
-2. Identificar el registro afectado.
-
-3. Leer el motivo del error.
-
-4. Revisar la recomendación "Cómo resolverlo".
-
-5. Corregir el dato en SAF cuando el problema
-   corresponda a información de origen.
-
-6. Permitir que SAF vuelva a enviar o actualizar
-   el registro en la tabla intermedia.
-
-7. Ejecutar o esperar la siguiente sincronización.
-
-8. Verificar que el registro haya sido procesado
-   correctamente.
-
-9. Regresar a la incidencia original.
-
-10. Marcarla como resuelta.
-```
-
----
-
-# 16. Ejemplo de resolución
-
-Supongamos que SAF envía:
-
-```text
-Instructor SAF: 999999
-Nombres: vacío
-Apellidos: Pérez
-```
-
-Laravel detectará que el nombre es obligatorio.
-
-El registro quedará:
-
-```text
-estado = ERROR
-resultado_procesamiento = ERROR
-```
-
-La Bitácora mostrará la incidencia.
-
-El responsable debe corregir el instructor en SAF:
-
-```text
-Nombres: Juan
-Apellidos: Pérez
-```
-
-SAF deberá posteriormente actualizar el registro correspondiente para que vuelva a ser procesado.
-
-En una nueva sincronización el resultado podría ser:
-
-```text
-estado = PROCESADO
-resultado_procesamiento = CREADO
-```
-
-El consultor aparecerá entonces dentro de la sincronización exitosa.
-
----
-
-# 17. Marcar una incidencia como resuelta
-
-Una incidencia no debe marcarse como resuelta únicamente porque fue revisada.
-
-Debe marcarse como resuelta cuando se haya comprobado que la causa fue atendida.
-
-En el campo:
-
-```text
-Observación de resolución
-```
-
-debe colocarse una descripción breve de la acción realizada.
-
-Ejemplo:
-
-```text
-Se corrigió el nombre del instructor en SAF y el registro
-fue procesado correctamente en la sincronización posterior.
-```
-
-Luego se debe presionar:
-
-```text
-Marcar resuelto
-```
-
-La Bitácora conservará:
-
-- error original;
-- fecha del error;
-- sincronización donde ocurrió;
-- fecha de resolución;
-- usuario que registró la resolución;
-- observación de resolución.
-
----
-
-# 18. Reabrir una incidencia
-
-Si posteriormente se determina que el problema no estaba realmente solucionado, puede utilizarse:
-
-```text
-Reabrir incidencia
-```
-
-Esto devuelve el error al estado pendiente.
-
-La opción debe utilizarse cuando todavía exista una acción necesaria para solucionar completamente el problema.
-
----
-
-# 19. Errores técnicos
-
-La sección:
-
-```text
-Ver información técnica
-```
-
-contiene información destinada principalmente al equipo de Tecnología.
-
-Puede incluir:
-
-- operación realizada;
-- código del error;
-- detalle técnico;
-- excepción;
-- información relacionada con el procesamiento.
-
-Esta información resulta útil cuando el problema no corresponde a los datos provenientes de SAF, sino a una falla interna.
+# 17. Errores frecuentes de instructor
 
 Ejemplos:
 
 ```text
-Error de base de datos
-Excepción Laravel
-Error durante una transacción
-Problema interno del servicio de sincronización
+VALIDACION_TIPO_IDENTIFICACION
+VALIDACION_CORREO_SAF
+ENTIDAD_NO_PERMITIDA
 ```
 
-En estos casos el problema debe ser revisado por el equipo técnico antes de intentar reprocesar el registro.
+Un tipo de identificación diferente de 2, 4, 5 o 7 será rechazado.
+
+Un correo con formato inválido también generará error si `correo_saf` fue informado.
 
 ---
 
-# 20. Sincronizaciones vacías
+# 18. Errores frecuentes de capacitación
 
-Es posible que el proceso programado se ejecute cuando no existen registros pendientes.
-
-En ese caso puede generarse una sincronización con:
+Ejemplos:
 
 ```text
-Instructores procesados: 0
-Capacitaciones procesadas: 0
+CONSULTOR_NO_ENCONTRADO
+VALIDACION_FECHA_FIN
+VALIDACION_CODIGO_EVENTO
+VALIDACION_PROGRAMA_CURSO_ID
+```
+
+`CONSULTOR_NO_ENCONTRADO` significa que SAF envió una capacitación cuyo `id_instructor` todavía no posee un consultor relacionado en Facilitadores.
+
+---
+
+# 19. Cómo interpretar una incidencia
+
+Revisar tres elementos:
+
+## Registro afectado
+
+Identifica al instructor o evento.
+
+## Motivo
+
+Explica qué validación o proceso falló.
+
+## Cómo resolverlo
+
+Indica si debe corregirse información de SAF o si el equipo técnico debe revisar un problema interno.
+
+---
+
+# 20. Principio para resolver errores
+
+```text
+SAF
+→ corrige datos de origen
+
+Laravel
+→ valida y procesa
+
+Bitácora SAF
+→ registra y explica
+```
+
+Los datos de origen no se corrigen directamente desde la Bitácora.
+
+---
+
+# 21. Flujo correcto de resolución
+
+```text
+1. Abrir la incidencia.
+2. Identificar el registro.
+3. Revisar código y mensaje.
+4. Determinar si el problema es de origen o técnico.
+5. Corregir en SAF cuando corresponda.
+6. SAF envía una NUEVA recepción.
+7. Esperar o ejecutar la sincronización.
+8. Verificar el nuevo resultado.
+9. Regresar a la incidencia original.
+10. Marcarla como resuelta con observación.
+```
+
+No se debe modificar la fila histórica con error para volverla `PENDIENTE`.
+
+---
+
+# 22. Ejemplo: tipo de documento inválido
+
+SAF envía:
+
+```text
+id_instructor = 990010
+tipo_identificacion = 99
+```
+
+Laravel rechaza el registro porque los valores permitidos son:
+
+```text
+2, 4, 5, 7
+```
+
+La recepción original queda `ERROR`.
+
+Después de corregir el código en SAF, debe enviarse una nueva fila. La nueva recepción podrá terminar `CREADO`, `ACTUALIZADO` o `SIN_CAMBIOS`, mientras el error original permanece en el historial.
+
+---
+
+# 23. Ejemplo: capacitación sin consultor
+
+Si SAF envía:
+
+```text
+id_instructor = 999999
+codigo_evento = EVT-001
+```
+
+pero no existe consultor asociado, la Bitácora registrará:
+
+```text
+CONSULTOR_NO_ENCONTRADO
+```
+
+Primero debe existir/procesarse correctamente el instructor. Después SAF debe enviar nuevamente la capacitación.
+
+---
+
+# 24. Marcar incidencia como resuelta
+
+Una incidencia se marca resuelta únicamente cuando se comprobó que su causa fue atendida.
+
+La observación debe describir brevemente la acción.
+
+Ejemplo:
+
+```text
+Se corrigió el tipo de identificación en SAF y la nueva recepción
+fue procesada correctamente.
+```
+
+La Bitácora conserva el error original, usuario, fecha y observación de resolución.
+
+---
+
+# 25. Reabrir incidencia
+
+Si se descubre que el problema continúa, puede utilizarse la opción de reabrir incidencia.
+
+Debe utilizarse cuando todavía exista una acción pendiente.
+
+---
+
+# 26. Información técnica
+
+La sección de información técnica está orientada al equipo de Tecnología.
+
+Puede incluir:
+
+- operación;
+- código interno;
+- excepción;
+- archivo/línea;
+- detalle recibido;
+- identificadores de staging y sincronización.
+
+Debe utilizarse para diagnosticar fallas de aplicación, base de datos o transacción.
+
+---
+
+# 27. Sincronizaciones vacías
+
+Una ejecución puede procesar cero registros.
+
+Ejemplo:
+
+```text
+Instructores: 0
+Capacitaciones: 0
 Errores: 0
 ```
 
-Esto no representa una falla.
-
-Simplemente indica que el proceso se ejecutó correctamente, pero SAF no tenía registros pendientes de procesamiento en ese momento.
+Esto no es una falla si no existían recepciones pendientes.
 
 ---
 
-# 21. Historial y trazabilidad
+# 28. Trazabilidad
 
-Cada registro procesado conserva la relación con la sincronización correspondiente mediante:
+Cada recepción conserva:
 
 ```text
+id_importacion
 id_sincronizacion
-```
-
-También se conserva el resultado individual mediante:
-
-```text
 resultado_procesamiento
-```
-
-y, cuando existe un registro creado o actualizado en Facilitadores:
-
-```text
 id_registro_local
+fecha_procesamiento
 ```
 
-Esto permite reconstruir posteriormente qué ocurrió durante cada sincronización.
+Gracias al diseño append-only, una recepción posterior no elimina la relación histórica de la recepción anterior.
 
 ---
 
-# 22. Consideración sobre sincronizaciones antiguas
+# 29. Sincronizaciones históricas antiguas
 
-Las sincronizaciones realizadas antes de implementar la trazabilidad individual pueden no contener:
+Registros creados antes de incorporar `resultado_procesamiento` o `id_registro_local` pueden mostrar información menos detallada.
 
-```text
-resultado_procesamiento
-id_registro_local
-```
-
-Por esta razón, algunos registros históricos podrían mostrar únicamente:
-
-```text
-PROCESADO
-```
-
-sin especificar si fueron:
-
-```text
-CREADOS
-ACTUALIZADOS
-SIN_CAMBIOS
-```
-
-Esto es esperado y no debe modificarse manualmente.
-
-No se deben inventar resultados históricos que el sistema no registró originalmente.
+No deben completarse manualmente con resultados inventados.
 
 ---
 
-# 23. Ejecución automática
-
-La integración SAF está programada para ejecutarse automáticamente una vez al día.
-
-La ejecución programada corresponde a:
-
-```text
-05:00 a. m.
-```
-
-Después de cada ejecución, la Bitácora SAF puede utilizarse para verificar el resultado.
-
-La revisión diaria recomendada consiste en comprobar:
+# 30. Revisión diaria recomendada
 
 ```text
 Bitácora SAF
  ↓
 Última sincronización
  ↓
-¿Tiene errores?
- ↓
-NO ──→ No requiere intervención
- ↓
-SÍ
- ↓
-Revisar errores
- ↓
-Identificar registros afectados
- ↓
-Gestionar corrección
+¿Existen errores?
+ ├─ No → Sin intervención
+ └─ Sí
+     ↓
+ Revisar incidencias
+     ↓
+ Identificar origen
+     ↓
+ Gestionar corrección
+     ↓
+ Verificar nueva recepción
 ```
 
 ---
 
-# 24. Ejecución manual
+# 31. Ejecución automática
 
-Cuando sea necesario ejecutar manualmente el procesamiento, desde la raíz del proyecto puede utilizarse:
+La integración está programada una vez al día a las:
+
+```text
+05:00 a. m.
+```
+
+La Bitácora debe revisarse después de la ejecución cuando exista una operación crítica o cuando se estén corrigiendo incidencias.
+
+---
+
+# 32. Ejecución manual
+
+Comando:
 
 ```bash
 php artisan saf:procesar-importaciones
 ```
 
-Debe utilizarse principalmente para:
+Usarlo para:
 
 - pruebas;
-- verificaciones técnicas;
-- reprocesamiento después de una corrección;
-- diagnóstico de incidencias.
+- diagnóstico;
+- validación posterior a correcciones;
+- ejecuciones administrativas controladas.
 
-En producción debe evitarse ejecutar repetidamente el comando sin verificar primero la causa de los errores existentes.
+No ejecutarlo repetidamente sin revisar primero qué registros están pendientes o con error.
 
 ---
 
-# 25. Buenas prácticas
+# 33. Buenas prácticas
 
-Para mantener una Bitácora SAF confiable:
-
-1. No modificar directamente desde Laravel datos cuyo origen sea SAF.
+1. No modificar datos SAF directamente en tablas funcionales.
 2. No eliminar errores históricos.
-3. No modificar manualmente sincronizaciones anteriores.
-4. Registrar una observación clara al resolver una incidencia.
-5. Verificar que el registro haya sido procesado correctamente antes de marcar un error como resuelto.
-6. Utilizar la información técnica únicamente cuando sea necesario diagnosticar una falla.
-7. Mantener los registros históricos como evidencia del funcionamiento de la integración.
-8. Revisar periódicamente las incidencias pendientes.
-9. Investigar incrementos anormales de errores en el gráfico de actividad.
-10. No considerar una sincronización con cero registros como un error si no existían registros pendientes.
+3. No reutilizar filas staging procesadas.
+4. Corregir datos de origen en SAF.
+5. Verificar la nueva recepción antes de cerrar una incidencia.
+6. Registrar observaciones claras de resolución.
+7. Diferenciar errores funcionales de errores técnicos.
+8. Revisar incrementos anormales de errores.
+9. No considerar una ejecución vacía como fallo por sí sola.
+10. Mantener la Bitácora como evidencia histórica de la integración.
 
 ---
 
-# 26. Resumen operativo
+# 34. Resumen operativo
 
-La Bitácora SAF debe permitir responder rápidamente cuatro preguntas:
+La Bitácora debe responder cuatro preguntas:
 
 ### ¿Cuándo se sincronizó?
 
-Consultar el gráfico de actividad y el historial de sincronizaciones.
+Revisar actividad e historial.
 
-### ¿Qué ingresó correctamente?
+### ¿Qué se procesó?
 
-Ingresar al detalle y consultar:
+Revisar Consultores y Capacitaciones.
 
-```text
-Consultores
-Capacitaciones
-```
+### ¿Qué falló?
 
-### ¿Qué no pudo ingresar?
+Revisar Errores.
 
-Consultar:
+### ¿Qué debe hacerse?
 
-```text
-Errores
-```
+Revisar motivo, recomendación y corregir en el origen correspondiente.
 
-### ¿Qué debemos hacer?
-
-Revisar:
-
-```text
-Cómo resolverlo
-```
-
-y seguir la recomendación indicada.
-
-El principio general de operación puede resumirse como:
+Flujo resumido:
 
 ```text
 DETECTAR
@@ -728,11 +649,17 @@ IDENTIFICAR
    ↓
 CORREGIR EN ORIGEN
    ↓
-REPROCESAR
+NUEVA RECEPCIÓN
+   ↓
+PROCESAR
    ↓
 VERIFICAR
    ↓
 RESOLVER INCIDENCIA
 ```
 
-De esta manera, la Bitácora SAF funciona como el punto central de seguimiento y auditoría de la integración entre SAF y el Sistema de Facilitadores FEPADE.
+---
+
+# 35. Conclusión
+
+La Bitácora SAF es el punto central de observación y auditoría de la integración. Su función es conservar evidencia de cada recepción y permitir que el equipo identifique con rapidez qué ocurrió, por qué ocurrió y qué acción corresponde realizar.

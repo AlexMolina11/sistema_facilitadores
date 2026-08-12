@@ -4,104 +4,175 @@ namespace Tests\Unit\Modules\Fac\Services\Saf;
 
 use App\Modules\Fac\Data\Saf\CapacitacionSafData;
 use App\Modules\Fac\Models\Consultor;
+use App\Modules\Fac\Models\ConsultorCapacitacionFepade;
 use App\Modules\Fac\Models\SincronizacionSaf;
 use App\Modules\Fac\Services\Saf\SafAuditService;
 use App\Modules\Fac\Services\Saf\SafCapacitacionSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SafCapacitacionSyncServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    private SafAuditService $auditoria;
-
     private SafCapacitacionSyncService $service;
+
+    private SincronizacionSaf $sincronizacion;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         config([
-            'saf.audit.enabled' => true,
-            'saf.audit.store_error_payload' => true,
-            'saf.audit.store_exception_details' => true,
             'saf.hash.algorithm' => 'sha256',
         ]);
 
-        $this->auditoria = app(
+        $auditoria = app(
             SafAuditService::class
         );
 
-        $this->service = app(
-            SafCapacitacionSyncService::class
-        );
+        $this->service =
+            new SafCapacitacionSyncService(
+                $auditoria
+            );
+
+        $this->sincronizacion =
+            $auditoria->iniciar(
+                tipoEjecucion:
+                    SincronizacionSaf::TIPO_MANUAL,
+
+                resumenInicial: [
+                    'origen' => 'TEST',
+                ]
+            );
     }
 
     public function test_it_creates_a_training_record(): void
     {
-        $consultor = $this->crearConsultor(8001);
-        $ejecucion = $this->crearEjecucion(1);
+        $consultor =
+            $this->crearConsultorSaf(
+                5001
+            );
 
-        $resultado = $this->service->sincronizar(
-            $this->crearCapacitacion(8001),
-            $ejecucion
-        );
+        $capacitacion =
+            $this->makeCapacitacion(
+                5001
+            );
+
+        $resultado =
+            $this->service->sincronizar(
+                $capacitacion,
+                $this->sincronizacion
+            );
 
         $this->assertSame(
             SafCapacitacionSyncService::RESULTADO_CREADO,
             $resultado['resultado']
         );
 
+        $this->assertNotNull(
+            $resultado['capacitacion']
+        );
+
         $this->assertDatabaseHas(
             'tbl_consultor_capacitacion_fepade',
             [
-                'id_consultor' => $consultor->id_consultor,
+                'id_consultor' =>
+                    $consultor->id_consultor,
 
-                'codigo_evento_externo' => 'EVT-8001',
+                'programa_curso_id' =>
+                    7001,
 
-                'nombre_evento' => 'Liderazgo efectivo',
+                'codigo_evento' =>
+                    'EVT-5001',
 
-                'horas' => 8,
+                'curso_nombre' =>
+                    'Liderazgo efectivo',
 
-                'fuente' => 'SAF',
+                'estado_curso_nombre' =>
+                    'Finalizado',
 
-                'activo' => true,
+                'no_horas_real' =>
+                    8,
+
+                'modalidad' =>
+                    'Virtual',
+
+                'tipo_evento_nombre' =>
+                    'Capacitación',
+
+                'cliente' =>
+                    'Cliente de prueba',
+
+                'fuente' =>
+                    ConsultorCapacitacionFepade::FUENTE_SAF,
+
+                /*
+                 * Una capacitación SAF nueva nace activa.
+                 */
+                'activo' =>
+                    1,
             ]
-        );
-
-        $ejecucion->refresh();
-
-        $this->assertSame(
-            1,
-            $ejecucion->capacitaciones_creadas
         );
     }
 
     public function test_it_updates_a_training_record(): void
     {
-        $this->crearConsultor(8002);
-        $ejecucion = $this->crearEjecucion(2);
+        $consultor =
+            $this->crearConsultorSaf(
+                5002
+            );
 
-        $this->service->sincronizar(
-            $this->crearCapacitacion(8002),
-            $ejecucion
+        $inicial =
+            $this->makeCapacitacion(
+                5002
+            );
+
+        $primerResultado =
+            $this->service->sincronizar(
+                $inicial,
+                $this->sincronizacion
+            );
+
+        $this->assertSame(
+            SafCapacitacionSyncService::RESULTADO_CREADO,
+            $primerResultado['resultado']
         );
 
-        $actualizada = new CapacitacionSafData(
-            idInstructor: 8002,
-            codigoEventoExterno: 'EVT-8002',
-            nombre: 'Liderazgo avanzado',
-            fechaInicio: null,
-            fechaFin: null,
-            horas: 16,
-            activo: true
-        );
+        $actualizada =
+            new CapacitacionSafData(
+                idInstructor: 5002,
+                programaCursoId: 7001,
+                codigoEvento: 'EVT-5002',
+                cursoNombre:
+                    'Liderazgo efectivo actualizado',
+                fechaInicio: null,
+                fechaFin: null,
+                estadoCursoNombre:
+                    'Finalizado',
+                noHorasReal: 12,
+                modalidad:
+                    'Presencial',
+                tipoEventoNombre:
+                    'Taller',
+                cliente:
+                    'Cliente actualizado',
+                encuestaId:
+                    9001,
+                encuestaNombre:
+                    'Encuesta de satisfacción',
+                promedioEncuesta:
+                    '4.75',
+                fechaEvaluacion:
+                    null
+            );
 
-        $resultado = $this->service->sincronizar(
-            $actualizada,
-            $ejecucion
-        );
+        $resultado =
+            $this->service->sincronizar(
+                $actualizada,
+                $this->sincronizacion
+            );
 
         $this->assertSame(
             SafCapacitacionSyncService::RESULTADO_ACTUALIZADO,
@@ -111,164 +182,450 @@ class SafCapacitacionSyncServiceTest extends TestCase
         $this->assertDatabaseHas(
             'tbl_consultor_capacitacion_fepade',
             [
-                'codigo_evento_externo' => 'EVT-8002',
+                'id_consultor' =>
+                    $consultor->id_consultor,
 
-                'nombre_evento' => 'Liderazgo avanzado',
+                'codigo_evento' =>
+                    'EVT-5002',
 
-                'horas' => 16,
+                'curso_nombre' =>
+                    'Liderazgo efectivo actualizado',
+
+                'no_horas_real' =>
+                    12,
+
+                'modalidad' =>
+                    'Presencial',
+
+                'tipo_evento_nombre' =>
+                    'Taller',
+
+                'cliente' =>
+                    'Cliente actualizado',
+
+                'encuesta_id' =>
+                    9001,
+
+                'encuesta_nombre' =>
+                    'Encuesta de satisfacción',
+
+                'promedio_encuesta' =>
+                    4.75,
             ]
         );
     }
 
     public function test_it_detects_no_changes(): void
     {
-        $this->crearConsultor(8003);
-        $ejecucion = $this->crearEjecucion(2);
-        $capacitacion = $this->crearCapacitacion(8003);
-
-        $this->service->sincronizar(
-            $capacitacion,
-            $ejecucion
+        $this->crearConsultorSaf(
+            5003
         );
 
-        $resultado = $this->service->sincronizar(
-            $capacitacion,
-            $ejecucion
+        $capacitacion =
+            $this->makeCapacitacion(
+                5003
+            );
+
+        $primero =
+            $this->service->sincronizar(
+                $capacitacion,
+                $this->sincronizacion
+            );
+
+        $segundo =
+            $this->service->sincronizar(
+                $capacitacion,
+                $this->sincronizacion
+            );
+
+        $this->assertSame(
+            SafCapacitacionSyncService::RESULTADO_CREADO,
+            $primero['resultado']
         );
 
         $this->assertSame(
             SafCapacitacionSyncService::RESULTADO_SIN_CAMBIOS,
-            $resultado['resultado']
+            $segundo['resultado']
         );
-
-        $ejecucion->refresh();
 
         $this->assertSame(
             1,
-            $ejecucion->capacitaciones_sin_cambios
+            DB::table(
+                'tbl_consultor_capacitacion_fepade'
+            )
+                ->where(
+                    'codigo_evento',
+                    'EVT-5003'
+                )
+                ->count()
         );
     }
 
-    public function test_it_marks_training_as_inactive(): void
+    public function test_it_updates_survey_data_received_later(): void
     {
-        $this->crearConsultor(8004);
-        $ejecucion = $this->crearEjecucion(2);
+        $consultor =
+            $this->crearConsultorSaf(
+                5004
+            );
+
+        $inicial =
+            $this->makeCapacitacion(
+                5004
+            );
 
         $this->service->sincronizar(
-            $this->crearCapacitacion(8004),
-            $ejecucion
+            $inicial,
+            $this->sincronizacion
         );
 
-        $inactiva = new CapacitacionSafData(
-            idInstructor: 8004,
-            codigoEventoExterno: 'EVT-8004',
-            nombre: 'Liderazgo efectivo',
-            fechaInicio: null,
-            fechaFin: null,
-            horas: 8,
-            activo: false
+        /*
+         * La capacitación se recibe inicialmente
+         * sin encuesta.
+         */
+        $this->assertDatabaseHas(
+            'tbl_consultor_capacitacion_fepade',
+            [
+                'id_consultor' =>
+                    $consultor->id_consultor,
+
+                'codigo_evento' =>
+                    'EVT-5004',
+
+                'encuesta_id' =>
+                    null,
+
+                'encuesta_nombre' =>
+                    null,
+
+                'promedio_encuesta' =>
+                    null,
+
+                'fecha_evaluacion' =>
+                    null,
+            ]
         );
 
-        $resultado = $this->service->sincronizar(
-            $inactiva,
-            $ejecucion
-        );
+        $conEncuesta =
+            CapacitacionSafData::fromArray([
+                'id_instructor' =>
+                    5004,
+
+                'programa_curso_id' =>
+                    7001,
+
+                'codigo_evento' =>
+                    'EVT-5004',
+
+                'curso_nombre' =>
+                    'Liderazgo efectivo',
+
+                'estado_curso_nombre' =>
+                    'Finalizado',
+
+                'no_horas_real' =>
+                    8,
+
+                'modalidad' =>
+                    'Virtual',
+
+                'tipo_evento_nombre' =>
+                    'Capacitación',
+
+                'cliente' =>
+                    'Cliente de prueba',
+
+                'encuesta_id' =>
+                    9100,
+
+                'encuesta_nombre' =>
+                    'Evaluación del evento',
+
+                'promedio_encuesta' =>
+                    4.80,
+
+                'fecha_evaluacion' =>
+                    '2026-08-10 14:30:00',
+            ]);
+
+        $resultado =
+            $this->service->sincronizar(
+                $conEncuesta,
+                $this->sincronizacion
+            );
 
         $this->assertSame(
-            SafCapacitacionSyncService::RESULTADO_DESACTIVADO,
+            SafCapacitacionSyncService::RESULTADO_ACTUALIZADO,
             $resultado['resultado']
         );
 
         $this->assertDatabaseHas(
             'tbl_consultor_capacitacion_fepade',
             [
-                'codigo_evento_externo' => 'EVT-8004',
+                'id_consultor' =>
+                    $consultor->id_consultor,
 
-                'activo' => false,
+                'codigo_evento' =>
+                    'EVT-5004',
+
+                'encuesta_id' =>
+                    9100,
+
+                'encuesta_nombre' =>
+                    'Evaluación del evento',
+
+                'promedio_encuesta' =>
+                    4.80,
+
+                'fecha_evaluacion' =>
+                    '2026-08-10 14:30:00',
+            ]
+        );
+    }
+
+    public function test_it_preserves_internal_active_state_when_saf_updates_training(): void
+    {
+        $consultor =
+            $this->crearConsultorSaf(
+                5005
+            );
+
+        $inicial =
+            $this->makeCapacitacion(
+                5005
+            );
+
+        $resultadoInicial =
+            $this->service->sincronizar(
+                $inicial,
+                $this->sincronizacion
+            );
+
+        $idCapacitacion =
+            $resultadoInicial[
+                'capacitacion'
+            ]->id_capacitacion_fepade;
+
+        /*
+         * Facilitadores desactiva internamente
+         * la capacitación.
+         */
+        DB::table(
+            'tbl_consultor_capacitacion_fepade'
+        )
+            ->where(
+                'id_capacitacion_fepade',
+                $idCapacitacion
+            )
+            ->update([
+                'activo' => 0,
+            ]);
+
+        /*
+         * SAF envía una modificación de negocio.
+         */
+        $actualizada =
+            new CapacitacionSafData(
+                idInstructor: 5005,
+                programaCursoId: 7001,
+                codigoEvento: 'EVT-5005',
+                cursoNombre:
+                    'Liderazgo efectivo actualizado',
+                fechaInicio: null,
+                fechaFin: null,
+                estadoCursoNombre:
+                    'Finalizado',
+                noHorasReal: 10,
+                modalidad:
+                    'Virtual',
+                tipoEventoNombre:
+                    'Capacitación',
+                cliente:
+                    'Cliente actualizado',
+                encuestaId: null,
+                encuestaNombre: null,
+                promedioEncuesta: null,
+                fechaEvaluacion: null
+            );
+
+        $resultado =
+            $this->service->sincronizar(
+                $actualizada,
+                $this->sincronizacion
+            );
+
+        $this->assertSame(
+            SafCapacitacionSyncService::RESULTADO_ACTUALIZADO,
+            $resultado['resultado']
+        );
+
+        /*
+         * Datos SAF sí cambian.
+         */
+        $this->assertDatabaseHas(
+            'tbl_consultor_capacitacion_fepade',
+            [
+                'id_capacitacion_fepade' =>
+                    $idCapacitacion,
+
+                'curso_nombre' =>
+                    'Liderazgo efectivo actualizado',
+
+                'no_horas_real' =>
+                    10,
+
+                'cliente' =>
+                    'Cliente actualizado',
             ]
         );
 
-        $ejecucion->refresh();
+        /*
+         * Pero SAF NO reactiva la capacitación.
+         */
+        $this->assertDatabaseHas(
+            'tbl_consultor_capacitacion_fepade',
+            [
+                'id_capacitacion_fepade' =>
+                    $idCapacitacion,
 
-        $this->assertSame(
-            1,
-            $ejecucion->capacitaciones_desactivadas
+                'id_consultor' =>
+                    $consultor->id_consultor,
+
+                'activo' =>
+                    0,
+            ]
         );
     }
 
     public function test_it_returns_error_when_consultant_does_not_exist(): void
     {
-        $ejecucion = $this->crearEjecucion(1);
+        $capacitacion =
+            $this->makeCapacitacion(
+                9999
+            );
 
-        $resultado = $this->service->sincronizar(
-            $this->crearCapacitacion(8999),
-            $ejecucion
-        );
+        $resultado =
+            $this->service->sincronizar(
+                $capacitacion,
+                $this->sincronizacion
+            );
 
         $this->assertSame(
             SafCapacitacionSyncService::RESULTADO_ERROR,
             $resultado['resultado']
         );
 
+        $this->assertNull(
+            $resultado['capacitacion']
+        );
+
         $this->assertDatabaseMissing(
             'tbl_consultor_capacitacion_fepade',
             [
-                'codigo_evento_externo' => 'EVT-8999',
+                'codigo_evento' =>
+                    'EVT-9999',
             ]
         );
 
-        $ejecucion->refresh();
-
-        $this->assertSame(
-            1,
-            $ejecucion->capacitaciones_con_error
+        $this->assertDatabaseHas(
+            'tbl_sincronizacion_saf_error',
+            [
+                'codigo_error' =>
+                    'CONSULTOR_NO_ENCONTRADO',
+            ]
         );
     }
 
-    private function crearConsultor(
+    private function crearConsultorSaf(
         int $idInstructor
     ): Consultor {
-        return Consultor::query()->create([
-            'id_instructor' => $idInstructor,
+        $consultor =
+            new Consultor();
 
-            'id_entidad' => 1,
+        $consultor->forceFill([
+            'id_instructor' =>
+                $idInstructor,
 
-            'nombres' => 'Instructor',
+            'id_entidad' =>
+                1,
 
-            'apellidos' => 'Prueba',
+            'nombres' =>
+                'Instructor',
 
-            'origen_registro' => Consultor::ORIGEN_SAF,
+            'apellidos' =>
+                'Prueba ' . $idInstructor,
 
-            'activo' => true,
+            'origen_registro' =>
+                Consultor::ORIGEN_SAF,
 
-            'vigente' => true,
+            'activo' =>
+                true,
+
+            'vigente' =>
+                true,
+
+            'fecha_ultima_sincronizacion_saf' =>
+                now(),
+
+            'hash_datos_saf' =>
+                hash(
+                    'sha256',
+                    'consultor-' . $idInstructor
+                ),
         ]);
+
+        $consultor->save();
+
+        return $consultor;
     }
 
-    private function crearCapacitacion(
+    private function makeCapacitacion(
         int $idInstructor
     ): CapacitacionSafData {
         return new CapacitacionSafData(
-            idInstructor: $idInstructor,
-            codigoEventoExterno: 'EVT-'.$idInstructor,
-            nombre: 'Liderazgo efectivo',
-            fechaInicio: null,
-            fechaFin: null,
-            horas: 8,
-            activo: true
-        );
-    }
+            idInstructor:
+                $idInstructor,
 
-    private function crearEjecucion(
-        int $total
-    ): SincronizacionSaf {
-        $ejecucion = $this->auditoria->iniciar(
-            SincronizacionSaf::TIPO_MANUAL
-        );
+            programaCursoId:
+                7001,
 
-        return $this->auditoria->establecerTotal(
-            $ejecucion,
-            $total
+            codigoEvento:
+                'EVT-' . $idInstructor,
+
+            cursoNombre:
+                'Liderazgo efectivo',
+
+            fechaInicio:
+                null,
+
+            fechaFin:
+                null,
+
+            estadoCursoNombre:
+                'Finalizado',
+
+            noHorasReal:
+                8,
+
+            modalidad:
+                'Virtual',
+
+            tipoEventoNombre:
+                'Capacitación',
+
+            cliente:
+                'Cliente de prueba',
+
+            encuestaId:
+                null,
+
+            encuestaNombre:
+                null,
+
+            promedioEncuesta:
+                null,
+
+            fechaEvaluacion:
+                null
         );
     }
 }

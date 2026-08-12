@@ -86,9 +86,35 @@
                             <div class="text-muted small">{{ $consultor->direccion_residencia ?? 'Sin dirección registrada' }}</div>
                         </td>
 
+                        @php
+                            $documentoPrincipal =
+                                $consultor->documentos
+                                    ->first();
+
+                            $tipoDocumento =
+                                $documentoPrincipal
+                                    ?->tipoDocumento
+                                    ?->nombre;
+
+                            $tipoIdentificacion =
+                                $tipoDocumento
+                                ?? $consultor->tipo_identificacion
+                                ?? 'Documento';
+
+                            $numeroIdentificacion =
+                                $documentoPrincipal?->numero
+                                ?? $consultor->numero_identificacion
+                                ?? null;
+                        @endphp
+
                         <td>
-                            <div>{{ $consultor->tipo_identificacion ?? 'Documento' }}</div>
-                            <div class="text-muted small">{{ $consultor->numero_identificacion ?? 'No registrado' }}</div>
+                            <div>
+                                {{ $tipoIdentificacion }}
+                            </div>
+
+                            <div class="text-muted small">
+                                {{ $numeroIdentificacion ?? 'No registrado' }}
+                            </div>
                         </td>
 
                         <td>{{ $consultor->nacionalidad ?? 'No registrada' }}</td>

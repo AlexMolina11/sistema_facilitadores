@@ -2,506 +2,542 @@
 
 ## Sistema de Facilitadores FEPADE 2026
 
-**Versión:** 2.0.0  
+**Versión:** 2.1.0  
 **Estado:** Vigente  
-**Última actualización:** Julio 2026
+**Última actualización:** Agosto 2026
 
 ---
 
 # 1. Objetivo
 
-El presente documento establece el contrato técnico que debe cumplir el Sistema de Administración de Financiero (SAF) para integrarse con el Sistema de Facilitadores FEPADE.
+Este documento establece el contrato técnico que SAF debe cumplir para enviar instructores y capacitaciones al Sistema de Facilitadores FEPADE.
 
-Este contrato define la estructura de las tablas de importación, las reglas para el intercambio de información, los campos requeridos y las condiciones que deben cumplirse para que la sincronización sea procesada correctamente.
+Define:
 
----
-
-# 2. Alcance
-
-El contrato aplica exclusivamente a las siguientes tablas de importación:
-
-- `tbl_saf_instructor_importacion`
-- `tbl_saf_capacitacion_importacion`
-
-Estas tablas representan el único punto de entrada autorizado para la información proveniente de SAF.
+- tablas autorizadas;
+- campos de negocio;
+- tipos y longitudes;
+- reglas de recepción;
+- traducciones necesarias;
+- campos internos que SAF no debe administrar;
+- comportamiento esperado ante actualizaciones y errores.
 
 ---
 
-# 3. Reglas generales
+# 2. Punto de entrada autorizado
 
-La integración deberá cumplir las siguientes reglas:
-
-- SAF únicamente insertará o actualizará información en las tablas de importación.
-- SAF no debe modificar tablas funcionales del Sistema de Facilitadores.
-- Laravel es el único responsable de sincronizar la información hacia las tablas finales.
-- Cada registro debe poseer un identificador externo único.
-- Todos los datos deberán cumplir con los tipos y tamaños definidos para cada columna.
-- Los cambios serán procesados mediante la tarea programada diaria de sincronización.
-
----
-
-# 4. Tabla de importación de instructores
-
-## Nombre de la tabla
+SAF únicamente debe escribir en:
 
 ```text
 tbl_saf_instructor_importacion
-```
-
-### Propósito
-
-Recibir la información de instructores proveniente de SAF para posteriormente sincronizarla con la tabla `tbl_consultor`.
-
----
-
-## Campos de negocio
-
-| Campo                 | Tipo    | Obligatorio | Descripción                                      |
-| --------------------- | ------- | :---------: | ------------------------------------------------ |
-| id_instructor         | BIGINT  |     Sí      | Identificador único del instructor en SAF.       |
-| nombres               | VARCHAR |     Sí      | Nombres del instructor.                          |
-| apellidos             | VARCHAR |     Sí      | Apellidos del instructor.                        |
-| tipo_identificacion   | INT     |     No      | Documento Único de Identidad.                    |
-| numero_identificacion | VARCHAR |     No      | Documento Único de Identidad.                    |
-| sexo                  | VARCHAR |     No      | Identificador para el sexo. (F o M)              |
-| id_entidad            | INT     |     Sí      | Identificador de la entidad a la que pertenece.  |
-| activo                | BOOLEAN |     Sí      | Indica si el instructor continúa vigente en SAF. |
-
----
-
-## Campos de control
-
-Los siguientes campos son administrados exclusivamente por Laravel.
-
-| Campo               | Descripción                           |
-| ------------------- | ------------------------------------- |
-| estado              | Estado del procesamiento.             |
-| intentos            | Número de intentos realizados.        |
-| fecha_recepcion     | Fecha de inserción del registro.      |
-| fecha_procesamiento | Fecha del último procesamiento.       |
-| mensaje_error       | Descripción del error, cuando exista. |
-
-SAF no debe modificar estos campos una vez que el registro haya sido insertado.
-
----
-
-# 5. Operaciones permitidas
-
-La tabla admite tres tipos de operaciones.
-
-## Alta
-
-Cuando el instructor no existe previamente en el Sistema de Facilitadores, Laravel creará un nuevo consultor.
-
----
-
-## Actualización
-
-Si el instructor ya existe, Laravel actualizará únicamente los campos administrados por SAF.
-
----
-
-## Desactivación
-
-Cuando el campo **activo** tenga el valor **false**, Laravel marcará el consultor como inactivo de acuerdo con las reglas del sistema.
-
----
-
-# 6. Restricciones
-
-Para que un registro sea considerado válido deberá cumplir las siguientes condiciones:
-
-- poseer un identificador externo;
-- contener nombres y apellidos;
-- indicar una entidad válida;
-- especificar el estado activo;
-- cumplir con los tamaños definidos para cada campo.
-
-Los registros que no cumplan estas reglas serán rechazados durante el proceso de validación y registrados en la auditoría de errores.
-
----
-
-# 7. Ejemplo de inserción
-
-```sql
-INSERT INTO tbl_saf_instructor_importacion (
-    id_instructor_externo,
-    nombres,
-    apellidos,
-    dui,
-    correo,
-    telefono,
-    id_entidad,
-    activo
-)
-VALUES (
-    995001,
-    'Juan Carlos',
-    'Pérez',
-    '01234567-8',
-    'juan.perez@correo.com',
-    '70000001',
-    3,
-    1
-);
-```
-
----
-
-# 8. Ejemplo de actualización
-
-```sql
-UPDATE tbl_saf_instructor_importacion
-SET
-    correo = 'nuevo.correo@correo.com',
-    telefono = '71111111',
-    estado = 'PENDIENTE'
-WHERE id_instructor_externo = 995001;
-```
-
-La actualización del estado a **PENDIENTE** permitirá que Laravel procese nuevamente el registro durante la siguiente ejecución de sincronización.
-
----
-
-# 9. Resumen
-
-La tabla `tbl_saf_instructor_importacion` constituye el mecanismo oficial mediante el cual SAF comunica las altas, modificaciones y desactivaciones de instructores. Laravel valida cada registro, aplica las reglas de negocio correspondientes y sincroniza la información hacia la tabla `tbl_consultor`, manteniendo en todo momento la integridad y trazabilidad del proceso.
-
-> **Continúa en la Parte 2**, donde se documenta el contrato técnico de `tbl_saf_capacitacion_importacion`, incluyendo su estructura, reglas de validación y ejemplos de operaciones.
-
-# 10. Tabla de importación de capacitaciones
-
-## Nombre de la tabla
-
-```text
 tbl_saf_capacitacion_importacion
 ```
 
-### Propósito
+SAF no debe escribir directamente en:
 
-Recibir la información de las capacitaciones impartidas por los instructores registrados en SAF para posteriormente sincronizarla con la tabla `tbl_consultor_capacitacion_fepade`.
-
-Cada registro representa una capacitación individual asociada a un consultor.
-
----
-
-## Campos de negocio
-
-| Campo                 | Tipo    | Obligatorio | Descripción                                                |
-| --------------------- | ------- | :---------: | ---------------------------------------------------------- |
-| id_instructor_externo | BIGINT  |     Sí      | Identificador único del instructor en SAF.                 |
-| codigo_evento_externo | VARCHAR |     Sí      | Código único del evento de capacitación.                   |
-| nombre_evento         | VARCHAR |     Sí      | Nombre oficial de la capacitación.                         |
-| tema                  | VARCHAR |     No      | Tema principal desarrollado durante la capacitación.       |
-| institucion           | VARCHAR |     No      | Institución organizadora o responsable de la capacitación. |
-| modalidad             | VARCHAR |     No      | Modalidad de impartición (Presencial, Virtual o Híbrida).  |
-| fecha_inicio          | DATE    |     Sí      | Fecha de inicio de la capacitación.                        |
-| fecha_fin             | DATE    |     Sí      | Fecha de finalización de la capacitación.                  |
-| horas                 | DECIMAL |     Sí      | Cantidad de horas de formación.                            |
-| activo                | BOOLEAN |     Sí      | Indica si la capacitación continúa vigente en SAF.         |
+```text
+tbl_consultor
+tbl_consultor_documento
+tbl_consultor_email
+tbl_consultor_capacitacion_fepade
+```
 
 ---
 
-## Campos de control
+# 3. Regla de historial de recepciones
 
-Los siguientes campos son administrados exclusivamente por Laravel y no deben ser modificados por SAF.
+Cada envío de SAF debe generar una nueva fila de staging.
 
-| Campo               | Descripción                                                       |
-| ------------------- | ----------------------------------------------------------------- |
-| estado              | Estado del procesamiento.                                         |
-| intentos            | Número de intentos realizados.                                    |
-| fecha_recepcion     | Fecha de inserción del registro.                                  |
-| fecha_procesamiento | Fecha del último procesamiento.                                   |
-| mensaje_error       | Mensaje generado durante el procesamiento cuando exista un error. |
+No se debe actualizar una fila histórica ya procesada para representar un cambio posterior.
 
----
+Ejemplo correcto:
 
-# 11. Operaciones permitidas
+```text
+recepción 1 → instructor 500 → CREADO
+recepción 2 → instructor 500 → ACTUALIZADO
+recepción 3 → instructor 500 → SIN_CAMBIOS
+```
 
-La tabla permite realizar las siguientes operaciones.
-
-## Alta
-
-Cuando una capacitación no exista previamente para el consultor correspondiente, Laravel creará un nuevo registro en `tbl_consultor_capacitacion_fepade`.
+Las tablas staging no tienen restricción única por instructor/evento porque deben conservar todas las recepciones.
 
 ---
 
-## Actualización
+# 4. Tabla `tbl_saf_instructor_importacion`
 
-Si la capacitación ya existe, Laravel actualizará únicamente los campos administrados por SAF.
+## 4.1. Campos de negocio
 
-Entre ellos:
+| Campo | Tipo acordado | Requerido | Descripción |
+|---|---|:---:|---|
+| `id_instructor` | int(10) | Sí | Identificador único del instructor en SAF |
+| `id_entidad` | int(10) | Sí | Identificador de entidad SAF |
+| `nombres` | varchar(50) | Sí | Nombres del instructor |
+| `apellidos` | varchar(50) | Sí | Apellidos del instructor |
+| `tipo_identificacion` | int(10) | Condicional | Código de tipo de identificación SAF |
+| `numero_identificacion` | varchar(50) | Condicional | Número del documento |
+| `correo_saf` | varchar(50) | No | Correo principal proveniente de SAF |
+| `activo` | int / boolean | Sí | Estado ya traducido para Facilitadores |
 
-- nombre del evento;
-- tema;
-- institución;
-- modalidad;
-- fechas;
-- horas;
-- estado activo.
+El campo anterior `dui` ya no forma parte del contrato. Fue sustituido por:
 
----
-
-## Desactivación
-
-Cuando el campo **activo** tenga el valor **false**, Laravel marcará la capacitación como inactiva dentro del Sistema de Facilitadores, conservando el historial para fines de auditoría.
-
----
-
-# 12. Restricciones
-
-Antes de procesar una capacitación se verificará que:
-
-- exista un instructor asociado;
-- el código del evento sea único;
-- el nombre del evento esté informado;
-- la fecha de inicio sea válida;
-- la fecha de finalización sea válida;
-- la fecha de inicio no sea posterior a la fecha final;
-- las horas sean mayores que cero;
-- el estado activo esté definido.
-
-Si alguna validación falla, el registro será rechazado y se documentará en la auditoría de errores.
+```text
+numero_identificacion
+```
 
 ---
 
-# 13. Ejemplo de inserción
+# 5. Tipos de identificación SAF
+
+SAF enviará:
+
+| Código SAF | Documento |
+|---:|---|
+| 2 | Número de Identificación Tributaria (NIT) |
+| 4 | Pasaporte |
+| 5 | Licencia de conducir |
+| 7 | DUI |
+
+Cualquier otro código será rechazado por validación.
+
+---
+
+# 6. Traducción al catálogo de Facilitadores
+
+Los IDs de SAF no coinciden necesariamente con `tbl_tipo_documento`.
+
+Laravel realiza la traducción:
+
+| SAF | Documento | Facilitadores |
+|---:|---|---:|
+| 2 | NIT | 1 |
+| 4 | Pasaporte | 4 |
+| 5 | Licencia de conducir | 6 |
+| 7 | DUI | 2 |
+
+La Licencia de Conducir se encuentra registrada en `tbl_tipo_documento` con ID 6.
+
+---
+
+# 7. Destino del documento
+
+Laravel guarda:
+
+```text
+id_consultor       = consultor sincronizado
+id_tipo_documento  = código traducido
+numero             = numero_identificacion
+activo             = 1
+```
+
+en:
+
+```text
+tbl_consultor_documento
+```
+
+SAF no debe escribir directamente en esta tabla.
+
+---
+
+# 8. Destino del correo SAF
+
+`correo_saf` se guarda en:
+
+```text
+tbl_consultor_email
+```
+
+como:
+
+```text
+principal = 1
+activo    = 1
+```
+
+Si existe otro correo principal, Laravel lo conserva como secundario.
+
+---
+
+# 9. Conversión de `Inactivo`
+
+El sistema origen maneja el campo `Inactivo`, mientras la tabla de importación utiliza `activo`.
+
+La conversión obligatoria es:
+
+```text
+Inactivo = 0 → activo = 1
+Inactivo = 1 → activo = 0
+```
+
+Ejemplo SQL:
 
 ```sql
-INSERT INTO tbl_saf_capacitacion_importacion (
-    id_instructor_externo,
-    codigo_evento_externo,
-    nombre_evento,
-    tema,
-    institucion,
-    modalidad,
+CASE
+    WHEN Inactivo = 1 THEN 0
+    ELSE 1
+END AS activo
+```
+
+Laravel utiliza `activo` para actualizar tanto `activo` como `vigente` del consultor.
+
+---
+
+# 10. Ejemplo de recepción de instructor
+
+```sql
+INSERT INTO tbl_saf_instructor_importacion
+(
+    id_instructor,
+    id_entidad,
+    nombres,
+    apellidos,
+    tipo_identificacion,
+    numero_identificacion,
+    correo_saf,
+    activo,
+    estado,
+    intentos,
+    fecha_recepcion,
+    created_at,
+    updated_at
+)
+VALUES
+(
+    12345,
+    1,
+    'JUAN',
+    'PEREZ',
+    7,
+    '01234567-8',
+    'juan.perez@ejemplo.com',
+    1,
+    'PENDIENTE',
+    0,
+    NOW(),
+    NOW(),
+    NOW()
+);
+```
+
+Los campos técnicos incluidos en el ejemplo únicamente se inicializan para recepción. Después del INSERT, Laravel es su único propietario.
+
+Si la configuración de base de datos define valores por defecto para estos campos, SAF debe preferir omitirlos.
+
+---
+
+# 11. Actualización de un instructor
+
+Una actualización no debe modificar la fila anterior.
+
+SAF debe insertar una nueva recepción con el mismo `id_instructor` y los datos actualizados.
+
+Laravel determinará si el resultado es:
+
+```text
+ACTUALIZADO
+SIN_CAMBIOS
+ERROR
+```
+
+---
+
+# 12. Tabla `tbl_saf_capacitacion_importacion`
+
+## 12.1. Campos de negocio
+
+| Campo | Tipo acordado | Requerido | Descripción |
+|---|---|:---:|---|
+| `id_instructor` | int(10) | Sí | Instructor SAF relacionado |
+| `programa_curso_id` | int(10) | Sí | Identificador del programa/curso |
+| `codigo_evento` | varchar(50) | Sí | Código del evento |
+| `curso_nombre` | varchar(250) | Sí | Nombre del curso |
+| `fecha_inicio` | date | No | Fecha de inicio |
+| `fecha_fin` | date | No | Fecha de finalización |
+| `estado_curso_nombre` | varchar(30) | No | Estado de negocio del curso |
+| `no_horas_real` | int(10) | No | Número real de horas |
+| `modalidad` | varchar(50) | No | Modalidad |
+| `tipo_evento_nombre` | varchar(30) | No | Tipo de evento |
+| `cliente` | varchar(300) | No | Cliente al que se impartió |
+| `encuesta_id` | int(10) | No | Identificador de encuesta |
+| `encuesta_nombre` | varchar(100) | No | Nombre de la encuesta |
+| `promedio_encuesta` | decimal(10,2) | No | Promedio obtenido |
+| `fecha_evaluacion` | datetime | No | Fecha/hora de evaluación |
+
+---
+
+# 13. Campos renombrados y eliminados
+
+El nuevo contrato utiliza:
+
+```text
+codigo_evento_externo → codigo_evento
+nombre_evento         → curso_nombre
+institucion           → cliente
+horas                 → no_horas_real
+```
+
+Se eliminaron de la staging:
+
+```text
+tema
+activo
+```
+
+`estado_curso_nombre` es un nuevo dato de SAF.
+
+El campo `estado` que ya existía en staging NO corresponde al estado del curso. Es un campo técnico de procesamiento administrado por Laravel.
+
+---
+
+# 14. Ejemplo de recepción de capacitación
+
+```sql
+INSERT INTO tbl_saf_capacitacion_importacion
+(
+    id_instructor,
+    programa_curso_id,
+    codigo_evento,
+    curso_nombre,
     fecha_inicio,
     fecha_fin,
-    horas,
-    activo
+    estado_curso_nombre,
+    no_horas_real,
+    modalidad,
+    tipo_evento_nombre,
+    cliente,
+    encuesta_id,
+    encuesta_nombre,
+    promedio_encuesta,
+    fecha_evaluacion,
+    estado,
+    intentos,
+    fecha_recepcion,
+    created_at,
+    updated_at
 )
-VALUES (
-    995001,
-    'CUR-2026-001',
-    'Metodologías Activas de Aprendizaje',
-    'Aprendizaje Basado en Problemas',
-    'FEPADE',
-    'Presencial',
-    '2026-06-10',
-    '2026-06-12',
-    24,
-    1
+VALUES
+(
+    12345,
+    501,
+    'EVT-2026-001',
+    'Excel Avanzado',
+    '2026-08-01',
+    '2026-08-05',
+    'Finalizado',
+    16,
+    'Virtual',
+    'Capacitación',
+    'Cliente Ejemplo',
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    'PENDIENTE',
+    0,
+    NOW(),
+    NOW(),
+    NOW()
 );
 ```
 
 ---
 
-# 14. Ejemplo de actualización
+# 15. Encuesta posterior
 
-```sql
-UPDATE tbl_saf_capacitacion_importacion
-SET
-    modalidad = 'Virtual',
-    horas = 30,
-    estado = 'PENDIENTE'
-WHERE codigo_evento_externo = 'CUR-2026-001';
-```
+Los campos de encuesta pueden llegar después de la primera recepción del curso.
 
-Al establecer el estado en **PENDIENTE**, Laravel volverá a evaluar el registro durante la siguiente ejecución del proceso de sincronización.
-
----
-
-# 15. Relación con el consultor
-
-Toda capacitación debe estar asociada a un instructor existente.
-
-La asociación se realiza utilizando el campo:
+Ejemplo:
 
 ```text
-id_instructor_externo
+Recepción 1
+encuesta_id       = NULL
+promedio_encuesta = NULL
+
+Recepción 2
+encuesta_id       = 80
+promedio_encuesta = 4.75
 ```
 
-Durante el procesamiento, Laravel localizará al consultor correspondiente y utilizará su identificador interno para registrar la capacitación en el expediente.
+La segunda recepción debe ser una nueva fila de staging con el mismo `id_instructor` y `codigo_evento`.
 
-Si el instructor no existe, la capacitación no será procesada y se registrará el error correspondiente en la auditoría.
+Laravel actualizará la capacitación funcional existente.
 
 ---
 
-# 16. Prevención de duplicados
+# 16. Identidad funcional de capacitaciones
 
-Para evitar registros duplicados, Laravel utiliza como identificador principal el campo:
+La tabla staging permite recepciones repetidas.
+
+En la tabla funcional Laravel identifica una capacitación por:
 
 ```text
-codigo_evento_externo
+id_consultor + codigo_evento
 ```
 
-Cuando el código ya existe para el mismo consultor, el registro será tratado como una actualización y no como una nueva inserción.
+Por ello, reenviar un evento no crea automáticamente una capacitación duplicada.
 
 ---
 
-# 17. Resumen
+# 17. Campo `activo` de capacitaciones
 
-La tabla `tbl_saf_capacitacion_importacion` constituye el mecanismo oficial para el intercambio de información relacionada con las capacitaciones impartidas por los instructores registrados en SAF.
+SAF no envía `activo` para capacitaciones.
 
-Cada registro recibido es validado, asociado al consultor correspondiente y sincronizado con la tabla `tbl_consultor_capacitacion_fepade`, garantizando la integridad de la información y la trazabilidad de todas las operaciones realizadas.
+En `tbl_consultor_capacitacion_fepade` el campo `activo` permanece como dato interno del Sistema de Facilitadores.
 
-> **Continúa en la Parte 3**, donde se documentan los estados del procesamiento, las reglas de sincronización, la auditoría, el manejo de errores y las buenas prácticas para la integración.
-
-# 18. Estados del procesamiento
-
-Durante el proceso de sincronización, Laravel administra el estado de cada registro recibido desde SAF.
-
-| Estado     | Descripción                                                          |
-| ---------- | -------------------------------------------------------------------- |
-| PENDIENTE  | Registro disponible para ser procesado.                              |
-| EN_PROCESO | Registro reservado por Laravel durante la sincronización.            |
-| PROCESADO  | Registro sincronizado correctamente.                                 |
-| ERROR      | El registro presentó errores durante la validación o sincronización. |
-
-Estos estados son utilizados únicamente por el Sistema de Facilitadores y no deben ser modificados por SAF.
-
----
-
-# 19. Flujo de sincronización
-
-Cada ejecución sigue el siguiente proceso:
-
-1. Detectar registros con estado **PENDIENTE**.
-2. Cambiar el estado a **EN_PROCESO**.
-3. Validar la información recibida.
-4. Sincronizar los datos con las tablas funcionales.
-5. Registrar la auditoría.
-6. Actualizar el estado final del registro.
-7. Continuar con el siguiente registro hasta finalizar el lote.
-
-Este flujo garantiza que cada registro sea procesado una única vez por ejecución.
-
----
-
-# 20. Validaciones aplicadas
-
-Antes de sincronizar un registro, Laravel ejecuta una serie de validaciones para asegurar la calidad de la información.
-
-Entre las principales validaciones se encuentran:
-
-- existencia del instructor;
-- obligatoriedad de los campos requeridos;
-- formatos válidos para fechas;
-- horas mayores que cero;
-- consistencia entre fecha de inicio y fecha de finalización;
-- identificadores externos válidos;
-- prevención de registros duplicados.
-
-Cuando una validación falla, el registro se marca como **ERROR** y no es sincronizado.
-
----
-
-# 21. Auditoría del proceso
-
-Cada ejecución genera un registro en la tabla:
+Una nueva capacitación SAF se crea con:
 
 ```text
-tbl_sincronizacion_saf
+activo = 1
 ```
 
-La auditoría almacena información como:
+Una actualización SAF posterior no debe modificar:
 
-- fecha y hora de inicio;
-- fecha y hora de finalización;
-- registros detectados;
-- registros procesados;
-- registros exitosos;
-- registros con error;
-- consultores creados;
-- consultores actualizados;
-- capacitaciones creadas;
-- capacitaciones actualizadas;
-- capacitaciones desactivadas;
-- observaciones de la ejecución.
-
-Esta información permite conocer el resultado de cada proceso de sincronización.
+- `activo`;
+- `deleted_at`;
+- `usuario_elim`.
 
 ---
 
-# 22. Auditoría de errores
+# 18. Campos técnicos de staging
 
-Cuando un registro presenta errores, Laravel genera un detalle en la tabla:
+Los campos técnicos incluyen, según la tabla:
+
+- `id_importacion`;
+- `estado`;
+- `resultado_procesamiento`;
+- `intentos`;
+- `mensaje_error`;
+- `fecha_recepcion`;
+- `fecha_procesamiento`;
+- `id_sincronizacion`;
+- `id_registro_local`;
+- `created_at`;
+- `updated_at`.
+
+Después de la recepción, estos campos son administrados por Laravel.
+
+SAF no debe convertir una fila `PROCESADO` o `ERROR` nuevamente a `PENDIENTE`. Debe insertar una nueva recepción.
+
+---
+
+# 19. Estados técnicos
+
+Valores principales de `estado`:
+
+```text
+PENDIENTE
+EN_PROCESO
+PROCESADO
+ERROR
+```
+
+`estado_curso_nombre` no debe confundirse con estos valores.
+
+---
+
+# 20. Resultados funcionales
+
+Para instructores:
+
+```text
+CREADO
+ACTUALIZADO
+SIN_CAMBIOS
+ERROR
+OMITIDO
+```
+
+Para capacitaciones:
+
+```text
+CREADO
+ACTUALIZADO
+SIN_CAMBIOS
+ERROR
+```
+
+El resultado `DESACTIVADO` deja de formar parte del contrato vigente de capacitaciones porque SAF ya no controla su campo `activo`.
+
+---
+
+# 21. Validaciones de instructor
+
+Laravel valida al menos:
+
+- identificador mayor que cero;
+- entidad válida;
+- nombres y apellidos obligatorios;
+- longitud de cadenas;
+- tipos de identificación 2, 4, 5 o 7;
+- formato de correo cuando se proporciona;
+- valor válido de `activo`.
+
+---
+
+# 22. Validaciones de capacitación
+
+Laravel valida al menos:
+
+- `id_instructor`;
+- `programa_curso_id`;
+- `codigo_evento`;
+- `curso_nombre`;
+- longitudes máximas;
+- fechas válidas;
+- `fecha_fin >= fecha_inicio`;
+- horas enteras y no negativas;
+- promedio numérico cuando se proporciona;
+- fecha de evaluación válida.
+
+Además, debe existir un consultor asociado al `id_instructor`.
+
+---
+
+# 23. Auditoría y trazabilidad
+
+Cada recepción procesada conserva:
+
+```text
+id_sincronizacion
+resultado_procesamiento
+id_registro_local
+fecha_procesamiento
+```
+
+Los errores se registran además en:
 
 ```text
 tbl_sincronizacion_saf_error
 ```
 
-Cada incidencia almacena información como:
-
-- tipo de registro;
-- operación realizada;
-- identificador externo;
-- código del error;
-- mensaje descriptivo;
-- detalle técnico;
-- archivo;
-- línea;
-- fecha del error.
-
-Esta información facilita el diagnóstico y la corrección de incidencias.
+Por esta razón no deben eliminarse ni reutilizarse las filas históricas.
 
 ---
 
-# 23. Ejemplos de errores
+# 24. Recomendaciones para el equipo SAF
 
-| Situación                         | Resultado            |
-| --------------------------------- | -------------------- |
-| Instructor inexistente            | Registro rechazado.  |
-| Código de evento vacío            | Error de validación. |
-| Fecha final menor que la inicial  | Error de validación. |
-| Horas iguales o menores a cero    | Error de validación. |
-| Campo obligatorio sin información | Error de validación. |
-
-En todos los casos el procesamiento continúa con los registros restantes.
-
----
-
-# 24. Recomendaciones para SAF
-
-Para garantizar una sincronización correcta se recomienda:
-
-- utilizar identificadores externos permanentes;
-- no reutilizar códigos de eventos;
-- enviar información completa en cada actualización;
-- respetar los tipos y longitudes definidos para cada campo;
-- actualizar únicamente registros existentes cuando corresponda;
-- evitar modificaciones manuales sobre los campos de control.
+- validar longitudes antes de insertar;
+- enviar correo limpio, sin formato HTML ni enlaces;
+- mantener `id_instructor` estable;
+- mantener `codigo_evento` estable;
+- convertir correctamente `Inactivo` a `activo`;
+- enviar una nueva fila cuando exista un cambio;
+- no corregir directamente tablas funcionales;
+- no modificar estados técnicos después de la recepción;
+- no eliminar recepciones históricas.
 
 ---
 
-# 25. Buenas prácticas
+# 25. Control de versiones
 
-Durante el desarrollo y mantenimiento de la integración se recomienda:
-
-- mantener un ambiente de pruebas antes de realizar cambios en producción;
-- validar nuevas estructuras antes de desplegarlas;
-- documentar cualquier modificación al contrato técnico;
-- conservar la compatibilidad con versiones anteriores cuando sea posible;
-- monitorear periódicamente la auditoría de sincronización para detectar incidencias.
+| Versión | Fecha | Descripción |
+|---|---|---|
+| 2.0.0 | Julio 2026 | Contrato inicial con staging y procesamiento Laravel |
+| 2.1.0 | Agosto 2026 | Nuevo contrato de identificación, correo SAF, capacitaciones, encuestas e historial append-only |
 
 ---
 
-# 26. Control de versiones
+# 26. Conclusión
 
-Toda modificación al presente contrato deberá registrarse mediante una nueva versión del documento.
+Este contrato es la referencia técnica vigente para cualquier proceso SAF que escriba en las tablas intermedias del Sistema de Facilitadores FEPADE.
 
-Los cambios pueden incluir:
-
-- incorporación de nuevos campos;
-- nuevas tablas de importación;
-- modificación de reglas de validación;
-- cambios en el flujo de sincronización;
-- mejoras en los procesos de auditoría.
-
----
-
-# 27. Conclusión
-
-El presente contrato técnico establece las reglas oficiales para el intercambio de información entre SAF y el Sistema de Facilitadores FEPADE.
-
-La utilización de tablas intermedias, junto con un proceso de validación, sincronización y auditoría centralizado en Laravel, garantiza una integración segura, controlada y escalable. Este documento constituye la referencia técnica para el mantenimiento, evolución y futuras ampliaciones del proceso de integración entre ambos sistemas.
+Cualquier modificación futura de nombres, tipos, códigos de catálogo o reglas de identidad debe acordarse y documentarse antes de cambiar el proceso de integración.

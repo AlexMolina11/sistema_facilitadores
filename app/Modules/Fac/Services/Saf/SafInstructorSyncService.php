@@ -4,10 +4,11 @@ namespace App\Modules\Fac\Services\Saf;
 
 use App\Modules\Fac\Data\Saf\InstructorSafData;
 use App\Modules\Fac\Models\Consultor;
+use App\Modules\Fac\Models\ConsultorDocumento;
+use App\Modules\Fac\Models\ConsultorEmail;
 use App\Modules\Fac\Models\SincronizacionSaf;
 use App\Modules\Fac\Models\SincronizacionSafError;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Throwable;
 
 class SafInstructorSyncService
@@ -22,13 +23,28 @@ class SafInstructorSyncService
 
     public const RESULTADO_OMITIDO = 'OMITIDO';
 
+    /*
+    |--------------------------------------------------------------------------
+    | IDs de tipos de documento en Facilitadores
+    |--------------------------------------------------------------------------
+    */
+    private const DOCUMENTO_NIT = 1;
+    private const DOCUMENTO_DUI = 2;
+    private const DOCUMENTO_PASAPORTE = 4;
+    private const DOCUMENTO_LICENCIA_CONDUCIR = 6;
+
     public function __construct(
         private readonly SafAuditService $auditoria
-    ) {
-    }
+    ) {}
 
     /**
      * Sincroniza un instructor recibido desde SAF.
+     *
+     * La operación completa se ejecuta dentro de una transacción:
+     *
+     * - tbl_consultor
+     * - tbl_consultor_documento
+     * - tbl_consultor_email
      *
      * @return array{
      *     resultado: string,
@@ -48,28 +64,28 @@ class SafInstructorSyncService
         }
 
         try {
-            $resultado = DB::transaction(function () use (
-                $instructor
-            ): array {
-                $consultor = Consultor::withTrashed()
-                    ->where(
-                        'id_instructor',
-                        $instructor->idInstructor
-                    )
-                    ->lockForUpdate()
-                    ->first();
+            $resultado = DB::transaction(
+                function () use ($instructor): array {
+                    $consultor = Consultor::withTrashed()
+                        ->where(
+                            'id_instructor',
+                            $instructor->idInstructor
+                        )
+                        ->lockForUpdate()
+                        ->first();
 
-                if ($consultor === null) {
-                    return $this->crearConsultor(
+                    if ($consultor === null) {
+                        return $this->crearConsultor(
+                            $instructor
+                        );
+                    }
+
+                    return $this->actualizarConsultor(
+                        $consultor,
                         $instructor
                     );
                 }
-
-                return $this->actualizarConsultor(
-                    $consultor,
-                    $instructor
-                );
-            });
+            );
 
             $this->registrarResultadoExitoso(
                 $sincronizacion,
@@ -150,38 +166,70 @@ class SafInstructorSyncService
     private function crearConsultor(
         InstructorSafData $instructor
     ): array {
-        $datos = $this->datosPersistibles(
+        $datos = $this->datosPersistiblesConsultor(
             $instructor
         );
 
         $consultor = new Consultor();
 
-        $consultor->forceFill(array_merge(
-            $datos,
-            [
-                'origen_registro' =>
-                    Consultor::ORIGEN_SAF,
+        $consultor->forceFill(
+            array_merge(
+                $datos,
+                [
+                    'origen_registro' =>
+                        Consultor::ORIGEN_SAF,
 
-                'fecha_ultima_sincronizacion_saf' =>
-                    now(),
+                    'fecha_ultima_sincronizacion_saf' =>
+                        now(),
 
-                'hash_datos_saf' =>
-                    $this->generarHash($datos),
+                    /*
+                     * El hash representa ahora TODO el contrato
+                     * recibido desde SAF, incluyendo documento
+                     * y correo.
+                     */
+                    'hash_datos_saf' =>
+                        $instructor->hash(),
 
-                'usuario_crea' =>
-                    $this->resolverUsuarioId(),
+                    'usuario_crea' =>
+                        $this->resolverUsuarioId(),
 
-                'usuario_mod' => null,
-                'usuario_elim' => null,
-            ]
-        ));
+                    'usuario_mod' =>
+                        null,
+
+                    'usuario_elim' =>
+                        null,
+                ]
+            )
+        );
 
         $consultor->save();
 
+        /*
+         * El documento ya NO se guarda directamente
+         * en tbl_consultor.
+         */
+        $this->sincronizarDocumento(
+            $consultor,
+            $instructor
+        );
+
+        /*
+         * El correo SAF se registra como correo principal.
+         */
+        $this->sincronizarCorreo(
+            $consultor,
+            $instructor
+        );
+
         return [
-            'resultado' => self::RESULTADO_CREADO,
-            'consultor' => $consultor->fresh(),
-            'mensaje' => 'El instructor fue creado como consultor.',
+            'resultado' =>
+                self::RESULTADO_CREADO,
+
+            'consultor' =>
+                $consultor->fresh(),
+
+            'mensaje' =>
+                'El instructor fue creado como consultor.',
         ];
     }
 
@@ -192,15 +240,50 @@ class SafInstructorSyncService
         Consultor $consultor,
         InstructorSafData $instructor
     ): array {
-        $datos = $this->datosPersistibles(
+        $datos = $this->datosPersistiblesConsultor(
             $instructor
         );
 
-        $nuevoHash = $this->generarHash($datos);
+        $nuevoHash = $instructor->hash();
+
+        $estabaEliminado =
+            $consultor->trashed();
+
+        /*
+         * El comportamiento histórico del sistema restaura
+         * un consultor SAF si vuelve a ser recibido desde SAF.
+         */
+        if ($estabaEliminado) {
+            $consultor->restore();
+        }
+
+        /*
+         * Aunque el hash sea igual, verificamos documento
+         * y correo.
+         *
+         * Esto permite reparar relaciones que hayan sido
+         * eliminadas o modificadas internamente.
+         */
+        $documentoModificado =
+            $this->sincronizarDocumento(
+                $consultor,
+                $instructor
+            );
+
+        $correoModificado =
+            $this->sincronizarCorreo(
+                $consultor,
+                $instructor
+            );
+
+        $datosSafCambiaron =
+            $consultor->hash_datos_saf !== $nuevoHash;
 
         if (
-            $consultor->hash_datos_saf === $nuevoHash
-            && $consultor->deleted_at === null
+            ! $datosSafCambiaron
+            && ! $documentoModificado
+            && ! $correoModificado
+            && ! $estabaEliminado
         ) {
             $consultor->forceFill([
                 'fecha_ultima_sincronizacion_saf' =>
@@ -222,45 +305,56 @@ class SafInstructorSyncService
             ];
         }
 
-        if ($consultor->trashed()) {
-            $consultor->restore();
-        }
+        $consultor->forceFill(
+            array_merge(
+                $datos,
+                [
+                    'origen_registro' =>
+                        Consultor::ORIGEN_SAF,
 
-        $consultor->forceFill(array_merge(
-            $datos,
-            [
-                'origen_registro' =>
-                    Consultor::ORIGEN_SAF,
+                    'fecha_ultima_sincronizacion_saf' =>
+                        now(),
 
-                'fecha_ultima_sincronizacion_saf' =>
-                    now(),
+                    'hash_datos_saf' =>
+                        $nuevoHash,
 
-                'hash_datos_saf' =>
-                    $nuevoHash,
+                    'usuario_mod' =>
+                        $this->resolverUsuarioId(),
 
-                'usuario_mod' =>
-                    $this->resolverUsuarioId(),
-
-                'usuario_elim' => null,
-            ]
-        ));
+                    'usuario_elim' =>
+                        null,
+                ]
+            )
+        );
 
         $consultor->save();
 
         return [
-            'resultado' => self::RESULTADO_ACTUALIZADO,
-            'consultor' => $consultor->fresh(),
-            'mensaje' => 'El instructor fue actualizado.',
+            'resultado' =>
+                self::RESULTADO_ACTUALIZADO,
+
+            'consultor' =>
+                $consultor->fresh(),
+
+            'mensaje' =>
+                'El instructor fue actualizado.',
         ];
     }
 
     /**
-     * Convierte el DTO en campos existentes en tbl_consultor.
+     * Devuelve exclusivamente los campos pertenecientes
+     * a tbl_consultor.
+     *
+     * IMPORTANTE:
+     *
+     * tipo_identificacion y numero_identificacion
+     * deliberadamente NO se guardan aquí.
      */
-    private function datosPersistibles(
+    private function datosPersistiblesConsultor(
         InstructorSafData $instructor
     ): array {
-        $activo = $instructor->activo ?? true;
+        $activo =
+            $instructor->activo ?? true;
 
         return [
             'id_instructor' =>
@@ -275,20 +369,356 @@ class SafInstructorSyncService
             'apellidos' =>
                 $instructor->apellidos,
 
-            'numero_identificacion' =>
-                $instructor->dui,
-
-            'tipo_identificacion' =>
-                $instructor->dui !== null
-                    ? 'DUI'
-                    : null,
-
             'activo' =>
                 $activo,
 
             'vigente' =>
                 $activo,
         ];
+    }
+
+    /**
+     * Sincroniza el documento enviado por SAF.
+     *
+     * Retorna true si fue necesario crear, restaurar
+     * o actualizar información.
+     */
+    private function sincronizarDocumento(
+        Consultor $consultor,
+        InstructorSafData $instructor
+    ): bool {
+        if (! $instructor->tieneDocumento()) {
+            return false;
+        }
+
+        $idTipoDocumento =
+            $this->mapearTipoDocumento(
+                $instructor->tipoIdentificacion
+            );
+
+        $numero = trim(
+            (string) $instructor->numeroIdentificacion
+        );
+
+        /*
+         * Primero buscamos coincidencia exacta.
+         *
+         * Esto evita crear duplicados si el documento
+         * ya estaba registrado previamente.
+         */
+        $documento = ConsultorDocumento::withTrashed()
+            ->where(
+                'id_consultor',
+                $consultor->id_consultor
+            )
+            ->where(
+                'id_tipo_documento',
+                $idTipoDocumento
+            )
+            ->where(
+                'numero',
+                $numero
+            )
+            ->lockForUpdate()
+            ->first();
+
+        if ($documento !== null) {
+            $modificado = false;
+
+            if ($documento->trashed()) {
+                $documento->restore();
+
+                $modificado = true;
+            }
+
+            if (! $documento->activo) {
+                $documento->activo = true;
+
+                $modificado = true;
+            }
+
+            if ($modificado) {
+                $documento->usuario_mod =
+                    $this->resolverUsuarioId();
+
+                $documento->usuario_elim =
+                    null;
+
+                $documento->save();
+            }
+
+            return $modificado;
+        }
+
+        /*
+         * Si no encontramos el número exacto, buscamos
+         * un documento existente del mismo tipo.
+         *
+         * Esto permite actualizar, por ejemplo, un DUI
+         * cuyo número haya sido corregido por SAF.
+         */
+        $documento = ConsultorDocumento::withTrashed()
+            ->where(
+                'id_consultor',
+                $consultor->id_consultor
+            )
+            ->where(
+                'id_tipo_documento',
+                $idTipoDocumento
+            )
+            ->orderByDesc('activo')
+            ->orderByDesc('id_documento')
+            ->lockForUpdate()
+            ->first();
+
+        if ($documento !== null) {
+            if ($documento->trashed()) {
+                $documento->restore();
+            }
+
+            $documento->forceFill([
+                'numero' =>
+                    $numero,
+
+                'activo' =>
+                    true,
+
+                'usuario_mod' =>
+                    $this->resolverUsuarioId(),
+
+                'usuario_elim' =>
+                    null,
+            ])->save();
+
+            return true;
+        }
+
+        $documento =
+            new ConsultorDocumento();
+
+        $documento->forceFill([
+            'id_consultor' =>
+                $consultor->id_consultor,
+
+            'id_tipo_documento' =>
+                $idTipoDocumento,
+
+            'numero' =>
+                $numero,
+
+            'actividad_giro' =>
+                null,
+
+            'url_archivo' =>
+                null,
+
+            'activo' =>
+                true,
+
+            'usuario_crea' =>
+                $this->resolverUsuarioId(),
+
+            'usuario_mod' =>
+                null,
+
+            'usuario_elim' =>
+                null,
+        ]);
+
+        $documento->save();
+
+        return true;
+    }
+
+    /**
+     * Sincroniza correo_saf como correo principal.
+     *
+     * Si existe otro correo principal del consultor,
+     * se conserva como correo secundario.
+     *
+     * Retorna true cuando hubo cambios.
+     */
+    private function sincronizarCorreo(
+        Consultor $consultor,
+        InstructorSafData $instructor
+    ): bool {
+        if (! $instructor->tieneCorreoSaf()) {
+            return false;
+        }
+
+        $correo = strtolower(
+            trim(
+                (string) $instructor->correoSaf
+            )
+        );
+
+        $modificado = false;
+
+        /*
+         * Bloqueamos los correos activos del consultor
+         * antes de modificar el principal.
+         */
+        $correosActuales =
+            ConsultorEmail::withTrashed()
+                ->where(
+                    'id_consultor',
+                    $consultor->id_consultor
+                )
+                ->lockForUpdate()
+                ->get();
+
+        $correoSaf = $correosActuales
+            ->first(
+                fn (ConsultorEmail $email): bool =>
+                    strtolower(
+                        trim($email->email)
+                    ) === $correo
+            );
+
+        /*
+         * Todo correo diferente al recibido desde SAF
+         * deja de ser principal, pero NO se elimina ni
+         * se desactiva.
+         */
+        foreach ($correosActuales as $email) {
+            if (
+                $correoSaf !== null
+                && $email->id_email ===
+                    $correoSaf->id_email
+            ) {
+                continue;
+            }
+
+            if (
+                ! $email->trashed()
+                && $email->principal
+            ) {
+                $email->forceFill([
+                    'principal' =>
+                        false,
+
+                    'usuario_mod' =>
+                        $this->resolverUsuarioId(),
+                ])->save();
+
+                $modificado = true;
+            }
+        }
+
+        /*
+         * El correo ya existe.
+         */
+        if ($correoSaf !== null) {
+            if ($correoSaf->trashed()) {
+                $correoSaf->restore();
+
+                $modificado = true;
+            }
+
+            if (
+                ! $correoSaf->principal
+                || ! $correoSaf->activo
+                || $correoSaf->email !== $correo
+            ) {
+                $correoSaf->forceFill([
+                    'email' =>
+                        $correo,
+
+                    'principal' =>
+                        true,
+
+                    'activo' =>
+                        true,
+
+                    'usuario_mod' =>
+                        $this->resolverUsuarioId(),
+
+                    'usuario_elim' =>
+                        null,
+                ])->save();
+
+                $modificado = true;
+            }
+
+            return $modificado;
+        }
+
+        /*
+         * El correo no existe todavía.
+         */
+        $nuevoCorreo =
+            new ConsultorEmail();
+
+        $nuevoCorreo->forceFill([
+            'id_consultor' =>
+                $consultor->id_consultor,
+
+            'email' =>
+                $correo,
+
+            'principal' =>
+                true,
+
+            'activo' =>
+                true,
+
+            'usuario_crea' =>
+                $this->resolverUsuarioId(),
+
+            'usuario_mod' =>
+                null,
+
+            'usuario_elim' =>
+                null,
+        ]);
+
+        $nuevoCorreo->save();
+
+        return true;
+    }
+
+    /**
+     * Traduce el catálogo de SAF al catálogo
+     * tbl_tipo_documento de Facilitadores.
+     *
+     * SAF:
+     * 2 = NIT
+     * 4 = Pasaporte
+     * 5 = Licencia de conducir
+     * 7 = DUI
+     *
+     * Facilitadores:
+     * 1 = NIT
+     * 2 = DUI
+     * 4 = Pasaporte
+     * 6 = Licencia de conducir
+     */
+    private function mapearTipoDocumento(
+        ?int $tipoSaf
+    ): int {
+        return match ($tipoSaf) {
+            InstructorSafData::TIPO_NIT =>
+                self::DOCUMENTO_NIT,
+
+            InstructorSafData::TIPO_PASAPORTE =>
+                self::DOCUMENTO_PASAPORTE,
+
+            InstructorSafData::TIPO_LICENCIA_CONDUCIR =>
+                self::DOCUMENTO_LICENCIA_CONDUCIR,
+
+            InstructorSafData::TIPO_DUI =>
+                self::DOCUMENTO_DUI,
+
+            default =>
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'No existe equivalencia en Facilitadores para el tipo de identificación SAF: %s.',
+                        $tipoSaf === null
+                            ? 'NULL'
+                            : (string) $tipoSaf
+                    )
+                ),
+        };
     }
 
     /**
@@ -322,7 +752,8 @@ class SafInstructorSyncService
     }
 
     /**
-     * Registra un instructor cuya entidad no está permitida.
+     * Registra un instructor cuya entidad
+     * no está permitida.
      */
     private function registrarEntidadNoPermitida(
         InstructorSafData $instructor,
@@ -336,7 +767,8 @@ class SafInstructorSyncService
         );
 
         $this->auditoria->registrarError(
-            sincronizacion: $sincronizacion,
+            sincronizacion:
+                $sincronizacion,
 
             tipoRegistro:
                 SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
@@ -344,7 +776,8 @@ class SafInstructorSyncService
             tipoOperacion:
                 SincronizacionSafError::OPERACION_VALIDAR,
 
-            mensaje: $mensaje,
+            mensaje:
+                $mensaje,
 
             opciones: [
                 'id_registro_externo' =>
@@ -358,19 +791,26 @@ class SafInstructorSyncService
             ]
         );
 
-        $this->auditoria->registrarConsultorConError(
-            $sincronizacion
-        );
+        $this->auditoria
+            ->registrarConsultorConError(
+                $sincronizacion
+            );
 
         return [
-            'resultado' => self::RESULTADO_OMITIDO,
-            'consultor' => null,
-            'mensaje' => $mensaje,
+            'resultado' =>
+                self::RESULTADO_OMITIDO,
+
+            'consultor' =>
+                null,
+
+            'mensaje' =>
+                $mensaje,
         ];
     }
 
     /**
-     * Registra un fallo ocurrido al crear o actualizar.
+     * Registra un fallo ocurrido durante
+     * la creación o actualización.
      */
     private function registrarFallo(
         InstructorSafData $instructor,
@@ -378,8 +818,11 @@ class SafInstructorSyncService
         Throwable $exception
     ): array {
         $this->auditoria->registrarExcepcion(
-            sincronizacion: $sincronizacion,
-            exception: $exception,
+            sincronizacion:
+                $sincronizacion,
+
+            exception:
+                $exception,
 
             tipoRegistro:
                 SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
@@ -394,50 +837,21 @@ class SafInstructorSyncService
                 $instructor->externalId()
         );
 
-        $this->auditoria->registrarConsultorConError(
-            $sincronizacion
-        );
+        $this->auditoria
+            ->registrarConsultorConError(
+                $sincronizacion
+            );
 
         return [
-            'resultado' => self::RESULTADO_ERROR,
-            'consultor' => null,
-            'mensaje' => $exception->getMessage(),
+            'resultado' =>
+                self::RESULTADO_ERROR,
+
+            'consultor' =>
+                null,
+
+            'mensaje' =>
+                $exception->getMessage(),
         ];
-    }
-
-    /**
-     * Genera el hash únicamente con los datos almacenados
-     * directamente en tbl_consultor.
-     */
-    private function generarHash(array $datos): string
-    {
-        ksort($datos);
-
-        $algoritmo = config(
-            'saf.hash.algorithm',
-            'sha256'
-        );
-
-        if (
-            ! is_string($algoritmo)
-            || ! in_array(
-                $algoritmo,
-                hash_algos(),
-                true
-            )
-        ) {
-            $algoritmo = 'sha256';
-        }
-
-        return hash(
-            $algoritmo,
-            json_encode(
-                $datos,
-                JSON_UNESCAPED_UNICODE
-                | JSON_UNESCAPED_SLASHES
-                | JSON_THROW_ON_ERROR
-            )
-        );
     }
 
     /**

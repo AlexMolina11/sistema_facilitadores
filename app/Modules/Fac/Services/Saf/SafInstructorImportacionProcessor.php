@@ -18,6 +18,16 @@ class SafInstructorImportacionProcessor
         private readonly SafAuditService $auditoria
     ) {}
 
+    /**
+     * Procesa los instructores pendientes de la tabla staging.
+     *
+     * @return array{
+     *     detectados: int,
+     *     procesados: int,
+     *     exitosos: int,
+     *     con_error: int
+     * }
+     */
     public function procesar(
         SincronizacionSaf $ejecucion,
         ?int $limite = null
@@ -68,6 +78,10 @@ class SafInstructorImportacionProcessor
         return $resumen;
     }
 
+    /**
+     * Reserva un registro pendiente para evitar
+     * procesamiento simultáneo del mismo registro.
+     */
     private function tomarRegistro(
         int $idImportacion,
         SincronizacionSaf $ejecucion
@@ -92,19 +106,23 @@ class SafInstructorImportacionProcessor
                     'estado' =>
                         SafInstructorImportacion::ESTADO_EN_PROCESO,
 
-                    'resultado_procesamiento' => null,
+                    'resultado_procesamiento' =>
+                        null,
 
                     'intentos' =>
                         (int) $registro->intentos + 1,
 
-                    'mensaje_error' => null,
+                    'mensaje_error' =>
+                        null,
 
-                    'fecha_procesamiento' => null,
+                    'fecha_procesamiento' =>
+                        null,
 
                     'id_sincronizacion' =>
                         $ejecucion->getKey(),
 
-                    'id_registro_local' => null,
+                    'id_registro_local' =>
+                        null,
                 ])->save();
 
                 return $registro->fresh();
@@ -112,6 +130,10 @@ class SafInstructorImportacionProcessor
         );
     }
 
+    /**
+     * Convierte el registro staging al DTO
+     * y ejecuta la sincronización.
+     */
     private function procesarRegistro(
         SafInstructorImportacion $registro,
         SincronizacionSaf $ejecucion
@@ -130,8 +152,14 @@ class SafInstructorImportacionProcessor
                 'apellidos' =>
                     $registro->apellidos,
 
-                'dui' =>
-                    $registro->dui,
+                'tipo_identificacion' =>
+                    $registro->tipo_identificacion,
+
+                'numero_identificacion' =>
+                    $registro->numero_identificacion,
+
+                'correo_saf' =>
+                    $registro->correo_saf,
 
                 'activo' =>
                     $registro->activo,
@@ -155,7 +183,10 @@ class SafInstructorImportacionProcessor
             ) {
                 $this->marcarProcesado(
                     registro: $registro,
-                    resultado: $resultado['resultado'],
+
+                    resultado:
+                        $resultado['resultado'],
+
                     idRegistroLocal:
                         $resultado['consultor']?->getKey()
                 );
@@ -183,7 +214,9 @@ class SafInstructorImportacionProcessor
 
             $this->marcarError(
                 registro: $registro,
+
                 mensaje: $mensaje,
+
                 resultado:
                     SafInstructorSyncService::RESULTADO_ERROR
             );
@@ -198,7 +231,10 @@ class SafInstructorImportacionProcessor
         } catch (Throwable $exception) {
             $this->marcarError(
                 registro: $registro,
-                mensaje: $exception->getMessage(),
+
+                mensaje:
+                    $exception->getMessage(),
+
                 resultado:
                     SafInstructorSyncService::RESULTADO_ERROR
             );
@@ -213,19 +249,31 @@ class SafInstructorImportacionProcessor
         }
     }
 
+    /**
+     * Registra individualmente los errores
+     * producidos por la validación del DTO.
+     */
     private function registrarErroresValidacion(
         SafInstructorImportacion $registro,
         SincronizacionSaf $ejecucion,
         ValidationException $exception
     ): void {
+        /*
+         * El contador aumenta una única vez por instructor,
+         * aunque existan varios campos inválidos.
+         */
         $this->auditoria->registrarConsultorConError(
             $ejecucion
         );
 
-        foreach ($exception->errors() as $campo => $mensajes) {
+        foreach (
+            $exception->errors()
+            as $campo => $mensajes
+        ) {
             foreach ($mensajes as $mensaje) {
                 $this->auditoria->registrarError(
-                    sincronizacion: $ejecucion,
+                    sincronizacion:
+                        $ejecucion,
 
                     tipoRegistro:
                         SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
@@ -233,7 +281,8 @@ class SafInstructorImportacionProcessor
                     tipoOperacion:
                         SincronizacionSafError::OPERACION_VALIDAR,
 
-                    mensaje: (string) $mensaje,
+                    mensaje:
+                        (string) $mensaje,
 
                     opciones: [
                         'id_registro_externo' =>
@@ -255,7 +304,8 @@ class SafInstructorImportacionProcessor
                         'detalle_tecnico' =>
                             json_encode(
                                 [
-                                    'campo' => $campo,
+                                    'campo' =>
+                                        $campo,
 
                                     'id_importacion' =>
                                         $registro->id_importacion,
@@ -270,6 +320,10 @@ class SafInstructorImportacionProcessor
         }
     }
 
+    /**
+     * Registra una excepción inesperada
+     * durante el procesamiento.
+     */
     private function registrarExcepcion(
         SafInstructorImportacion $registro,
         SincronizacionSaf $ejecucion,
@@ -280,9 +334,11 @@ class SafInstructorImportacionProcessor
         );
 
         $this->auditoria->registrarExcepcion(
-            sincronizacion: $ejecucion,
+            sincronizacion:
+                $ejecucion,
 
-            exception: $exception,
+            exception:
+                $exception,
 
             tipoRegistro:
                 SincronizacionSafError::TIPO_REGISTRO_CONSULTOR,
@@ -291,7 +347,9 @@ class SafInstructorImportacionProcessor
                 SincronizacionSafError::OPERACION_PROCESAR,
 
             datosRecibidos:
-                $this->datosRecibidos($registro),
+                $this->datosRecibidos(
+                    $registro
+                ),
 
             idRegistroExterno:
                 (string) $registro->id_instructor,
@@ -301,10 +359,16 @@ class SafInstructorImportacionProcessor
         );
     }
 
+    /**
+     * Genera un código técnico para identificar
+     * el campo que produjo el error.
+     */
     private function codigoErrorValidacion(
         string $campo
     ): string {
-        $campoNormalizado = Str::of($campo)
+        $campoNormalizado = Str::of(
+            $campo
+        )
             ->upper()
             ->replace('.', '_')
             ->replace('-', '_')
@@ -317,6 +381,12 @@ class SafInstructorImportacionProcessor
         );
     }
 
+    /**
+     * Construye el conjunto de datos de negocio
+     * que será registrado en auditoría.
+     *
+     * No incluye campos técnicos del procesador.
+     */
     private function datosRecibidos(
         SafInstructorImportacion $registro
     ): array {
@@ -336,14 +406,23 @@ class SafInstructorImportacionProcessor
             'apellidos' =>
                 $registro->apellidos,
 
-            'dui' =>
-                $registro->dui,
+            'tipo_identificacion' =>
+                $registro->tipo_identificacion,
+
+            'numero_identificacion' =>
+                $registro->numero_identificacion,
+
+            'correo_saf' =>
+                $registro->correo_saf,
 
             'activo' =>
                 $registro->activo,
         ];
     }
 
+    /**
+     * Marca un instructor staging como procesado.
+     */
     private function marcarProcesado(
         SafInstructorImportacion $registro,
         string $resultado,
@@ -367,6 +446,9 @@ class SafInstructorImportacionProcessor
         ])->save();
     }
 
+    /**
+     * Marca un instructor staging con error.
+     */
     private function marcarError(
         SafInstructorImportacion $registro,
         string $mensaje,
@@ -380,7 +462,11 @@ class SafInstructorImportacionProcessor
                 $resultado,
 
             'mensaje_error' =>
-                mb_substr($mensaje, 0, 65535),
+                mb_substr(
+                    $mensaje,
+                    0,
+                    65535
+                ),
 
             'fecha_procesamiento' =>
                 now(),
@@ -390,10 +476,16 @@ class SafInstructorImportacionProcessor
         ])->save();
     }
 
+    /**
+     * Obtiene el primer mensaje de una
+     * ValidationException.
+     */
     private function mensajeValidacion(
         ValidationException $exception
     ): string {
-        $mensaje = collect($exception->errors())
+        $mensaje = collect(
+            $exception->errors()
+        )
             ->flatten()
             ->first();
 

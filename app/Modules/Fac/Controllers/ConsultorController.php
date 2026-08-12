@@ -16,27 +16,133 @@ class ConsultorController extends Controller
 {
     public function index(Request $request)
     {
-        $buscar = $request->get('buscar');
+        $buscar = trim(
+            (string) $request->get('buscar')
+        );
+
         $estado = $request->get('estado');
 
         $consultores = Consultor::query()
-            ->when($buscar, function ($query) use ($buscar) {
-                $query->where(function ($q) use ($buscar) {
-                    $q->where('nombres', 'like', "%{$buscar}%")
-                        ->orWhere('apellidos', 'like', "%{$buscar}%")
-                        ->orWhere('numero_identificacion', 'like', "%{$buscar}%")
-                        ->orWhere('nit', 'like', "%{$buscar}%");
-                });
-            })
-            ->when($estado !== null && $estado !== '', function ($query) use ($estado) {
-                $query->where('activo', $estado);
-            })
+            ->with([
+                'documentos' => fn ($query) =>
+                    $query
+                        ->where('activo', true)
+                        ->with('tipoDocumento')
+                        ->orderBy('id_documento'),
+
+                'emails' => fn ($query) =>
+                    $query
+                        ->where('activo', true)
+                        ->orderByDesc('principal'),
+            ])
+
+            ->when(
+                $buscar !== '',
+                function ($query) use ($buscar) {
+                    $like = "%{$buscar}%";
+
+                    $query->where(
+                        function ($q) use ($like) {
+                            $q
+                                ->where(
+                                    'nombres',
+                                    'like',
+                                    $like
+                                )
+                                ->orWhere(
+                                    'apellidos',
+                                    'like',
+                                    $like
+                                )
+                                ->orWhere(
+                                    'numero_identificacion',
+                                    'like',
+                                    $like
+                                )
+                                ->orWhere(
+                                    'nit',
+                                    'like',
+                                    $like
+                                )
+
+                                /*
+                                |--------------------------------------------------------------------------
+                                | Documentos nuevos
+                                |--------------------------------------------------------------------------
+                                |
+                                | Esto permite encontrar consultores SAF mediante:
+                                |
+                                | - DUI
+                                | - NIT
+                                | - Pasaporte
+                                | - Licencia de conducir
+                                |
+                                */
+                                ->orWhereHas(
+                                    'documentos',
+                                    function ($documento) use ($like) {
+                                        $documento
+                                            ->where(
+                                                'activo',
+                                                true
+                                            )
+                                            ->where(
+                                                'numero',
+                                                'like',
+                                                $like
+                                            );
+                                    }
+                                )
+
+                                /*
+                                |--------------------------------------------------------------------------
+                                | Correo SAF / correos del consultor
+                                |--------------------------------------------------------------------------
+                                */
+                                ->orWhereHas(
+                                    'emails',
+                                    function ($email) use ($like) {
+                                        $email
+                                            ->where(
+                                                'activo',
+                                                true
+                                            )
+                                            ->where(
+                                                'email',
+                                                'like',
+                                                $like
+                                            );
+                                    }
+                                );
+                        }
+                    );
+                }
+            )
+
+            ->when(
+                $estado !== null
+                && $estado !== '',
+                function ($query) use ($estado) {
+                    $query->where(
+                        'activo',
+                        $estado
+                    );
+                }
+            )
+
             ->orderBy('apellidos')
             ->orderBy('nombres')
             ->paginate(10)
             ->withQueryString();
 
-        return view('fac.consultores.index', compact('consultores', 'buscar', 'estado'));
+        return view(
+            'fac.consultores.index',
+            compact(
+                'consultores',
+                'buscar',
+                'estado'
+            )
+        );
     }
 
     public function create()

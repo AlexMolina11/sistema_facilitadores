@@ -63,13 +63,14 @@
     ]));
 
     $capacitaciones = collect($cvData['capacitaciones_fepade'] ?? [])->filter(fn($item) => $visible('capacitaciones_fepade', $item, [
-        'nombre_evento',
-        'tema',
-        'institucion',
+        'curso_nombre',
+        'cliente',
         'modalidad',
+        'tipo_evento_nombre',
+        'estado_curso_nombre',
         'fecha_inicio',
         'fecha_fin',
-        'horas',
+        'no_horas_real',
         'fuente',
     ]));
 
@@ -716,39 +717,117 @@
 
             @foreach($capacitaciones as $item)
                 <div class="cv-pro-item">
-                    @if($cell('capacitaciones_fepade', $item, 'fecha_inicio') || $cell('capacitaciones_fepade', $item, 'fecha_fin'))
-                        <div class="cv-pro-date">
-                            {{ $cell('capacitaciones_fepade', $item, 'fecha_inicio') }}
-                            @if($cell('capacitaciones_fepade', $item, 'fecha_fin'))
-                                - {{ $cell('capacitaciones_fepade', $item, 'fecha_fin') }}
-                            @endif
+                    @if(
+                        $cell(
+                            'capacitaciones_fepade',
+                            $item,
+                            'curso_nombre'
+                        )
+                    )
+                        <div class="cv-pro-item-title">
+                            {{
+                                $cell(
+                                    'capacitaciones_fepade',
+                                    $item,
+                                    'curso_nombre'
+                                )
+                            }}
                         </div>
                     @endif
 
-                    @if($cell('capacitaciones_fepade', $item, 'nombre_evento'))
-                        <div class="cv-pro-item-title">{{ $cell('capacitaciones_fepade', $item, 'nombre_evento') }}</div>
-                    @endif
-
-                    @if($cell('capacitaciones_fepade', $item, 'institucion'))
-                        <div class="cv-pro-place">{{ $cell('capacitaciones_fepade', $item, 'institucion') }}</div>
+                    @if(
+                        $cell(
+                            'capacitaciones_fepade',
+                            $item,
+                            'cliente'
+                        )
+                    )
+                        <div class="cv-pro-place">
+                            {{
+                                $cell(
+                                    'capacitaciones_fepade',
+                                    $item,
+                                    'cliente'
+                                )
+                            }}
+                        </div>
                     @endif
 
                     <div class="cv-pro-tags">
-                        @if($cell('capacitaciones_fepade', $item, 'tema'))
-                            <span class="cv-pro-tag">{{ $cell('capacitaciones_fepade', $item, 'tema') }}</span>
+
+                        @if(
+                            $cell(
+                                'capacitaciones_fepade',
+                                $item,
+                                'tipo_evento_nombre'
+                            )
+                        )
+                            <span class="cv-pro-tag">
+                                {{
+                                    $cell(
+                                        'capacitaciones_fepade',
+                                        $item,
+                                        'tipo_evento_nombre'
+                                    )
+                                }}
+                            </span>
                         @endif
 
-                        @if($cell('capacitaciones_fepade', $item, 'modalidad'))
-                            <span class="cv-pro-tag">{{ $cell('capacitaciones_fepade', $item, 'modalidad') }}</span>
+                        @if(
+                            $cell(
+                                'capacitaciones_fepade',
+                                $item,
+                                'modalidad'
+                            )
+                        )
+                            <span class="cv-pro-tag">
+                                {{
+                                    $cell(
+                                        'capacitaciones_fepade',
+                                        $item,
+                                        'modalidad'
+                                    )
+                                }}
+                            </span>
                         @endif
 
-                        @if($cell('capacitaciones_fepade', $item, 'horas'))
-                            <span class="cv-pro-tag">{{ $cell('capacitaciones_fepade', $item, 'horas') }} horas</span>
+                        @if(
+                            $cell(
+                                'capacitaciones_fepade',
+                                $item,
+                                'no_horas_real'
+                            )
+                        )
+                            <span class="cv-pro-tag">
+                                {{
+                                    $cell(
+                                        'capacitaciones_fepade',
+                                        $item,
+                                        'no_horas_real'
+                                    )
+                                }}
+                                horas
+                            </span>
                         @endif
 
-                        @if($cell('capacitaciones_fepade', $item, 'fuente'))
-                            <span class="cv-pro-tag">{{ $cell('capacitaciones_fepade', $item, 'fuente') }}</span>
+                        @if(
+                            $cell(
+                                'capacitaciones_fepade',
+                                $item,
+                                'fuente'
+                            )
+                        )
+                            <span class="cv-pro-tag">
+                                {{
+                                    $cell(
+                                        'capacitaciones_fepade',
+                                        $item,
+                                        'fuente'
+                                    )
+                                }}
+                            </span>
                         @endif
+
                     </div>
 
                     <div class="clear"></div>

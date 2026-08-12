@@ -251,16 +251,20 @@
                     'section' => 'capacitaciones_fepade',
                     'items' => $cvData['capacitaciones_fepade'],
                     'fields' => [
-                        'nombre_evento' => 'Nombre evento',
-                        'tema' => 'Tema',
-                        'institucion' => 'Institución',
+                        'curso_nombre' => 'Curso',
+                        'cliente' => 'Cliente',
                         'modalidad' => 'Modalidad',
+                        'tipo_evento_nombre' => 'Tipo de evento',
+                        'estado_curso_nombre' => 'Estado del curso',
                         'fecha_inicio' => 'Fecha inicio',
                         'fecha_fin' => 'Fecha fin',
-                        'horas' => 'Horas',
+                        'no_horas_real' => 'Horas',
+                        'encuesta_nombre' => 'Encuesta',
+                        'promedio_encuesta' => 'Promedio encuesta',
+                        'fecha_evaluacion' => 'Fecha evaluación',
                         'fuente' => 'Fuente',
                     ],
-                    'mainField' => 'nombre_evento',
+                    'mainField' => 'curso_nombre',
                 ])
 
                 @include('fac.cv.partials.config-list', [
@@ -1162,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         html += sectionTitle('Experiencia como facilitador/a:');
+
         html += `
             <table class="cv-table">
                 <thead>
@@ -1172,8 +1177,21 @@ document.addEventListener('DOMContentLoaded', function () {
                         <th>Empresa a quien se impartió</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    ${renderRows('capacitaciones_fepade', data.capacitaciones_fepade, ['nombre_evento', 'fecha_inicio', 'fecha_fin', 'institucion']) || '<tr><td colspan="4">&nbsp;</td></tr>'}
+                    ${
+                        renderRows(
+                            'capacitaciones_fepade',
+                            data.capacitaciones_fepade,
+                            [
+                                'curso_nombre',
+                                'fecha_inicio',
+                                'fecha_fin',
+                                'cliente'
+                            ]
+                        )
+                        || '<tr><td colspan="4">&nbsp;</td></tr>'
+                    }
                 </tbody>
             </table>
         `;
@@ -1677,7 +1695,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 ${isSelected('atestados', item.id, 'tipo_atestado') && item.tipo_atestado ? `<span class="cv-pro-tag">${escapeHtml(item.tipo_atestado)}</span>` : ''}
                                 ${isSelected('atestados', item.id, 'nivel') && item.nivel ? `<span class="cv-pro-tag">${escapeHtml(item.nivel)}</span>` : ''}
                                 ${isSelected('atestados', item.id, 'pais') && item.pais ? `<span class="cv-pro-tag">${escapeHtml(item.pais)}</span>` : ''}
-                                ${isSelected('atestados', item.id, 'horas') && item.horas ? `<span class="cv-pro-tag">${escapeHtml(item.horas)} horas</span>` : ''}
+                                ${isSelected('atestados', item.id, 'horas') && item.no_horas_real ? `<span class="cv-pro-tag">${escapeHtml(item.no_horas_real)} horas</span>` : ''}
                             </div>
 
                             ${(isSelected('atestados', item.id, 'fecha_emision') || isSelected('atestados', item.id, 'fecha_vencimiento')) ? `
@@ -1702,7 +1720,24 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
 
-        const capacitaciones = data.capacitaciones_fepade.filter(item => rowIsVisible('capacitaciones_fepade', item, ['nombre_evento', 'tema', 'institucion', 'modalidad', 'fecha_inicio', 'fecha_fin', 'horas', 'fuente']));
+        const capacitaciones =
+            data.capacitaciones_fepade.filter(
+                item => rowIsVisible(
+                    'capacitaciones_fepade',
+                    item,
+                    [
+                        'curso_nombre',
+                        'cliente',
+                        'modalidad',
+                        'tipo_evento_nombre',
+                        'estado_curso_nombre',
+                        'fecha_inicio',
+                        'fecha_fin',
+                        'no_horas_real',
+                        'fuente'
+                    ]
+                )
+            );
 
         if (capacitaciones.length) {
             html += `
@@ -1717,13 +1752,21 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                             ` : ''}
 
-                            ${isSelected('capacitaciones_fepade', item.id, 'nombre_evento') ? `<div class="cv-pro-item-title">${escapeHtml(item.nombre_evento)}</div>` : ''}
-                            ${isSelected('capacitaciones_fepade', item.id, 'institucion') ? `<div class="cv-pro-place">${escapeHtml(item.institucion)}</div>` : ''}
+                            ${isSelected('capacitaciones_fepade', item.id, 'curso_nombre') ? `<div class="cv-pro-item-title">${escapeHtml(item.curso_nombre)}</div>` : ''}
+                            ${isSelected('capacitaciones_fepade', item.id, 'institucion') ? `<div class="cv-pro-place">${escapeHtml(item.cliente)}</div>` : ''}
 
                             <div class="cv-pro-tags">
-                                ${isSelected('capacitaciones_fepade', item.id, 'tema') && item.tema ? `<span class="cv-pro-tag">${escapeHtml(item.tema)}</span>` : ''}
+                                ${isSelected(
+                                    'capacitaciones_fepade',
+                                    item.id,
+                                    'tipo_evento_nombre'
+                                ) && item.tipo_evento_nombre
+                                    ? `<span class="cv-pro-tag">${escapeHtml(
+                                        item.tipo_evento_nombre
+                                    )}</span>`
+                                    : ''}
                                 ${isSelected('capacitaciones_fepade', item.id, 'modalidad') && item.modalidad ? `<span class="cv-pro-tag">${escapeHtml(item.modalidad)}</span>` : ''}
-                                ${isSelected('capacitaciones_fepade', item.id, 'horas') && item.horas ? `<span class="cv-pro-tag">${escapeHtml(item.horas)} horas</span>` : ''}
+                                ${isSelected('capacitaciones_fepade', item.id, 'horas') && item.no_horas_real ? `<span class="cv-pro-tag">${escapeHtml(item.no_horas_real)} horas</span>` : ''}
                                 ${isSelected('capacitaciones_fepade', item.id, 'fuente') && item.fuente ? `<span class="cv-pro-tag">${escapeHtml(item.fuente)}</span>` : ''}
                             </div>
 

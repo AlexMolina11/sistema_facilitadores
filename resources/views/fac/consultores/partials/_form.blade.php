@@ -13,24 +13,195 @@
     $documentoNit = null;
     $documentoNrc = null;
 
-    if (isset($consultor) && $consultor && $consultor->relationLoaded('documentos')) {
-        $documentoIdentificacion = $consultor->documentos->first(function ($documento) use ($catalogos, $consultor) {
-            $tipo = $catalogos['tiposDocumento']->get($documento->id_tipo_documento) ?? null;
+    $tipoIdentificacionActual =
+        old(
+            'tipo_identificacion',
+            $consultor->tipo_identificacion ?? null
+        );
 
-            return $tipo && strtolower(str_replace(['.', ' ', '-'], '', $tipo->nombre)) === strtolower(str_replace(['.', ' ', '-'], '', $consultor->tipo_identificacion ?? ''));
-        });
+    $numeroIdentificacionActual =
+        old(
+            'numero_identificacion',
+            $consultor->numero_identificacion ?? null
+        );
 
-        $documentoNit = $consultor->documentos->first(function ($documento) use ($catalogos) {
-            $tipo = $catalogos['tiposDocumento']->get($documento->id_tipo_documento) ?? null;
+    if (
+        isset($consultor)
+        && $consultor
+        && $consultor->relationLoaded('documentos')
+    ) {
+        /*
+        |--------------------------------------------------------------------------
+        | NIT
+        |--------------------------------------------------------------------------
+        */
+        $documentoNit = $consultor->documentos
+            ->first(
+                function ($documento) use ($catalogos) {
+                    $tipo = $catalogos['tiposDocumento']
+                        ->get(
+                            $documento->id_tipo_documento
+                        );
 
-            return $tipo && strtolower(str_replace(['.', ' ', '-'], '', $tipo->nombre)) === 'nit';
-        });
+                    return $tipo
+                        && strtolower(
+                            str_replace(
+                                ['.', ' ', '-'],
+                                '',
+                                $tipo->nombre
+                            )
+                        ) === 'nit';
+                }
+            );
 
-        $documentoNrc = $consultor->documentos->first(function ($documento) use ($catalogos) {
-            $tipo = $catalogos['tiposDocumento']->get($documento->id_tipo_documento) ?? null;
+        /*
+        |--------------------------------------------------------------------------
+        | NRC
+        |--------------------------------------------------------------------------
+        */
+        $documentoNrc = $consultor->documentos
+            ->first(
+                function ($documento) use ($catalogos) {
+                    $tipo = $catalogos['tiposDocumento']
+                        ->get(
+                            $documento->id_tipo_documento
+                        );
 
-            return $tipo && strtolower(str_replace(['.', ' ', '-'], '', $tipo->nombre)) === 'nrc';
-        });
+                    return $tipo
+                        && strtolower(
+                            str_replace(
+                                ['.', ' ', '-'],
+                                '',
+                                $tipo->nombre
+                            )
+                        ) === 'nrc';
+                }
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Documento de identificación principal
+        |--------------------------------------------------------------------------
+        |
+        | 1. Si el consultor todavía tiene tipo_identificacion legacy,
+        |    buscamos ese documento.
+        |
+        | 2. Si viene de SAF y el campo legacy está vacío, tomamos el
+        |    primer documento válido registrado en tbl_consultor_documento.
+        |
+        */
+        if (filled($tipoIdentificacionActual)) {
+            $documentoIdentificacion =
+                $consultor->documentos
+                    ->first(
+                        function ($documento) use (
+                            $catalogos,
+                            $tipoIdentificacionActual
+                        ) {
+                            $tipo = $catalogos[
+                                'tiposDocumento'
+                            ]->get(
+                                $documento
+                                    ->id_tipo_documento
+                            );
+
+                            if (! $tipo) {
+                                return false;
+                            }
+
+                            $nombreCatalogo =
+                                strtolower(
+                                    str_replace(
+                                        ['.', ' ', '-', 'é'],
+                                        ['', '', '', 'e'],
+                                        $tipo->nombre
+                                    )
+                                );
+
+                            $nombreActual =
+                                strtolower(
+                                    str_replace(
+                                        ['.', ' ', '-', 'é'],
+                                        ['', '', '', 'e'],
+                                        $tipoIdentificacionActual
+                                    )
+                                );
+
+                            return $nombreCatalogo
+                                === $nombreActual;
+                        }
+                    );
+        }
+
+        /*
+        * Para consultores SAF no existe tipo_identificacion
+        * en tbl_consultor.
+        */
+        if ($documentoIdentificacion === null) {
+            $documentoIdentificacion =
+                $consultor->documentos
+                    ->first(
+                        function ($documento) use ($catalogos) {
+                            $tipo = $catalogos[
+                                'tiposDocumento'
+                            ]->get(
+                                $documento
+                                    ->id_tipo_documento
+                            );
+
+                            if (! $tipo) {
+                                return false;
+                            }
+
+                            return strtoupper(
+                                trim($tipo->nombre)
+                            ) !== 'NRC';
+                        }
+                    );
+        }
+
+        /*
+        * Si encontramos el documento desde la tabla normalizada,
+        * utilizamos esa información para precargar el formulario.
+        */
+        if ($documentoIdentificacion) {
+            $tipoDocumento =
+                $catalogos['tiposDocumento']
+                    ->get(
+                        $documentoIdentificacion
+                            ->id_tipo_documento
+                    );
+
+            $tipoIdentificacionActual =
+                match (
+                    strtoupper(
+                        trim(
+                            $tipoDocumento?->nombre ?? ''
+                        )
+                    )
+                ) {
+                    'DUI' =>
+                        'DUI',
+
+                    'NIT' =>
+                        'NIT',
+
+                    'PASAPORTE' =>
+                        'Pasaporte',
+
+                    'CARNET DE RESIDENTE' =>
+                        'Carné de residencia',
+
+                    'LICENCIA DE CONDUCIR' =>
+                        'Licencia de conducir',
+
+                    default =>
+                        $tipoDocumento?->nombre,
+                };
+
+            $numeroIdentificacionActual =
+                $documentoIdentificacion->numero;
+        }
     }
 @endphp
 
@@ -144,9 +315,12 @@
         @error('nacionalidad') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    <div class="col-12">
+    <div class="col-12" id="documentos-identificacion">
         <hr>
-        <h5 class="mb-1">Documentos de identificación</h5>
+
+        <h5 class="mb-1">
+            Documentos de identificación
+        </h5>
         <p class="text-muted mb-0">Registra el número y adjunta el documento correspondiente.</p>
     </div>
 
@@ -157,8 +331,14 @@
             <label class="form-label">Tipo de identificación</label>
             <select name="tipo_identificacion" class="form-select mb-3">
                 <option value="">Seleccione</option>
-                @foreach(['DUI', 'Pasaporte', 'Carné de residencia'] as $tipo)
-                    <option value="{{ $tipo }}" {{ old('tipo_identificacion', $consultor->tipo_identificacion ?? '') === $tipo ? 'selected' : '' }}>
+                @foreach([
+                        'DUI',
+                        'NIT',
+                        'Pasaporte',
+                        'Carné de residencia',
+                        'Licencia de conducir'
+                    ] as $tipo)
+                    <option value="{{ $tipo }}" {{ $tipoIdentificacionActual === $tipo ? 'selected' : '' }}>
                         {{ $tipo }}
                     </option>
                 @endforeach
@@ -168,7 +348,7 @@
             <input 
                 type="text" 
                 name="numero_identificacion" 
-                value="{{ old('numero_identificacion', $consultor->numero_identificacion ?? '') }}" 
+                value="{{ $numeroIdentificacionActual ?? '' }}"
                 class="form-control @error('numero_identificacion') is-invalid @enderror"
                 maxlength="30"
             >

@@ -293,9 +293,18 @@ class Consultor extends Model
         }
 
         foreach ($capacitacionesFepade as $capacitacion) {
-            $puntosDinamicos["Área vinculada a capacitación FEPADE: {$capacitacion->nombre_evento}"] =
+            $nombreCapacitacion =
+                $capacitacion->curso_nombre
+                ?? 'Capacitación FEPADE';
+
+            $puntosDinamicos[
+                "Área vinculada a capacitación FEPADE: {$nombreCapacitacion}"
+            ] =
                 $areasEspecializacion
-                    ->where('id_capacitacion_fepade', $capacitacion->id_capacitacion_fepade)
+                    ->where(
+                        'id_capacitacion_fepade',
+                        $capacitacion->id_capacitacion_fepade
+                    )
                     ->isNotEmpty();
         }
 

@@ -10,6 +10,7 @@ class ConsultorDocumento extends Model
     use SoftDeletes;
 
     protected $table = 'tbl_consultor_documento';
+
     protected $primaryKey = 'id_documento';
 
     protected $fillable = [
@@ -27,4 +28,22 @@ class ConsultorDocumento extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+
+    public function consultor()
+    {
+        return $this->belongsTo(
+            Consultor::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function tipoDocumento()
+    {
+        return $this->belongsTo(
+            TipoDocumento::class,
+            'id_tipo_documento',
+            'id_tipo_documento'
+        );
+    }
 }

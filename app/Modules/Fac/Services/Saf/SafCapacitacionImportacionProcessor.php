@@ -47,9 +47,12 @@ class SafCapacitacionImportacionProcessor
             $consulta->limit($limite);
         }
 
-        $ids = $consulta->pluck('id_importacion');
+        $ids = $consulta->pluck(
+            'id_importacion'
+        );
 
-        $resumen['detectados'] = $ids->count();
+        $resumen['detectados'] =
+            $ids->count();
 
         foreach ($ids as $idImportacion) {
             $registro = $this->tomarRegistro(
@@ -90,9 +93,10 @@ class SafCapacitacionImportacionProcessor
                 $idImportacion,
                 $ejecucion
             ): ?SafCapacitacionImportacion {
-                $registro = SafCapacitacionImportacion::query()
-                    ->lockForUpdate()
-                    ->find($idImportacion);
+                $registro =
+                    SafCapacitacionImportacion::query()
+                        ->lockForUpdate()
+                        ->find($idImportacion);
 
                 if (
                     $registro === null
@@ -105,14 +109,23 @@ class SafCapacitacionImportacionProcessor
                     'estado' =>
                         SafCapacitacionImportacion::ESTADO_EN_PROCESO,
 
+                    'resultado_procesamiento' =>
+                        null,
+
                     'intentos' =>
                         (int) $registro->intentos + 1,
 
-                    'mensaje_error' => null,
+                    'mensaje_error' =>
+                        null,
 
-                    'fecha_procesamiento' => null,
+                    'fecha_procesamiento' =>
+                        null,
 
-                    'id_sincronizacion' => $ejecucion->getKey(),
+                    'id_sincronizacion' =>
+                        $ejecucion->getKey(),
+
+                    'id_registro_local' =>
+                        null,
                 ])->save();
 
                 return $registro->fresh();
@@ -121,50 +134,78 @@ class SafCapacitacionImportacionProcessor
     }
 
     /**
-     * Convierte y sincroniza una capacitación.
+     * Convierte el registro staging en un DTO
+     * y ejecuta la sincronización.
      */
     private function procesarRegistro(
         SafCapacitacionImportacion $registro,
         SincronizacionSaf $ejecucion
     ): bool {
         try {
-            $capacitacion = CapacitacionSafData::fromArray([
-                'id_instructor' =>
-                    $registro->id_instructor,
+            $capacitacion =
+                CapacitacionSafData::fromArray([
+                    'id_instructor' =>
+                        $registro->id_instructor,
 
-                'codigo_evento_externo' =>
-                    $registro->codigo_evento_externo,
+                    'programa_curso_id' =>
+                        $registro->programa_curso_id,
 
-                'nombre_evento' =>
-                    $registro->nombre_evento,
+                    'codigo_evento' =>
+                        $registro->codigo_evento,
 
-                'tema' =>
-                    $registro->tema,
+                    'curso_nombre' =>
+                        $registro->curso_nombre,
 
-                'institucion' =>
-                    $registro->institucion,
+                    'fecha_inicio' =>
+                        $registro->fecha_inicio
+                            ?->format('Y-m-d'),
 
-                'modalidad' =>
-                    $registro->modalidad,
+                    'fecha_fin' =>
+                        $registro->fecha_fin
+                            ?->format('Y-m-d'),
 
-                'fecha_inicio' =>
-                    $registro->fecha_inicio?->format('Y-m-d'),
+                    'estado_curso_nombre' =>
+                        $registro->estado_curso_nombre,
 
-                'fecha_fin' =>
-                    $registro->fecha_fin?->format('Y-m-d'),
+                    'no_horas_real' =>
+                        $registro->no_horas_real,
 
-                'horas' =>
-                    $registro->horas,
+                    'modalidad' =>
+                        $registro->modalidad,
 
-                'activo' =>
-                    $registro->activo,
-            ]);
+                    'tipo_evento_nombre' =>
+                        $registro->tipo_evento_nombre,
 
-            $resultado = $this->sincronizacion->sincronizar(
-                $capacitacion,
-                $ejecucion
-            );
+                    'cliente' =>
+                        $registro->cliente,
 
+                    'encuesta_id' =>
+                        $registro->encuesta_id,
+
+                    'encuesta_nombre' =>
+                        $registro->encuesta_nombre,
+
+                    'promedio_encuesta' =>
+                        $registro->promedio_encuesta,
+
+                    'fecha_evaluacion' =>
+                        $registro->fecha_evaluacion
+                            ?->format('Y-m-d H:i:s'),
+                ]);
+
+            $resultado =
+                $this->sincronizacion->sincronizar(
+                    $capacitacion,
+                    $ejecucion
+                );
+
+            /*
+             * RESULTADO_DESACTIVADO se conserva temporalmente
+             * porque todavía existe en el servicio actual.
+             *
+             * En el Bloque 4 revisaremos si debe desaparecer
+             * definitivamente del contrato del servicio.
+             */
             if (
                 in_array(
                     $resultado['resultado'],
@@ -178,14 +219,19 @@ class SafCapacitacionImportacionProcessor
                 )
             ) {
                 $this->marcarProcesado(
-                    registro: $registro,
+                    registro:
+                        $registro,
 
                     resultado:
                         $resultado['resultado'],
 
                     idRegistroLocal:
-                        isset($resultado['capacitacion']->id_capacitacion_fepade)
-                            ? (int) $resultado['capacitacion']->id_capacitacion_fepade
+                        isset(
+                            $resultado['capacitacion']
+                                ->id_capacitacion_fepade
+                        )
+                            ? (int) $resultado['capacitacion']
+                                ->id_capacitacion_fepade
                             : null
                 );
 
@@ -193,18 +239,23 @@ class SafCapacitacionImportacionProcessor
             }
 
             /*
-             * El servicio de sincronización ya registra en auditoría
-             * los errores producidos después de construir el DTO.
+             * Los errores producidos dentro del servicio
+             * después de construir el DTO ya son registrados
+             * por el propio servicio de sincronización.
              */
             $this->marcarError(
                 $registro,
+
                 $resultado['mensaje']
                     ?? 'La capacitación no pudo ser sincronizada.'
             );
 
             return false;
         } catch (ValidationException $exception) {
-            $mensaje = $this->mensajeValidacion($exception);
+            $mensaje =
+                $this->mensajeValidacion(
+                    $exception
+                );
 
             $this->marcarError(
                 $registro,
@@ -235,7 +286,8 @@ class SafCapacitacionImportacionProcessor
     }
 
     /**
-     * Registra todos los mensajes generados por la validación del DTO.
+     * Registra todos los mensajes generados
+     * por la validación del DTO.
      */
     private function registrarErroresValidacion(
         SafCapacitacionImportacion $registro,
@@ -243,17 +295,22 @@ class SafCapacitacionImportacionProcessor
         ValidationException $exception
     ): void {
         /*
-         * El contador se incrementa una vez por registro,
-         * aunque el registro tenga varios errores.
+         * El contador aumenta una única vez
+         * por registro de capacitación.
          */
-        $this->auditoria->registrarCapacitacionConError(
-            $ejecucion
-        );
+        $this->auditoria
+            ->registrarCapacitacionConError(
+                $ejecucion
+            );
 
-        foreach ($exception->errors() as $campo => $mensajes) {
+        foreach (
+            $exception->errors()
+            as $campo => $mensajes
+        ) {
             foreach ($mensajes as $mensaje) {
                 $this->auditoria->registrarError(
-                    sincronizacion: $ejecucion,
+                    sincronizacion:
+                        $ejecucion,
 
                     tipoRegistro:
                         SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
@@ -261,31 +318,42 @@ class SafCapacitacionImportacionProcessor
                     tipoOperacion:
                         SincronizacionSafError::OPERACION_VALIDAR,
 
-                    mensaje: (string) $mensaje,
+                    mensaje:
+                        (string) $mensaje,
 
                     opciones: [
                         'id_registro_externo' =>
-                            $this->identificadorExterno($registro),
+                            $this->identificadorExterno(
+                                $registro
+                            ),
 
                         'id_registro_local' =>
                             $registro->id_importacion,
 
                         'codigo_error' =>
-                            $this->codigoErrorValidacion($campo),
+                            $this->codigoErrorValidacion(
+                                $campo
+                            ),
 
                         'datos_recibidos' =>
-                            $this->datosRecibidos($registro),
+                            $this->datosRecibidos(
+                                $registro
+                            ),
 
-                        'detalle_tecnico' => json_encode(
-                            [
-                                'campo' => $campo,
-                                'id_importacion' =>
-                                    $registro->id_importacion,
-                            ],
-                            JSON_UNESCAPED_UNICODE
-                            | JSON_UNESCAPED_SLASHES
-                            | JSON_THROW_ON_ERROR
-                        ),
+                        'detalle_tecnico' =>
+                            json_encode(
+                                [
+                                    'campo' =>
+                                        $campo,
+
+                                    'id_importacion' =>
+                                        $registro
+                                            ->id_importacion,
+                                ],
+                                JSON_UNESCAPED_UNICODE
+                                | JSON_UNESCAPED_SLASHES
+                                | JSON_THROW_ON_ERROR
+                            ),
                     ]
                 );
             }
@@ -293,21 +361,25 @@ class SafCapacitacionImportacionProcessor
     }
 
     /**
-     * Registra una excepción inesperada del procesador.
+     * Registra una excepción inesperada
+     * ocurrida en el procesador.
      */
     private function registrarExcepcion(
         SafCapacitacionImportacion $registro,
         SincronizacionSaf $ejecucion,
         Throwable $exception
     ): void {
-        $this->auditoria->registrarCapacitacionConError(
-            $ejecucion
-        );
+        $this->auditoria
+            ->registrarCapacitacionConError(
+                $ejecucion
+            );
 
         $this->auditoria->registrarExcepcion(
-            sincronizacion: $ejecucion,
+            sincronizacion:
+                $ejecucion,
 
-            exception: $exception,
+            exception:
+                $exception,
 
             tipoRegistro:
                 SincronizacionSafError::TIPO_REGISTRO_CAPACITACION,
@@ -316,10 +388,14 @@ class SafCapacitacionImportacionProcessor
                 SincronizacionSafError::OPERACION_PROCESAR,
 
             datosRecibidos:
-                $this->datosRecibidos($registro),
+                $this->datosRecibidos(
+                    $registro
+                ),
 
             idRegistroExterno:
-                $this->identificadorExterno($registro),
+                $this->identificadorExterno(
+                    $registro
+                ),
 
             idRegistroLocal:
                 $registro->id_importacion
@@ -327,13 +403,18 @@ class SafCapacitacionImportacionProcessor
     }
 
     /**
-     * Construye el identificador externo para la auditoría.
+     * Construye el identificador externo
+     * de la capacitación para auditoría.
+     *
+     * Formato:
+     *
+     * id_instructor:codigo_evento
      */
     private function identificadorExterno(
         SafCapacitacionImportacion $registro
     ): string {
         $codigo = trim(
-            (string) $registro->codigo_evento_externo
+            (string) $registro->codigo_evento
         );
 
         if ($codigo === '') {
@@ -348,12 +429,15 @@ class SafCapacitacionImportacionProcessor
     }
 
     /**
-     * Construye el código de error de validación.
+     * Construye el código técnico de un
+     * error de validación.
      */
     private function codigoErrorValidacion(
         string $campo
     ): string {
-        $campoNormalizado = Str::of($campo)
+        $campoNormalizado = Str::of(
+            $campo
+        )
             ->upper()
             ->replace('.', '_')
             ->replace('-', '_')
@@ -367,7 +451,11 @@ class SafCapacitacionImportacionProcessor
     }
 
     /**
-     * Obtiene los datos de negocio recibidos desde SAF.
+     * Obtiene exclusivamente los datos de negocio
+     * recibidos desde SAF.
+     *
+     * Los campos técnicos de procesamiento no se
+     * mezclan con el contrato de SAF.
      */
     private function datosRecibidos(
         SafCapacitacionImportacion $registro
@@ -379,32 +467,50 @@ class SafCapacitacionImportacionProcessor
             'id_instructor' =>
                 $registro->id_instructor,
 
-            'codigo_evento_externo' =>
-                $registro->codigo_evento_externo,
+            'programa_curso_id' =>
+                $registro->programa_curso_id,
 
-            'nombre_evento' =>
-                $registro->nombre_evento,
+            'codigo_evento' =>
+                $registro->codigo_evento,
 
-            'tema' =>
-                $registro->tema,
+            'curso_nombre' =>
+                $registro->curso_nombre,
 
-            'institucion' =>
-                $registro->institucion,
+            'fecha_inicio' =>
+                $registro->fecha_inicio
+                    ?->format('Y-m-d'),
+
+            'fecha_fin' =>
+                $registro->fecha_fin
+                    ?->format('Y-m-d'),
+
+            'estado_curso_nombre' =>
+                $registro->estado_curso_nombre,
+
+            'no_horas_real' =>
+                $registro->no_horas_real,
 
             'modalidad' =>
                 $registro->modalidad,
 
-            'fecha_inicio' =>
-                $registro->fecha_inicio?->format('Y-m-d'),
+            'tipo_evento_nombre' =>
+                $registro->tipo_evento_nombre,
 
-            'fecha_fin' =>
-                $registro->fecha_fin?->format('Y-m-d'),
+            'cliente' =>
+                $registro->cliente,
 
-            'horas' =>
-                $registro->horas,
+            'encuesta_id' =>
+                $registro->encuesta_id,
 
-            'activo' =>
-                $registro->activo,
+            'encuesta_nombre' =>
+                $registro->encuesta_nombre,
+
+            'promedio_encuesta' =>
+                $registro->promedio_encuesta,
+
+            'fecha_evaluacion' =>
+                $registro->fecha_evaluacion
+                    ?->format('Y-m-d H:i:s'),
         ];
     }
 
@@ -449,7 +555,11 @@ class SafCapacitacionImportacionProcessor
                 SafCapacitacionSyncService::RESULTADO_ERROR,
 
             'mensaje_error' =>
-                mb_substr($mensaje, 0, 65535),
+                mb_substr(
+                    $mensaje,
+                    0,
+                    65535
+                ),
 
             'fecha_procesamiento' =>
                 now(),
@@ -460,12 +570,15 @@ class SafCapacitacionImportacionProcessor
     }
 
     /**
-     * Obtiene el primer mensaje de validación.
+     * Obtiene el primer mensaje generado
+     * por una ValidationException.
      */
     private function mensajeValidacion(
         ValidationException $exception
     ): string {
-        $mensaje = collect($exception->errors())
+        $mensaje = collect(
+            $exception->errors()
+        )
             ->flatten()
             ->first();
 

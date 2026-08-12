@@ -206,19 +206,77 @@ class ExportacionCvController extends Controller
                 'archivo_url' => $item->url_archivo ? url(Storage::url($item->url_archivo)) : null,
             ])->values(),
 
-            'capacitaciones_fepade' => $consultor->capacitacionesFepade->map(fn ($item) => [
-                'id' => $item->id_capacitacion_fepade,
-                'nombre_evento' => $item->nombre_evento,
-                'tema' => $item->tema,
-                'institucion' => $item->institucion,
-                'modalidad' => $item->modalidad,
-                'fecha_inicio' => optional($item->fecha_inicio)->format('d/m/Y'),
-                'fecha_inicio_iso' => optional($item->fecha_inicio)->format('Y-m-d'),
-                'fecha_fin' => optional($item->fecha_fin)->format('d/m/Y'),
-                'fecha_fin_iso' => optional($item->fecha_fin)->format('Y-m-d'),
-                'horas' => $item->horas,
-                'fuente' => $item->fuente,
-            ])->values(),
+            'capacitaciones_fepade' =>
+                $consultor
+                    ->capacitacionesFepade
+                    ->map(
+                        fn ($item) => [
+                            'id' =>
+                                $item->id_capacitacion_fepade,
+
+                            'programa_curso_id' =>
+                                $item->programa_curso_id,
+
+                            'codigo_evento' =>
+                                $item->codigo_evento,
+
+                            'curso_nombre' =>
+                                $item->curso_nombre,
+
+                            'cliente' =>
+                                $item->cliente,
+
+                            'modalidad' =>
+                                $item->modalidad,
+
+                            'tipo_evento_nombre' =>
+                                $item->tipo_evento_nombre,
+
+                            'estado_curso_nombre' =>
+                                $item->estado_curso_nombre,
+
+                            'fecha_inicio' =>
+                                optional(
+                                    $item->fecha_inicio
+                                )->format('d/m/Y'),
+
+                            'fecha_inicio_iso' =>
+                                optional(
+                                    $item->fecha_inicio
+                                )->format('Y-m-d'),
+
+                            'fecha_fin' =>
+                                optional(
+                                    $item->fecha_fin
+                                )->format('d/m/Y'),
+
+                            'fecha_fin_iso' =>
+                                optional(
+                                    $item->fecha_fin
+                                )->format('Y-m-d'),
+
+                            'no_horas_real' =>
+                                $item->no_horas_real,
+
+                            'encuesta_id' =>
+                                $item->encuesta_id,
+
+                            'encuesta_nombre' =>
+                                $item->encuesta_nombre,
+
+                            'promedio_encuesta' =>
+                                $item->promedio_encuesta,
+
+                            'fecha_evaluacion' =>
+                                optional(
+                                    $item->fecha_evaluacion
+                                )->format('d/m/Y H:i'),
+
+                            'fuente' =>
+                                $item->fuente,
+                        ]
+                    )
+                    ->values(),
 
             'areas' => $consultor->areasEspecializacion->map(fn ($item) => [
                 'id' => $item->id_consultor_area ?? $item->id_consultor_area_especializacion ?? $item->id,

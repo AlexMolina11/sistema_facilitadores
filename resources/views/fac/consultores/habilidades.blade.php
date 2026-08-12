@@ -80,7 +80,7 @@
                             value="{{ $capacitacion->id_capacitacion_fepade }}"
                             @selected(old('id_capacitacion_fepade') == $capacitacion->id_capacitacion_fepade)
                         >
-                            {{ $capacitacion->nombre_evento }}
+                            {{ $capacitacion->curso_nombre }}
                         </option>
                     @endforeach
                 </select>
@@ -160,7 +160,7 @@
                         @if($registro->atestado)
                             {{ $registro->atestado->titulo }}
                         @elseif($registro->capacitacionFepade)
-                            {{ $registro->capacitacionFepade->nombre_evento }}
+                            {{ $registro->capacitacionFepade->curso_nombre }}
                         @else
                             Sin evidencia vinculada
                         @endif
