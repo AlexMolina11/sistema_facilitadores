@@ -94,4 +94,80 @@ class Invitacion extends Model
             'id_usuario'
         );
     }
+
+    public function estaVencida(): bool
+    {
+        return $this->fecha_expiracion !== null
+            && $this->fecha_expiracion->isPast();
+    }
+
+    public function alcanzoMaximoUsos(): bool
+    {
+        return $this->max_usos !== null
+            && $this->usos_actuales >= $this->max_usos;
+    }
+
+    public function estaRevocada(): bool
+    {
+        return (bool) $this->revocada;
+    }
+
+    public function estaActiva(): bool
+    {
+        return (bool) $this->activa;
+    }
+
+    public function puedeUsarse(): bool
+    {
+        if (! $this->estaActiva()) {
+            return false;
+        }
+
+        if ($this->estaRevocada()) {
+            return false;
+        }
+
+        if ($this->estaVencida()) {
+            return false;
+        }
+
+        if ($this->alcanzoMaximoUsos()) {
+            return false;
+        }
+
+        if (! $this->consultor) {
+            return false;
+        }
+
+        if ($this->consultor->usuario()->exists()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function estado(): string
+    {
+        if ($this->estaRevocada()) {
+            return 'Revocada';
+        }
+
+        if ($this->estaVencida()) {
+            return 'Vencida';
+        }
+
+        if ($this->alcanzoMaximoUsos()) {
+            return 'Consumida';
+        }
+
+        if (! $this->estaActiva()) {
+            return 'Inactiva';
+        }
+
+        if ($this->consultor && $this->consultor->usuario()->exists()) {
+            return 'Consumida';
+        }
+
+        return 'Activa';
+    }
 }

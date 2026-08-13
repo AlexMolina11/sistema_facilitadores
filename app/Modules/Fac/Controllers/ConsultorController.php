@@ -140,7 +140,7 @@ class ConsultorController extends Controller
             compact(
                 'consultores',
                 'buscar',
-                'estado'
+                'estado',
             )
         );
     }

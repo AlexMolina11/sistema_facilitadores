@@ -148,6 +148,35 @@
                         </td>
 
                         <td class="text-end">
+                            @if(!$consultor->usuario)
+                                <form
+                                    action="{{ route('seg.invitaciones.store', $consultor) }}"
+                                    method="POST"
+                                    class="d-inline"
+                                >
+                                    @csrf
+
+                                    <input
+                                        type="hidden"
+                                        name="duracion_horas"
+                                        value="24"
+                                    >
+
+                                    <input
+                                        type="hidden"
+                                        name="max_usos"
+                                        value="1"
+                                    >
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        <i class="fa-solid fa-envelope me-1"></i>
+                                        Generar invitación
+                                    </button>
+                                </form>
+                            @endif
                             <a href="{{ route('fac.consultores.show', $consultor) }}" class="btn btn-sm btn-outline-primary">
                                 Ver
                             </a>

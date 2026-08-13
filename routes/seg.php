@@ -8,6 +8,7 @@ use App\Modules\Seg\Controllers\PermisoController;
 use App\Modules\Seg\Controllers\BitacoraAccesoController;
 use App\Modules\Seg\Controllers\BitacoraSafController;
 use App\Modules\Seg\Controllers\PasswordResetController;
+use App\Modules\Seg\Controllers\InvitacionController;
 
 Route::middleware('guest')->group(function () {
 
@@ -115,4 +116,18 @@ Route::prefix('seg')
         )
             ->middleware('permission:seg.bitacora-saf.ver')
             ->name('bitacora-saf.errores.reabrir');
-    });
+
+        Route::middleware('permission:seg.invitaciones.gestionar')
+            ->group(function () {
+
+                Route::post(
+                    'invitaciones/consultores/{consultor}',
+                    [InvitacionController::class, 'store']
+                )->name('invitaciones.store');
+
+                Route::get(
+                    'invitaciones/{invitacion}',
+                    [InvitacionController::class, 'show']
+                )->name('invitaciones.show');
+            });
+});

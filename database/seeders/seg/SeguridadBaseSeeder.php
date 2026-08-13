@@ -61,6 +61,7 @@ class SeguridadBaseSeeder extends Seeder
             Permiso::whereIn('codigo', [
                 'fac.dashboard.ver',
                 'fac.consultores.ver',
+                'seg.invitaciones.gestionar',
             ])->pluck('id_permiso')->toArray()
         );
 
