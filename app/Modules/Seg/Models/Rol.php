@@ -5,6 +5,7 @@ namespace App\Modules\Seg\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Rol extends Model
 {
@@ -28,5 +29,14 @@ class Rol extends Model
     public function permisos(): BelongsToMany
     {
         return $this->belongsToMany(Permiso::class, 'seg_rol_permiso', 'id_rol', 'id_permiso')->withTimestamps();
+    }
+
+    public function invitaciones(): HasMany
+    {
+        return $this->hasMany(
+            Invitacion::class,
+            'id_rol',
+            'id_rol'
+        );
     }
 }

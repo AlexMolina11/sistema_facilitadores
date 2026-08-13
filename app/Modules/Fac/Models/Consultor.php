@@ -5,6 +5,10 @@ namespace App\Modules\Fac\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Modules\Fac\Models\TipoReferencia;
+use App\Modules\Seg\Models\Usuario;
+use App\Modules\Seg\Models\Invitacion;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Consultor extends Model
 {
@@ -59,6 +63,24 @@ class Consultor extends Model
     public function getNombreCompletoAttribute(): string
     {
         return trim($this->nombres . ' ' . $this->apellidos);
+    }
+
+    public function usuario(): HasOne
+    {
+        return $this->hasOne(
+            Usuario::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function invitaciones(): HasMany
+    {
+        return $this->hasMany(
+            Invitacion::class,
+            'id_consultor',
+            'id_consultor'
+        );
     }
 
     public function emails()
