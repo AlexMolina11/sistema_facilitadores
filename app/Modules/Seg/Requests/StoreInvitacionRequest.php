@@ -3,6 +3,7 @@
 namespace App\Modules\Seg\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreInvitacionRequest extends FormRequest
 {
@@ -11,33 +12,43 @@ class StoreInvitacionRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'duracion_ilimitada' => $this->boolean('duracion_ilimitada'),
+            'usos_ilimitados' => $this->boolean('usos_ilimitados'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
             'duracion_ilimitada' => [
-                'nullable',
                 'boolean',
             ],
 
             'duracion_horas' => [
                 'nullable',
+                Rule::requiredIf(
+                    fn () => ! $this->boolean('duracion_ilimitada')
+                ),
                 'integer',
                 'min:1',
                 'max:8760',
-                'required_unless:duracion_ilimitada,1',
             ],
 
             'usos_ilimitados' => [
-                'nullable',
                 'boolean',
             ],
 
             'max_usos' => [
                 'nullable',
+                Rule::requiredIf(
+                    fn () => ! $this->boolean('usos_ilimitados')
+                ),
                 'integer',
                 'min:1',
                 'max:1000',
-                'required_unless:usos_ilimitados,1',
             ],
         ];
     }
@@ -45,7 +56,7 @@ class StoreInvitacionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'duracion_horas.required_unless' =>
+            'duracion_horas.required' =>
                 'Debe indicar la duración de la invitación o seleccionar duración ilimitada.',
 
             'duracion_horas.integer' =>
@@ -57,7 +68,7 @@ class StoreInvitacionRequest extends FormRequest
             'duracion_horas.max' =>
                 'La duración máxima permitida es de 8760 horas.',
 
-            'max_usos.required_unless' =>
+            'max_usos.required' =>
                 'Debe indicar el máximo de usos o seleccionar usos ilimitados.',
 
             'max_usos.integer' =>
@@ -69,13 +80,5 @@ class StoreInvitacionRequest extends FormRequest
             'max_usos.max' =>
                 'El máximo de usos permitido es 1000.',
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'duracion_ilimitada' => $this->boolean('duracion_ilimitada'),
-            'usos_ilimitados' => $this->boolean('usos_ilimitados'),
-        ]);
     }
 }

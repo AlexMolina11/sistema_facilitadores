@@ -34,6 +34,10 @@ class ConsultorController extends Controller
                     $query
                         ->where('activo', true)
                         ->orderByDesc('principal'),
+
+                'usuario',
+
+                'invitacionActiva',
             ])
 
             ->when(

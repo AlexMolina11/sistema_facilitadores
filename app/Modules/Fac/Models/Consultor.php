@@ -83,6 +83,26 @@ class Consultor extends Model
         );
     }
 
+    public function invitacionActiva(): HasOne
+    {
+        return $this->hasOne(
+            Invitacion::class,
+            'id_consultor',
+            'id_consultor'
+        )
+            ->where('activa', true)
+            ->where('revocada', false)
+            ->where(function ($query) {
+                $query->whereNull('fecha_expiracion')
+                    ->orWhere('fecha_expiracion', '>', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('max_usos')
+                    ->orWhereColumn('usos_actuales', '<', 'max_usos');
+            })
+            ->latest('id_invitacion');
+    }
+
     public function emails()
     {
         return $this->hasMany(ConsultorEmail::class, 'id_consultor', 'id_consultor');
@@ -395,5 +415,6 @@ class Consultor extends Model
     {
         return filled($this->id_instructor);
     }
+
 
 }
