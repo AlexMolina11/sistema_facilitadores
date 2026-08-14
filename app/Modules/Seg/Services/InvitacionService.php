@@ -9,6 +9,8 @@ use App\Modules\Seg\Models\Usuario;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class InvitacionService
 {
@@ -25,7 +27,8 @@ class InvitacionService
             $duracionHoras,
             $maxUsos,
             $alias
-        ) {
+        ) 
+        {
             /*
             |--------------------------------------------------------------------------
             | 1. Validar consultor
@@ -130,7 +133,7 @@ class InvitacionService
             |--------------------------------------------------------------------------
             */
 
-            return Invitacion::create([
+            $invitacion = Invitacion::create([
                 'id_consultor' => $consultor->id_consultor,
                 'id_rol' => $rolConsultor->id_rol,
                 'alias' => $alias ?: $consultor->nombre_completo,
@@ -147,6 +150,96 @@ class InvitacionService
                 'usuario_mod' => null,
                 'usuario_elim' => null,
             ]);
+
+            $rutaQr = sprintf(
+                'invitaciones/qr/invitacion_%d.svg',
+                $invitacion->id_invitacion
+            );
+
+            $contenidoQr = QrCode::format('svg')
+                ->size(500)
+                ->margin(2)
+                ->generate($urlInvitacion);
+
+            Storage::disk('public')->put(
+                $rutaQr,
+                $contenidoQr
+            );
+
+            $invitacion->update([
+                'ruta_qr' => $rutaQr,
+            ]);
+
+            return $invitacion->fresh();
         });
     }
+
+    public function revocar(
+        Invitacion $invitacion,
+        Usuario $usuario
+    ): Invitacion {
+        return DB::transaction(function () use ($invitacion, $usuario) {
+
+            $invitacion->refresh();
+
+            if ($invitacion->revocada) {
+                throw ValidationException::withMessages([
+                    'invitacion' => 'La invitación ya se encuentra revocada.',
+                ]);
+            }
+
+            if ($invitacion->estado() !== 'Activa') {
+                throw ValidationException::withMessages([
+                    'invitacion' => 'Solo se pueden revocar invitaciones activas.',
+                ]);
+            }
+
+            $invitacion->update([
+                'revocada' => true,
+                'activa' => false,
+                'usuario_mod' => $usuario->id_usuario,
+            ]);
+
+            return $invitacion->fresh();
+        });
+    }
+
+    public function generarQr(
+        Invitacion $invitacion
+    ): Invitacion {
+        if (
+            $invitacion->ruta_qr
+            && Storage::disk('public')->exists($invitacion->ruta_qr)
+        ) {
+            return $invitacion;
+        }
+
+        if (! $invitacion->url_invitacion) {
+            throw ValidationException::withMessages([
+                'invitacion' => 'La invitación no posee una URL válida para generar el QR.',
+            ]);
+        }
+
+        $rutaQr = sprintf(
+            'invitaciones/qr/invitacion_%d.svg',
+            $invitacion->id_invitacion
+        );
+
+        $contenidoQr = QrCode::format('svg')
+            ->size(500)
+            ->margin(2)
+            ->generate($invitacion->url_invitacion);
+
+        Storage::disk('public')->put(
+            $rutaQr,
+            $contenidoQr
+        );
+
+        $invitacion->update([
+            'ruta_qr' => $rutaQr,
+        ]);
+
+        return $invitacion->fresh();
+    }
+
 }

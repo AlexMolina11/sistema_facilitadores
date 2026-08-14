@@ -118,16 +118,31 @@ Route::prefix('seg')
             ->name('bitacora-saf.errores.reabrir');
 
         Route::middleware('permission:seg.invitaciones.gestionar')
-            ->group(function () {
+        ->group(function () {
 
-                Route::post(
-                    'invitaciones/consultores/{consultor}',
-                    [InvitacionController::class, 'store']
-                )->name('invitaciones.store');
+            Route::get(
+                'invitaciones',
+                [InvitacionController::class, 'index']
+            )->name('invitaciones.index');
 
-                Route::get(
-                    'invitaciones/{invitacion}',
-                    [InvitacionController::class, 'show']
-                )->name('invitaciones.show');
-            });
+            Route::post(
+                'invitaciones/consultores/{consultor}',
+                [InvitacionController::class, 'store']
+            )->name('invitaciones.store');
+
+            Route::get(
+                'invitaciones/{invitacion}',
+                [InvitacionController::class, 'show']
+            )->name('invitaciones.show');
+
+            Route::patch(
+                'invitaciones/{invitacion}/revocar',
+                [InvitacionController::class, 'revoke']
+            )->name('invitaciones.revoke');
+
+             Route::get(
+                'invitaciones/{invitacion}/qr/descargar',
+                [InvitacionController::class, 'downloadQr']
+            )->name('invitaciones.qr.download');
+        });
 });
