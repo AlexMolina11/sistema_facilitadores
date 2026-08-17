@@ -9,6 +9,7 @@ use App\Modules\Seg\Controllers\BitacoraAccesoController;
 use App\Modules\Seg\Controllers\BitacoraSafController;
 use App\Modules\Seg\Controllers\PasswordResetController;
 use App\Modules\Seg\Controllers\InvitacionController;
+use App\Modules\Seg\Controllers\RegistroInvitacionController;
 
 Route::middleware('guest')->group(function () {
 
@@ -23,6 +24,22 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/login', [AuthController::class, 'login'])
         ->name('login.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registro de invitación
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        'registro/{token}',
+        [RegistroInvitacionController::class, 'show']
+    )->name('registro.invitacion.show');
+
+    Route::post(
+        'registro/{token}',
+        [RegistroInvitacionController::class, 'store']
+    )->name('registro.invitacion.store');
 
 
     /*
