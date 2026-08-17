@@ -53,7 +53,6 @@ class SeguridadBaseSeeder extends Seeder
 
         $consultor->permisos()->sync(
             Permiso::whereIn('codigo', [
-                'fac.dashboard.ver',
                 'fac.consultores.ver',
             ])->pluck('id_permiso')->toArray()
         );

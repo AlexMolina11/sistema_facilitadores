@@ -57,6 +57,17 @@ class AuthController extends Controller
         $usuario->forceFill(['ultimo_acceso' => now()])->save();
         $this->bitacora->seguridadLoginExitoso($usuario->id_usuario, $request);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Entrada especial para usuarios Consultor
+        |--------------------------------------------------------------------------
+        */
+
+        if ($usuario->id_consultor) {
+            return redirect()
+                ->route('fac.mi-perfil');
+        }
+
         return redirect()->intended(route('fac.dashboard'));
     }
 

@@ -9,7 +9,6 @@ use App\Modules\Fac\Controllers\ConsultorFormacionController;
 use App\Modules\Fac\Controllers\ConsultorAtestadoController;
 use App\Modules\Fac\Controllers\ConsultorExperienciaController;
 use App\Modules\Fac\Controllers\ConsultorDocumentoController;
-
 use App\Modules\Fac\Controllers\Catalogo\TipoReferenciaController;
 use App\Modules\Fac\Controllers\Catalogo\TipoFormacionController;
 use App\Modules\Fac\Controllers\Catalogo\TipoAtestadoController;
@@ -30,6 +29,7 @@ use App\Modules\Fac\Controllers\Catalogo\SexoController;
 use App\Modules\Fac\Controllers\BusquedaAvanzadaController;
 use App\Modules\Fac\Controllers\ExportacionCvController;
 use App\Modules\Fac\Controllers\CvPlantillaController;
+use App\Modules\Fac\Controllers\ConsultorPortalController;
 
 Route::middleware(['auth'])->group(function () {
 
@@ -40,6 +40,36 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/exportar-csv', [DashboardController::class, 'exportarCsv'])
         ->middleware('permission:fac.dashboard.ver')
         ->name('fac.dashboard.exportar-csv');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Portal del Consultor
+    |--------------------------------------------------------------------------
+    |
+    | Estas rutas trabajan siempre sobre el consultor relacionado
+    | directamente con el usuario autenticado.
+    |
+    | No reciben id_consultor desde la URL para evitar que el usuario
+    | pueda intentar acceder al perfil de otro consultor desde estas rutas.
+    |
+    */
+
+    Route::get(
+        'mi-perfil',
+        [ConsultorPortalController::class, 'perfil']
+    )->name('fac.mi-perfil');
+
+    Route::get(
+        'mi-perfil/editar',
+        [ConsultorPortalController::class, 'editarPerfil']
+    )->name('fac.mi-perfil.editar');
+
+    Route::get(
+        'mis-capacitaciones',
+        [ConsultorPortalController::class, 'capacitaciones']
+    )->name('fac.mis-capacitaciones');
+
 
     Route::get('consultores', [ConsultorController::class, 'index'])
         ->middleware('permission:fac.consultores.ver,fac.consultores.gestionar')
