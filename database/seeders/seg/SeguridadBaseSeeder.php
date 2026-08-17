@@ -24,6 +24,7 @@ class SeguridadBaseSeeder extends Seeder
             ['codigo' => 'seg.bitacora-saf.ver', 'nombre' => 'Ver bitácora de sincronizaciones SAF', 'modulo' => 'SEG'],
             ['codigo' => 'seg.invitaciones.gestionar', 'nombre' => 'Gestionar invitaciones', 'modulo' => 'SEG'],
             ['codigo' => 'fac.busqueda.ver', 'nombre' => 'Ver búsqueda avanzada', 'modulo' => 'FAC'],
+            ['codigo' => 'seg.bitacora_terminos.ver', 'nombre' => 'Ver bitácora de aceptación de términos', 'modulo' => 'Seguridad'],
         ];
 
         foreach ($permisos as $permiso) {

@@ -15,6 +15,11 @@
     </title>
 
     <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
         rel="stylesheet"
         href="{{ asset('css/fepade.css') }}"
     >
@@ -75,134 +80,159 @@
 
             @if($errors->any())
 
-                <div class="alert alert-danger">
+                <div
+                    class="registro-validation-error"
+                    role="alert"
+                >
 
-                    <strong>
-                        No fue posible completar el registro.
-                    </strong>
+                    <div class="registro-validation-error-icon">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
 
-                    <ul class="mb-0 mt-2">
+                    <div>
 
-                        @foreach($errors->all() as $error)
-                            <li>
-                                {{ $error }}
-                            </li>
-                        @endforeach
+                        <strong>
+                            No fue posible completar el registro
+                        </strong>
 
-                    </ul>
+                        <ul>
+
+                            @foreach($errors->all() as $error)
+                                <li>
+                                    {{ $error }}
+                                </li>
+                            @endforeach
+
+                        </ul>
+
+                    </div>
 
                 </div>
 
             @endif
 
-
-            {{-- DATOS PRECARGADOS --}}
-            <div class="registro-invitacion-section">
-
-                <div class="registro-invitacion-section-title">
-
-                    <span class="registro-invitacion-section-icon">
-                        <i class="fa-solid fa-user"></i>
-                    </span>
-
-                    <div>
-                        <h2>
-                            Tus datos
-                        </h2>
-
-                        <p>
-                            Esta información proviene de tu perfil
-                            registrado en FEPADE.
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="registro-invitacion-grid">
-
-                    <div>
-                        <label class="form-label">
-                            Nombres
-                        </label>
-
-                        <input
-                            type="text"
-                            class="form-control"
-                            value="{{ $consultor->nombres }}"
-                            readonly
-                        >
-                    </div>
-
-
-                    <div>
-                        <label class="form-label">
-                            Apellidos
-                        </label>
-
-                        <input
-                            type="text"
-                            class="form-control"
-                            value="{{ $consultor->apellidos }}"
-                            readonly
-                        >
-                    </div>
-
-
-                    <div>
-                        <label class="form-label">
-                            Tipo de documento
-                        </label>
-
-                        <input
-                            type="text"
-                            class="form-control"
-                            value="{{ $consultor->tipo_identificacion ?? $documento?->tipoDocumento?->nombre ?? 'No registrado' }}"
-                            readonly
-                        >
-                    </div>
-
-
-                    <div>
-                        <label class="form-label">
-                            Número de documento
-                        </label>
-
-                        <input
-                            type="text"
-                            class="form-control"
-                            value="{{ $consultor->numero_identificacion ?? $documento?->numero ?? 'No registrado' }}"
-                            readonly
-                        >
-                    </div>
-
-
-                    <div class="registro-invitacion-wide">
-                        <label class="form-label">
-                            Correo electrónico
-                        </label>
-
-                        <input
-                            type="email"
-                            class="form-control"
-                            value="{{ $correoPrincipal }}"
-                            readonly
-                        >
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {{-- FORMULARIO --}}
-            <form
-                method="POST"
-                action="{{ route('registro.invitacion.store', $invitacion->token) }}"
-            >
-
+            <form method="POST" action="{{ route('registro.invitacion.store', $invitacion->token) }}" class="registro-access-form">
                 @csrf
 
+
+                {{-- DATOS PRECARGADOS --}}
+                <div class="registro-invitacion-section">
+
+                    <div class="registro-invitacion-section-title">
+
+                        <span class="registro-invitacion-section-icon">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+
+                        <div>
+                            <h2>
+                                Tus datos
+                            </h2>
+
+                            <p>
+                                Esta información proviene de tu perfil
+                                registrado en FEPADE.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="registro-invitacion-grid">
+
+                        <div>
+                            <label class="form-label">
+                                Nombres
+                            </label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ $consultor->nombres }}"
+                                readonly
+                            >
+                        </div>
+
+
+                        <div>
+                            <label class="form-label">
+                                Apellidos
+                            </label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ $consultor->apellidos }}"
+                                readonly
+                            >
+                        </div>
+
+
+                        <div>
+                            <label class="form-label">
+                                Tipo de documento
+                            </label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ $consultor->tipo_identificacion ?? $documento?->tipoDocumento?->nombre ?? 'No registrado' }}"
+                                readonly
+                            >
+                        </div>
+
+
+                        <div>
+                            <label class="form-label">
+                                Número de documento
+                            </label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ $consultor->numero_identificacion ?? $documento?->numero ?? 'No registrado' }}"
+                                readonly
+                            >
+                        </div>
+
+
+                        <div class="registro-invitacion-wide">
+
+                            <label
+                                for="email"
+                                class="form-label"
+                            >
+                                Correo electrónico
+                                <span class="registro-required">*</span>
+                            </label>
+
+                            <input
+                                type="email"
+                                name="email"
+                                id="email"
+                                class="form-control @error('email') is-invalid @enderror"
+                                value="{{ old('email', $correoPrincipal) }}"
+                                placeholder="nombre@correo.com"
+                                required
+                                autocomplete="email"
+                            >
+
+                            <div class="registro-field-help">
+                                Este correo será utilizado para iniciar sesión y quedará
+                                registrado como correo principal de tu perfil.
+                            </div>
+
+                            @error('email')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                </div>
 
                 <div class="registro-invitacion-section">
 
@@ -248,8 +278,9 @@
 
                                 <button
                                     type="button"
-                                    class="btn btn-outline-secondary js-toggle-password"
+                                    class="registro-password-toggle js-toggle-password"
                                     data-target="password"
+                                    aria-label="Mostrar contraseña"
                                 >
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
@@ -279,8 +310,9 @@
 
                                 <button
                                     type="button"
-                                    class="btn btn-outline-secondary js-toggle-password"
+                                    class="registro-password-toggle js-toggle-password"
                                     data-target="password_confirmation"
+                                    aria-label="Mostrar confirmación de contraseña"
                                 >
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
@@ -351,7 +383,7 @@
                 </div>
 
 
-                <div class="form-check mt-3">
+                <div class="form-check registro-terminos-check">
 
                     <input
                         class="form-check-input"
@@ -403,97 +435,103 @@
     aria-hidden="true"
 >
 
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
 
-        <div class="modal-content invitacion-modal">
+        <div class="registro-terminos-modal">
+            <div class="modal-content">
 
-            <div class="modal-header">
+                <div class="modal-header">
 
-                <div>
-                    <h5 class="modal-title">
-                        Términos y políticas de uso
-                    </h5>
+                    <div>
+                        <h5 class="modal-title">
+                            Términos y políticas de uso
+                        </h5>
 
-                    <small class="text-muted">
-                        Sistema de Facilitadores FEPADE
-                    </small>
+                        <small class="text-muted">
+                            Sistema de Facilitadores FEPADE
+                        </small>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                    ></button>
+
                 </div>
 
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                ></button>
 
-            </div>
+                <div class="modal-body">
+
+                    <div class="registro-terminos-content">
+
+                        <div class="registro-terminos-alert">
+
+                            <i class="fa-solid fa-circle-info"></i>
+
+                            <div>
+                                <strong>
+                                    Documento temporal
+                                </strong>
+
+                                <p>
+                                    Este contenido deberá sustituirse por los términos
+                                    institucionales oficialmente aprobados por FEPADE
+                                    antes de la puesta en producción.
+                                </p>
+                            </div>
+
+                        </div>
 
 
-            <div class="modal-body">
+                        <div class="registro-terminos-toolbar">
 
-                <div class="registro-terminos-content">
+                            <span>
+                                Versión del documento
+                            </span>
 
-                    <div class="alert alert-info">
+                            <strong>
+                                {{ config('terminos.version') }}
+                            </strong>
 
-                        Este contenido deberá sustituirse por
-                        los términos institucionales oficialmente aprobados
-                        por FEPADE antes de la puesta en producción.
+                        </div>
+
+
+                        <div class="registro-terminos-documento">
+
+                            @foreach(
+                                preg_split(
+                                    "/\r\n|\n|\r/",
+                                    (string) config('terminos.texto')
+                                ) as $linea
+                            )
+
+                                @if(trim($linea) !== '')
+                                    <p>
+                                        {{ $linea }}
+                                    </p>
+                                @endif
+
+                            @endforeach
+
+                        </div>
 
                     </div>
 
-                    <h6>
-                        Uso de la cuenta
-                    </h6>
-
-                    <p>
-                        Las credenciales de acceso son personales
-                        y no deben compartirse con terceros.
-                    </p>
-
-                    <h6>
-                        Actualización de información
-                    </h6>
-
-                    <p>
-                        El usuario es responsable de mantener actualizada
-                        la información profesional que puede modificar
-                        dentro de su perfil.
-                    </p>
-
-                    <h6>
-                        Seguridad
-                    </h6>
-
-                    <p>
-                        El usuario deberá proteger su contraseña
-                        y utilizar el sistema únicamente para los fines
-                        institucionales establecidos.
-                    </p>
-
-                    <h6>
-                        Información institucional
-                    </h6>
-
-                    <p>
-                        Los registros provenientes de sistemas
-                        institucionales FEPADE pueden ser de solo lectura
-                        y no podrán ser modificados directamente
-                        por el consultor.
-                    </p>
-
                 </div>
 
-            </div>
 
+                <div class="modal-footer">
 
-            <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-fepade"
+                        data-bs-dismiss="modal"
+                    >
+                        He leído los términos
+                    </button>
 
-                <button
-                    type="button"
-                    class="btn btn-fepade"
-                    data-bs-dismiss="modal"
-                >
-                    He leído los términos
-                </button>
+                </div>
 
             </div>
 

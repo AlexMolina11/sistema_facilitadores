@@ -10,6 +10,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Modules\Seg\Models\AceptacionTerminos;
+use App\Modules\Fac\Models\ConsultorEmail;
 
 class RegistroInvitacionController extends Controller
 {
@@ -133,35 +135,81 @@ class RegistroInvitacionController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Obtener correo del consultor
+            | Correo elegido por el consultor
             |--------------------------------------------------------------------------
             */
-            $correo = $consultor
-                ->emails()
-                ->where('activo', true)
-                ->orderByDesc('principal')
-                ->first();
 
-            if (! $correo) {
+            $emailRegistro = strtolower(
+                trim(
+                    (string) $request->input('email')
+                )
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Verificación defensiva de duplicidad
+            |--------------------------------------------------------------------------
+            |
+            | El FormRequest ya lo valida, pero volvemos a comprobar dentro
+            | de la transacción antes de crear la cuenta.
+            |
+            */
+
+            if (
+                Usuario::query()
+                    ->where('email', $emailRegistro)
+                    ->exists()
+            ) {
                 throw ValidationException::withMessages([
                     'email' =>
-                        'El consultor no posee un correo electrónico disponible para crear su usuario.',
+                        'Ya existe una cuenta registrada con este correo electrónico.',
                 ]);
             }
 
             /*
             |--------------------------------------------------------------------------
-            | Protección 2: correo único
+            | Sincronizar correo principal del consultor
             |--------------------------------------------------------------------------
+            |
+            | El correo anterior no se elimina.
+            | Únicamente deja de ser principal si es diferente.
+            |
             */
-            if (
-                Usuario::query()
-                    ->where('email', $correo->email)
-                    ->exists()
-            ) {
-                throw ValidationException::withMessages([
-                    'email' =>
-                        'Ya existe una cuenta registrada con el correo electrónico de este consultor.',
+
+            $consultor->emails()
+                ->where('principal', true)
+                ->where('email', '!=', $emailRegistro)
+                ->update([
+                    'principal' => false,
+                ]);
+
+            $correo = $consultor
+                ->emails()
+                ->withTrashed()
+                ->where('email', $emailRegistro)
+                ->first();
+
+            if ($correo) {
+
+                if (method_exists($correo, 'trashed') && $correo->trashed()) {
+                    $correo->restore();
+                }
+
+                $correo->update([
+                    'principal' => true,
+                    'activo' => true,
+                ]);
+
+            } else {
+
+                $correo = ConsultorEmail::create([
+                    'id_consultor' => $consultor->id_consultor,
+                    'email' => $emailRegistro,
+                    'principal' => true,
+                    'activo' => true,
+                    'usuario_crea' => null,
+                    'usuario_mod' => null,
+                    'usuario_elim' => null,
                 ]);
             }
 
@@ -174,7 +222,7 @@ class RegistroInvitacionController extends Controller
                 'id_consultor' => $consultor->id_consultor,
                 'nombres' => $consultor->nombres,
                 'apellidos' => $consultor->apellidos,
-                'email' => $correo->email,
+                'email' => $emailRegistro,
                 'password' => $request->input('password'),
                 'activo' => true,
                 'usuario_crea' => null,
@@ -189,6 +237,38 @@ class RegistroInvitacionController extends Controller
             */
             $usuario->update([
                 'usuario_crea' => $usuario->id_usuario,
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Registrar aceptación de términos
+            |--------------------------------------------------------------------------
+            |
+            | La aceptación queda vinculada al usuario, consultor e invitación
+            | y registra versión, hash, IP, navegador y fecha.
+            |
+            */
+
+            $textoTerminos = (string) config('terminos.texto');
+            $versionTerminos = (string) config('terminos.version');
+
+            AceptacionTerminos::create([
+                'id_usuario' => $usuario->id_usuario,
+                'id_consultor' => $consultor->id_consultor,
+                'id_invitacion' => $invitacion->id_invitacion,
+
+                'version_terminos' => $versionTerminos,
+
+                'hash_terminos' => hash(
+                    'sha256',
+                    $textoTerminos
+                ),
+
+                'ip' => $request->ip(),
+
+                'user_agent' => $request->userAgent(),
+
+                'fecha_aceptacion' => now(),
             ]);
 
             /*

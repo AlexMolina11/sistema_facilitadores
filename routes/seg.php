@@ -10,6 +10,7 @@ use App\Modules\Seg\Controllers\BitacoraSafController;
 use App\Modules\Seg\Controllers\PasswordResetController;
 use App\Modules\Seg\Controllers\InvitacionController;
 use App\Modules\Seg\Controllers\RegistroInvitacionController;
+use App\Modules\Seg\Controllers\BitacoraAceptacionTerminosController;
 
 Route::middleware('guest')->group(function () {
 
@@ -167,4 +168,10 @@ Route::prefix('seg')
                 [InvitacionController::class, 'sendEmail']
             )->name('invitaciones.email.send');
         });
+
+        Route::get(
+                'bitacoras/aceptacion-terminos',
+                [BitacoraAceptacionTerminosController::class, 'index']
+             )->middleware('permission:seg.bitacora_terminos.ver')
+                ->name('bitacora-terminos.index');
 });
