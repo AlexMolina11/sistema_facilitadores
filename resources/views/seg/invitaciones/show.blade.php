@@ -2,7 +2,7 @@
 
 @section('title', 'Detalle de invitación | Facilitadores FEPADE')
 @section('page-title', 'Invitación')
-@section('page-subtitle', 'Detalle y gestión de invitación')
+@section('page-subtitle', 'Detalle y gestión del acceso del consultor')
 
 @section('content')
 
@@ -19,206 +19,176 @@
             ?->emails
             ?->first()
             ?->email;
+
+    $claseEstado = match($estadoInvitacion) {
+        'Activa' => 'success',
+        'Vencida' => 'warning',
+        'Revocada' => 'danger',
+        'Consumida' => 'primary',
+        default => 'muted',
+    };
 @endphp
 
 
-<x-ui.page-header
-    title="Detalle de invitación"
-    subtitle="Consulta el enlace, QR y configuración de acceso del consultor."
->
-    <a
-        href="{{ route('seg.invitaciones.index') }}"
-        class="btn btn-outline-light"
-    >
-        <i class="fa-solid fa-arrow-left me-1"></i>
-        Volver
-    </a>
-</x-ui.page-header>
+<div class="invitacion-page">
 
+    {{-- HERO --}}
+    <section class="invitacion-hero">
 
-<div class="row g-4">
+        <div class="invitacion-hero-main">
 
-    {{-- INFORMACIÓN --}}
-    <div class="col-lg-8">
+            <div class="invitacion-hero-icon">
+                <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
 
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-body p-4">
+            <div>
 
-                <div class="d-flex justify-content-between align-items-start mb-4">
+                <div class="invitacion-kicker">
+                    Invitación #{{ $invitacion->id_invitacion }}
+                </div>
 
-                    <div>
-                        <h4 class="mb-1">
-                            {{ $invitacion->consultor?->nombre_completo ?? $invitacion->alias }}
-                        </h4>
+                <h2>
+                    {{ $invitacion->consultor?->nombre_completo ?? $invitacion->alias }}
+                </h2>
 
-                        @if($correoPrincipal)
-                            <div class="text-muted">
-                                <i class="fa-regular fa-envelope me-1"></i>
-                                {{ $correoPrincipal }}
-                            </div>
-                        @endif
-                    </div>
+                <div class="invitacion-hero-meta">
 
+                    @if($correoPrincipal)
+                        <span>
+                            <i class="fa-regular fa-envelope me-1"></i>
+                            {{ $correoPrincipal }}
+                        </span>
+                    @endif
 
-                    <div>
-
-                        @switch($estadoInvitacion)
-
-                            @case('Activa')
-                                <span class="badge text-bg-success">
-                                    Activa
-                                </span>
-                                @break
-
-                            @case('Vencida')
-                                <span class="badge text-bg-warning">
-                                    Vencida
-                                </span>
-                                @break
-
-                            @case('Consumida')
-                                <span class="badge text-bg-primary">
-                                    Consumida
-                                </span>
-                                @break
-
-                            @case('Revocada')
-                                <span class="badge text-bg-danger">
-                                    Revocada
-                                </span>
-                                @break
-
-                            @default
-                                <span class="badge text-bg-secondary">
-                                    {{ $estadoInvitacion }}
-                                </span>
-
-                        @endswitch
-
-                    </div>
+                    <span>
+                        <i class="fa-solid fa-user-shield me-1"></i>
+                        {{ $invitacion->rol?->nombre ?? 'Consultor' }}
+                    </span>
 
                 </div>
 
+            </div>
 
-                <div class="row g-4">
+        </div>
 
-                    <div class="col-md-6">
 
-                        <div class="text-muted small mb-1">
-                            Rol asignado
+        <div class="invitacion-hero-actions">
+
+            <span class="invitacion-status {{ $claseEstado }}">
+                <i class="fa-solid fa-circle"></i>
+                {{ $estadoInvitacion }}
+            </span>
+
+            <a
+                href="{{ route('seg.invitaciones.index') }}"
+                class="btn btn-light"
+            >
+                <i class="fa-solid fa-arrow-left me-1"></i>
+                Regresar al listado
+            </a>
+
+        </div>
+
+    </section>
+
+
+    {{-- MÉTRICAS --}}
+    <section class="invitacion-summary-grid">
+
+        <div class="invitacion-stat-card">
+            <span>Duración</span>
+
+            <strong>
+                @if($invitacion->duracion_horas === null)
+                    Ilimitada
+                @else
+                    {{ $invitacion->duracion_horas }} h
+                @endif
+            </strong>
+        </div>
+
+
+        <div class="invitacion-stat-card">
+            <span>Usos</span>
+
+            <strong>
+                @if($invitacion->max_usos === null)
+                    {{ $invitacion->usos_actuales }} / ∞
+                @else
+                    {{ $invitacion->usos_actuales }}
+                    /
+                    {{ $invitacion->max_usos }}
+                @endif
+            </strong>
+        </div>
+
+
+        <div class="invitacion-stat-card">
+            <span>Creada</span>
+
+            <strong>
+                {{ $invitacion->created_at?->format('d/m/Y') }}
+            </strong>
+
+            <small>
+                {{ $invitacion->created_at?->format('h:i A') }}
+            </small>
+        </div>
+
+
+        <div class="invitacion-stat-card">
+            <span>Expiración</span>
+
+            <strong>
+                @if($invitacion->fecha_expiracion)
+                    {{ $invitacion->fecha_expiracion->format('d/m/Y') }}
+                @else
+                    Sin límite
+                @endif
+            </strong>
+
+            @if($invitacion->fecha_expiracion)
+                <small>
+                    {{ $invitacion->fecha_expiracion->format('h:i A') }}
+                </small>
+            @endif
+        </div>
+
+    </section>
+
+
+    <div class="invitacion-layout">
+
+        {{-- COLUMNA PRINCIPAL --}}
+        <main class="invitacion-main">
+
+            {{-- ACCESO --}}
+            <section class="invitacion-panel">
+
+                <div class="invitacion-panel-header">
+
+                    <div class="invitacion-section-heading">
+
+                        <div class="invitacion-section-icon">
+                            <i class="fa-solid fa-link"></i>
                         </div>
 
-                        <div class="fw-semibold">
-                            {{ $invitacion->rol?->nombre ?? 'Consultor' }}
-                        </div>
+                        <div>
+                            <h4>Acceso de invitación</h4>
 
-                    </div>
-
-
-                    <div class="col-md-6">
-
-                        <div class="text-muted small mb-1">
-                            Creada por
-                        </div>
-
-                        <div class="fw-semibold">
-                            {{
-                                trim(
-                                    ($invitacion->creador?->nombres ?? '')
-                                    . ' '
-                                    . ($invitacion->creador?->apellidos ?? '')
-                                ) ?: 'Sistema'
-                            }}
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-md-6">
-
-                        <div class="text-muted small mb-1">
-                            Fecha de creación
-                        </div>
-
-                        <div class="fw-semibold">
-                            {{ $invitacion->created_at?->format('d/m/Y h:i A') }}
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-md-6">
-
-                        <div class="text-muted small mb-1">
-                            Fecha de expiración
-                        </div>
-
-                        <div class="fw-semibold">
-
-                            @if($invitacion->fecha_expiracion)
-                                {{ $invitacion->fecha_expiracion->format('d/m/Y h:i A') }}
-                            @else
-                                Sin expiración
-                            @endif
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-md-6">
-
-                        <div class="text-muted small mb-1">
-                            Duración
-                        </div>
-
-                        <div class="fw-semibold">
-
-                            @if($invitacion->duracion_horas === null)
-                                Ilimitada
-                            @else
-                                {{ $invitacion->duracion_horas }} horas
-                            @endif
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-md-6">
-
-                        <div class="text-muted small mb-1">
-                            Usos
-                        </div>
-
-                        <div class="fw-semibold">
-
-                            @if($invitacion->max_usos === null)
-
-                                {{ $invitacion->usos_actuales }}
-                                / Ilimitados
-
-                            @else
-
-                                {{ $invitacion->usos_actuales }}
-                                /
-                                {{ $invitacion->max_usos }}
-
-                            @endif
-
+                            <p>
+                                Enlace único asociado al perfil del consultor.
+                            </p>
                         </div>
 
                     </div>
 
                 </div>
-
-
-                <hr class="my-4">
 
 
                 <label
                     for="urlInvitacion"
-                    class="form-label fw-semibold"
+                    class="form-label"
                 >
                     URL de invitación
                 </label>
@@ -236,7 +206,7 @@
 
                     <button
                         type="button"
-                        class="btn btn-outline-secondary"
+                        class="btn btn-outline-primary"
                         id="btnCopiarUrl"
                     >
                         <i class="fa-solid fa-copy me-1"></i>
@@ -246,14 +216,56 @@
                 </div>
 
 
-                @if($estadoInvitacion === 'Activa')
+                <div class="invitacion-actions mt-4">
 
-                    <div class="mt-4">
+                    @if(
+                        $estadoInvitacion === 'Activa'
+                        && $correoPrincipal
+                    )
+
+                        <form
+                            method="POST"
+                            action="{{ route('seg.invitaciones.email.send', $invitacion) }}"
+                            onsubmit="return confirm(
+                                '¿Deseas enviar esta invitación a {{ $correoPrincipal }}?'
+                            );"
+                        >
+                            @csrf
+
+                            <button
+                                type="submit"
+                                class="btn btn-fepade"
+                            >
+                                <i class="fa-solid fa-paper-plane me-1"></i>
+                                Enviar por correo
+                            </button>
+
+                        </form>
+
+                    @endif
+
+
+                    @if($invitacion->ruta_qr)
+
+                        <a
+                            href="{{ route('seg.invitaciones.qr.download', $invitacion) }}"
+                            class="btn btn-outline-primary"
+                        >
+                            <i class="fa-solid fa-download me-1"></i>
+                            Descargar QR
+                        </a>
+
+                    @endif
+
+
+                    @if($estadoInvitacion === 'Activa')
 
                         <form
                             method="POST"
                             action="{{ route('seg.invitaciones.revoke', $invitacion) }}"
-                            onsubmit="return confirm('¿Deseas revocar esta invitación? El enlace dejará de ser válido inmediatamente.');"
+                            onsubmit="return confirm(
+                                '¿Deseas revocar esta invitación? El enlace dejará de ser válido inmediatamente.'
+                            );"
                         >
                             @csrf
                             @method('PATCH')
@@ -263,48 +275,144 @@
                                 class="btn btn-outline-danger"
                             >
                                 <i class="fa-solid fa-ban me-1"></i>
-                                Revocar invitación
+                                Revocar
                             </button>
 
                         </form>
+
+                    @endif
+
+                </div>
+
+
+                @if(!$correoPrincipal)
+
+                    <div class="invitacion-notice warning mt-4">
+
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+
+                        <div>
+                            <strong>
+                                Sin correo disponible
+                            </strong>
+
+                            <span>
+                                Comparte esta invitación manualmente mediante
+                                URL o código QR.
+                            </span>
+                        </div>
 
                     </div>
 
                 @endif
 
-            </div>
-        </div>
-
-    </div>
+            </section>
 
 
-    {{-- QR --}}
-    <div class="col-lg-4">
+            {{-- INFORMACIÓN --}}
+            <section class="invitacion-panel">
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4 text-center">
+                <div class="invitacion-panel-header">
 
-                <h5 class="mb-2">
+                    <div class="invitacion-section-heading">
+
+                        <div class="invitacion-section-icon">
+                            <i class="fa-solid fa-circle-info"></i>
+                        </div>
+
+                        <div>
+                            <h4>Información de la invitación</h4>
+
+                            <p>
+                                Configuración y trazabilidad administrativa.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="invitacion-info-grid">
+
+                    <div class="invitacion-info-item">
+                        <span>Consultor</span>
+
+                        <strong>
+                            {{ $invitacion->consultor?->nombre_completo ?? $invitacion->alias }}
+                        </strong>
+                    </div>
+
+
+                    <div class="invitacion-info-item">
+                        <span>Rol asignado</span>
+
+                        <strong>
+                            {{ $invitacion->rol?->nombre ?? 'Consultor' }}
+                        </strong>
+                    </div>
+
+
+                    <div class="invitacion-info-item">
+                        <span>Creada por</span>
+
+                        <strong>
+                            {{
+                                trim(
+                                    ($invitacion->creador?->nombres ?? '')
+                                    . ' '
+                                    . ($invitacion->creador?->apellidos ?? '')
+                                ) ?: 'Sistema'
+                            }}
+                        </strong>
+                    </div>
+
+
+                    <div class="invitacion-info-item">
+                        <span>Última modificación</span>
+
+                        <strong>
+                            {{ $invitacion->updated_at?->format('d/m/Y h:i A') }}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+        {{-- SIDEBAR QR --}}
+        <aside class="invitacion-sidebar">
+
+            <section class="invitacion-panel invitacion-qr-panel">
+
+                <div class="invitacion-qr-icon">
+                    <i class="fa-solid fa-qrcode"></i>
+                </div>
+
+                <h4>
                     Código QR
-                </h5>
+                </h4>
 
-                <p class="text-muted small mb-4">
-                    Escanea este código para abrir el enlace de invitación.
+                <p>
+                    Escanea el código para abrir directamente
+                    el enlace de invitación.
                 </p>
 
 
                 @if(
                     $invitacion->ruta_qr
-                    && Storage::disk('public')->exists($invitacion->ruta_qr)
+                    && \Illuminate\Support\Facades\Storage::disk('public')
+                        ->exists($invitacion->ruta_qr)
                 )
 
-                    <div class="mb-4">
+                    <div class="invitacion-qr-box">
 
                         <img
-                            src="{{ Storage::url($invitacion->ruta_qr) }}"
+                            src="{{ \Illuminate\Support\Facades\Storage::url($invitacion->ruta_qr) }}"
                             alt="Código QR de la invitación"
-                            class="img-fluid"
-                            style="max-width: 280px;"
                         >
 
                     </div>
@@ -315,66 +423,181 @@
                         class="btn btn-fepade w-100"
                     >
                         <i class="fa-solid fa-download me-1"></i>
-                        Descargar QR
+                        Descargar código QR
                     </a>
 
                 @else
 
-                    <div class="alert alert-warning mb-0">
-                        El código QR no está disponible.
+                    <div class="invitacion-notice warning">
+                        El código QR no se encuentra disponible.
                     </div>
 
                 @endif
 
-            </div>
-        </div>
+            </section>
+
+        </aside>
 
     </div>
 
 </div>
 
+
+{{-- MODAL ENVÍO DESPUÉS DE CREACIÓN --}}
+@if(
+    session('preguntar_envio_correo')
+    && $correoPrincipal
+    && $estadoInvitacion === 'Activa'
+)
+
+<div
+    class="modal fade"
+    id="modalEnviarInvitacion"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content invitacion-modal">
+
+            <div class="modal-header">
+
+                <div>
+                    <h5 class="modal-title">
+                        ¿Enviar invitación?
+                    </h5>
+
+                    <small class="text-muted">
+                        La invitación fue creada correctamente.
+                    </small>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                ></button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="invitacion-modal-icon">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </div>
+
+                <p class="mb-2">
+                    El consultor tiene registrado el correo:
+                </p>
+
+                <strong>
+                    {{ $correoPrincipal }}
+                </strong>
+
+                <p class="text-muted mt-3 mb-0">
+                    ¿Deseas enviar ahora el enlace y código QR
+                    para que pueda crear sus credenciales?
+                </p>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Enviar después
+                </button>
+
+
+                <form
+                    method="POST"
+                    action="{{ route('seg.invitaciones.email.send', $invitacion) }}"
+                >
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="btn btn-fepade"
+                    >
+                        <i class="fa-solid fa-paper-plane me-1"></i>
+                        Enviar ahora
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@endif
+
 @endsection
 
 
 @push('scripts')
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     const button = document.getElementById('btnCopiarUrl');
     const input = document.getElementById('urlInvitacion');
 
-    if (!button || !input) {
-        return;
-    }
+    if (button && input) {
 
-    button.addEventListener('click', async function () {
-
-        const url = input.value;
-
-        try {
-
-            await navigator.clipboard.writeText(url);
+        button.addEventListener('click', async function () {
 
             const original = this.innerHTML;
 
-            this.innerHTML =
-                '<i class="fa-solid fa-check me-1"></i>Copiada';
+            try {
+
+                await navigator.clipboard.writeText(input.value);
+
+                this.innerHTML =
+                    '<i class="fa-solid fa-check me-1"></i>Copiada';
+
+            } catch (error) {
+
+                input.select();
+                input.setSelectionRange(0, 99999);
+
+                document.execCommand('copy');
+
+                this.innerHTML =
+                    '<i class="fa-solid fa-check me-1"></i>Copiada';
+            }
 
             setTimeout(() => {
                 this.innerHTML = original;
             }, 1500);
 
-        } catch (error) {
+        });
 
-            input.select();
-            input.setSelectionRange(0, 99999);
+    }
 
-            document.execCommand('copy');
 
-        }
+    const modalElement = document.getElementById(
+        'modalEnviarInvitacion'
+    );
 
-    });
+    if (modalElement) {
+
+        const modal = new bootstrap.Modal(
+            modalElement
+        );
+
+        modal.show();
+
+    }
 
 });
 </script>
+
 @endpush

@@ -257,6 +257,12 @@ class InvitacionController extends Controller
             maxUsos: $maxUsos,
         );
 
+        $consultor->loadMissing('emails');
+
+        $tieneCorreo = $consultor->emails
+            ->where('activo', true)
+            ->isNotEmpty();
+
         return redirect()
             ->route(
                 'seg.invitaciones.show',
@@ -265,6 +271,10 @@ class InvitacionController extends Controller
             ->with(
                 'success',
                 'La invitación fue creada correctamente.'
+            )
+            ->with(
+                'preguntar_envio_correo',
+                $tieneCorreo
             );
     }
 
@@ -331,6 +341,19 @@ class InvitacionController extends Controller
         return response()->download(
             Storage::disk('public')->path($invitacion->ruta_qr),
             $nombreArchivo
+        );
+    }
+
+    public function sendEmail(
+        Invitacion $invitacion
+    ): RedirectResponse {
+        $this->invitacionService->enviarCorreo(
+            $invitacion
+        );
+
+        return back()->with(
+            'success',
+            'La invitación fue enviada correctamente por correo electrónico.'
         );
     }
 }

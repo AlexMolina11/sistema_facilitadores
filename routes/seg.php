@@ -144,5 +144,10 @@ Route::prefix('seg')
                 'invitaciones/{invitacion}/qr/descargar',
                 [InvitacionController::class, 'downloadQr']
             )->name('invitaciones.qr.download');
+
+            Route::post(
+                'invitaciones/{invitacion}/correo',
+                [InvitacionController::class, 'sendEmail']
+            )->name('invitaciones.email.send');
         });
 });

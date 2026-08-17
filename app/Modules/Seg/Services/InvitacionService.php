@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Modules\Seg\Notifications\ConsultorInvitationNotification;
+use Illuminate\Support\Facades\Notification;
 
 class InvitacionService
 {
@@ -240,6 +242,48 @@ class InvitacionService
         ]);
 
         return $invitacion->fresh();
+    }
+
+    public function enviarCorreo(
+        Invitacion $invitacion
+    ): void {
+        $invitacion->loadMissing([
+            'consultor.emails',
+        ]);
+
+        $consultor = $invitacion->consultor;
+
+        if (! $consultor) {
+            throw ValidationException::withMessages([
+                'invitacion' => 'La invitación no tiene un consultor asociado.',
+            ]);
+        }
+
+        $correo = $consultor->emails
+            ->where('activo', true)
+            ->sortByDesc('principal')
+            ->first();
+
+        if (! $correo) {
+            throw ValidationException::withMessages([
+                'correo' => 'El consultor no posee un correo electrónico disponible.',
+            ]);
+        }
+
+        if (! $invitacion->puedeUsarse()) {
+            throw ValidationException::withMessages([
+                'invitacion' => 'La invitación ya no se encuentra disponible para envío.',
+            ]);
+        }
+
+        Notification::route(
+            'mail',
+            $correo->email
+        )->notify(
+            new ConsultorInvitationNotification(
+                $invitacion
+            )
+        );
     }
 
 }

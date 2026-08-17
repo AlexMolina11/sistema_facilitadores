@@ -416,5 +416,13 @@ class Consultor extends Model
         return filled($this->id_instructor);
     }
 
+    public function correoPrincipal()
+    {
+        return $this->emails()
+            ->where('activo', true)
+            ->orderByDesc('principal')
+            ->first();
+    }
+
 
 }
