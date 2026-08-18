@@ -39,7 +39,6 @@
 
         </div>
 
-
         <a
             href="{{ route('fac.mi-perfil') }}"
             class="btn btn-light"
@@ -105,11 +104,11 @@
                     <thead>
                         <tr>
                             <th>Capacitación</th>
-                            <th>Cliente</th>
+                            <th>Institución</th>
                             <th>Fecha</th>
                             <th>Modalidad</th>
                             <th>Horas</th>
-                            <th>Estado</th>
+                            <th>Fuente</th>
                         </tr>
                     </thead>
 
@@ -125,16 +124,19 @@
                                 <td>
 
                                     <strong>
-                                        {{
-                                            $capacitacion->curso_nombre
-                                            ?? 'Capacitación FEPADE'
-                                        }}
+                                        {{ $capacitacion->nombre_evento }}
                                     </strong>
 
-                                    @if($capacitacion->codigo_evento)
+                                    @if($capacitacion->codigo_evento_externo)
                                         <small class="d-block text-muted">
                                             Código:
-                                            {{ $capacitacion->codigo_evento }}
+                                            {{ $capacitacion->codigo_evento_externo }}
+                                        </small>
+                                    @endif
+
+                                    @if($capacitacion->tema)
+                                        <small class="d-block text-muted mt-1">
+                                            {{ $capacitacion->tema }}
                                         </small>
                                     @endif
 
@@ -142,10 +144,7 @@
 
 
                                 <td>
-                                    {{
-                                        $capacitacion->cliente
-                                        ?? 'No registrado'
-                                    }}
+                                    {{ $capacitacion->institucion ?: '—' }}
                                 </td>
 
 
@@ -163,8 +162,7 @@
 
                                         @if(
                                             $capacitacion->fecha_fin
-                                            && $capacitacion->fecha_fin
-                                                != $capacitacion->fecha_inicio
+                                            && $capacitacion->fecha_fin != $capacitacion->fecha_inicio
                                         )
                                             <small class="d-block text-muted">
                                                 al
@@ -188,24 +186,15 @@
 
 
                                 <td>
-                                    {{
-                                        $capacitacion->modalidad
-                                        ?? '—'
-                                    }}
+                                    {{ $capacitacion->modalidad ?: '—' }}
                                 </td>
 
 
                                 <td>
 
-                                    @if(
-                                        $capacitacion->no_horas_real
-                                        !== null
-                                    )
+                                    @if($capacitacion->horas !== null)
 
-                                        {{
-                                            $capacitacion->no_horas_real
-                                        }}
-                                        h
+                                        {{ $capacitacion->horas }} h
 
                                     @else
 
@@ -218,19 +207,16 @@
 
                                 <td>
 
-                                    @if($capacitacion->estado_curso_nombre)
+                                    @if($capacitacion->fuente)
 
                                         <span class="badge badge-primary-soft">
-                                            {{
-                                                $capacitacion
-                                                    ->estado_curso_nombre
-                                            }}
+                                            {{ $capacitacion->fuente }}
                                         </span>
 
                                     @else
 
                                         <span class="badge badge-muted-soft">
-                                            No registrado
+                                            FEPADE
                                         </span>
 
                                     @endif

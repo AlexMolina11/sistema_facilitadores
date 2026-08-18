@@ -19,7 +19,15 @@ class AuthController extends Controller
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('fac.dashboard');
+            $usuario = Auth::user();
+
+            if ($usuario->id_consultor) {
+                return redirect()
+                    ->route('fac.mi-perfil');
+            }
+
+            return redirect()
+                ->route('fac.dashboard');
         }
 
         return view('seg.auth.login');

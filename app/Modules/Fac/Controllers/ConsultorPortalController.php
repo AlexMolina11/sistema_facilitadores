@@ -69,8 +69,9 @@ class ConsultorPortalController extends Controller
             ->with([
                 'capacitacionesFepade' => fn ($query) =>
                     $query
+                        ->where('activo', true)
                         ->orderByDesc('fecha_inicio')
-                        ->orderByDesc('id_consultor_capacitacion_fepade'),
+                        ->orderByDesc('id_capacitacion_fepade'),
             ])
             ->firstOrFail();
 
