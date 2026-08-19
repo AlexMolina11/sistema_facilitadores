@@ -53,8 +53,9 @@ class ConsultorPortalController extends Controller
      * Historial de capacitaciones FEPADE.
      * Exclusivamente de lectura.
      */
-    public function capacitaciones(Request $request): View
-    {
+    public function capacitaciones(
+        Request $request
+    ): View {
         $usuario = $request->user();
 
         if (! $usuario || ! $usuario->id_consultor) {
@@ -78,6 +79,52 @@ class ConsultorPortalController extends Controller
         return view(
             'fac.consultor-portal.capacitaciones',
             compact('consultor')
+        );
+    }
+
+    public function capacitacion(
+        Request $request,
+        int $capacitacion
+    ): View {
+        $usuario = $request->user();
+
+        if (! $usuario || ! $usuario->id_consultor) {
+            abort(
+                403,
+                'Tu usuario no posee un perfil de consultor asociado.'
+            );
+        }
+
+        $consultor = $usuario
+            ->consultor()
+            ->firstOrFail();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Capacitación perteneciente al usuario autenticado
+        |--------------------------------------------------------------------------
+        |
+        | La consulta parte de la relación del consultor.
+        | Por tanto, un usuario no puede consultar la capacitación
+        | perteneciente a otro facilitador cambiando el ID de la URL.
+        |
+        */
+
+        $capacitacion = $consultor
+            ->capacitacionesFepade()
+            ->where('activo', true)
+            ->where(
+                'id_capacitacion_fepade',
+                $capacitacion
+            )
+            ->firstOrFail();
+
+        return view(
+            'fac.consultor-portal.capacitacion-detalle',
+            compact(
+                'consultor',
+                'capacitacion'
+            )
         );
     }
 }

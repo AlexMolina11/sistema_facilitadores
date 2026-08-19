@@ -70,6 +70,11 @@ Route::middleware(['auth'])->group(function () {
         [ConsultorPortalController::class, 'capacitaciones']
     )->name('fac.mis-capacitaciones');
 
+    Route::get(
+        'mis-capacitaciones/{capacitacion}',
+        [ConsultorPortalController::class, 'capacitacion']
+    )->name('fac.mis-capacitaciones.show');
+
 
     Route::get('consultores', [ConsultorController::class, 'index'])
         ->middleware('permission:fac.consultores.ver,fac.consultores.gestionar')

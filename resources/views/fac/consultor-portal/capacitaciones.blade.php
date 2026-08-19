@@ -1,261 +1,480 @@
 @extends('layouts.app')
 
 @section('title', 'Mis capacitaciones | Facilitadores FEPADE')
-@section('page-title', 'Mis capacitaciones')
+
+@section(
+    'page-title',
+    'Mis capacitaciones'
+)
+
 @section(
     'page-subtitle',
-    'Historial de capacitaciones brindadas en FEPADE'
+    'Historial institucional de capacitaciones brindadas en FEPADE'
 )
+
 
 @section('content')
 
-<div class="consultor-portal">
+@php
 
-    {{-- HERO --}}
-    <section class="consultor-portal-hero">
+    $capacitaciones =
+        $consultor->capacitacionesFepade;
 
-        <div class="consultor-portal-hero-main">
+    $totalCapacitaciones =
+        $capacitaciones->count();
 
-            <div class="consultor-portal-hero-icon">
-                <i class="fa-solid fa-chalkboard-user"></i>
-            </div>
+    $totalHoras =
+        $capacitaciones
+            ->whereNotNull('no_horas_real')
+            ->sum('no_horas_real');
 
-            <div>
+    $capacitacionesEvaluadas =
+        $capacitaciones
+            ->whereNotNull('promedio_encuesta')
+            ->count();
 
-                <div class="consultor-portal-kicker">
-                    Mi expediente · FEPADE
-                </div>
+    $promedioGeneral =
+        $capacitaciones
+            ->whereNotNull('promedio_encuesta')
+            ->avg('promedio_encuesta');
 
-                <h2>
-                    Mis capacitaciones
-                </h2>
+@endphp
 
-                <p>
-                    Historial institucional de las capacitaciones
-                    que has brindado en FEPADE.
-                </p>
 
-            </div>
+{{-- =========================================================
+    ENCABEZADO
+========================================================= --}}
 
-        </div>
+<x-ui.page-header
+    title="Mis capacitaciones"
+    subtitle="Consulta las capacitaciones que has brindado en FEPADE y los resultados de evaluación disponibles."
+>
 
-        <a
-            href="{{ route('fac.mi-perfil') }}"
-            class="btn btn-light"
+    <a
+        href="{{ route('fac.mi-perfil') }}"
+        class="btn btn-outline-secondary"
+    >
+        <i class="fa-solid fa-arrow-left me-1"></i>
+        Volver a mi perfil
+    </a>
+
+</x-ui.page-header>
+
+
+{{-- =========================================================
+    RESUMEN
+========================================================= --}}
+
+<x-ui.dashboard-grid
+    :columns="3"
+    class="mb-4"
+>
+
+    <x-ui.stat-card
+        label="Capacitaciones impartidas"
+        :value="$totalCapacitaciones"
+        description="Registros institucionales"
+        icon="fa-chalkboard-user"
+    />
+
+
+    <x-ui.stat-card
+        label="Horas impartidas"
+        :value="$totalHoras"
+        description="Horas reales registradas"
+        icon="fa-clock"
+        variant="success"
+    />
+
+
+    <x-ui.stat-card
+        label="Promedio de evaluación"
+        :value="!is_null($promedioGeneral)
+            ? number_format($promedioGeneral, 2)
+            : '—'"
+        :description="$capacitacionesEvaluadas > 0
+            ? $capacitacionesEvaluadas . ' capacitaciones evaluadas'
+            : 'Aún no hay evaluaciones disponibles'"
+        icon="fa-star"
+        variant="warning"
+    />
+
+</x-ui.dashboard-grid>
+
+
+{{-- =========================================================
+    AVISO INSTITUCIONAL
+========================================================= --}}
+
+<x-ui.page-card class="mb-4">
+
+    <div class="d-flex align-items-start gap-3">
+
+        <div
+            class="
+                badge
+                badge-primary-soft
+                rounded-circle
+                d-inline-flex
+                align-items-center
+                justify-content-center
+                flex-shrink-0
+            "
+            style="
+                width: 42px;
+                height: 42px;
+            "
         >
-            <i class="fa-solid fa-user me-1"></i>
-            Mi perfil
-        </a>
 
-    </section>
-
-
-    {{-- AVISO --}}
-    <section class="consultor-portal-notice">
-
-        <div class="consultor-portal-notice-icon">
             <i class="fa-solid fa-circle-info"></i>
+
         </div>
+
 
         <div>
-            <strong>
+
+            <h5 class="mb-1">
                 Información institucional
-            </strong>
+            </h5>
 
-            <p>
-                Este historial proviene de los sistemas institucionales
-                de FEPADE y está disponible únicamente para consulta.
-                No puedes modificar ni eliminar estos registros.
+            <p class="text-muted mb-0">
+
+                Este historial proviene de los sistemas
+                institucionales de FEPADE y está disponible
+                únicamente para consulta.
+
+                Las capacitaciones y sus evaluaciones no pueden
+                modificarse ni eliminarse desde este portal.
+
             </p>
-        </div>
-
-    </section>
-
-
-    {{-- LISTADO --}}
-    <section class="consultor-portal-panel">
-
-        <div class="consultor-portal-panel-header">
-
-            <div>
-                <h4>
-                    Historial de capacitaciones
-                </h4>
-
-                <p>
-                    {{ $consultor->capacitacionesFepade->count() }}
-                    {{
-                        $consultor->capacitacionesFepade->count() === 1
-                            ? 'registro encontrado'
-                            : 'registros encontrados'
-                    }}
-                </p>
-            </div>
 
         </div>
 
+    </div>
 
-        @if($consultor->capacitacionesFepade->isNotEmpty())
+</x-ui.page-card>
 
-            <div class="fepade-table-wrapper">
 
-                <table class="table table-hover align-middle">
+{{-- =========================================================
+    HISTORIAL
+========================================================= --}}
 
-                    <thead>
-                        <tr>
-                            <th>Capacitación</th>
-                            <th>Institución</th>
-                            <th>Fecha</th>
-                            <th>Modalidad</th>
-                            <th>Horas</th>
-                            <th>Fuente</th>
-                        </tr>
-                    </thead>
+<x-ui.table-card
 
-                    <tbody>
+    title="Historial de capacitaciones"
 
-                        @foreach(
-                            $consultor->capacitacionesFepade
-                            as $capacitacion
+    subtitle="Selecciona una capacitación para consultar su información completa y los resultados de evaluación."
+
+    :items="$capacitaciones"
+
+    emptyTitle="Aún no tienes capacitaciones registradas."
+
+    emptyMessage="Cuando FEPADE registre capacitaciones vinculadas a tu perfil, aparecerán automáticamente aquí."
+
+>
+
+    <table class="table table-hover align-middle">
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Capacitación
+                </th>
+
+                <th>
+                    Fecha
+                </th>
+
+                <th>
+                    Modalidad y horas
+                </th>
+
+                <th>
+                    Evaluación
+                </th>
+
+                <th class="text-end">
+                    Acciones
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            @foreach(
+                $capacitaciones
+                as $capacitacion
+            )
+
+                <tr>
+
+                    {{-- =========================================
+                        CAPACITACIÓN
+                    ========================================== --}}
+
+                    <td style="min-width: 280px;">
+
+                        <strong class="d-block mb-1">
+
+                            {{
+                                $capacitacion->curso_nombre
+                                ?: 'Capacitación FEPADE'
+                            }}
+
+                        </strong>
+
+
+                        @if($capacitacion->cliente)
+
+                            <small class="text-muted d-block">
+
+                                <i class="fa-regular fa-building me-1"></i>
+
+                                {{
+                                    $capacitacion->cliente
+                                }}
+
+                            </small>
+
+                        @endif
+
+
+                        @if($capacitacion->codigo_evento)
+
+                            <small class="text-muted d-block mt-1">
+
+                                Código:
+                                {{
+                                    $capacitacion->codigo_evento
+                                }}
+
+                            </small>
+
+                        @endif
+
+
+                        @if($capacitacion->tipo_evento_nombre)
+
+                            <small class="text-muted d-block">
+
+                                {{
+                                    $capacitacion
+                                        ->tipo_evento_nombre
+                                }}
+
+                            </small>
+
+                        @endif
+
+                    </td>
+
+
+                    {{-- =========================================
+                        FECHA
+                    ========================================== --}}
+
+                    <td>
+
+                        @if($capacitacion->fecha_inicio)
+
+                            <strong class="d-block">
+
+                                {{
+                                    \Illuminate\Support\Carbon::parse(
+                                        $capacitacion->fecha_inicio
+                                    )->format('d/m/Y')
+                                }}
+
+                            </strong>
+
+
+                            @if(
+                                $capacitacion->fecha_fin
+                                && $capacitacion->fecha_fin
+                                    != $capacitacion->fecha_inicio
+                            )
+
+                                <small class="text-muted">
+
+                                    hasta
+
+                                    {{
+                                        \Illuminate\Support\Carbon::parse(
+                                            $capacitacion->fecha_fin
+                                        )->format('d/m/Y')
+                                    }}
+
+                                </small>
+
+                            @endif
+
+                        @else
+
+                            <span class="text-muted">
+                                —
+                            </span>
+
+                        @endif
+
+                    </td>
+
+
+                    {{-- =========================================
+                        MODALIDAD / HORAS
+                    ========================================== --}}
+
+                    <td>
+
+                        <div class="d-flex flex-column gap-1">
+
+                            @if($capacitacion->modalidad)
+
+                                <div>
+
+                                    <span class="badge badge-muted-soft">
+
+                                        <i class="fa-solid fa-location-dot me-1"></i>
+
+                                        {{
+                                            $capacitacion->modalidad
+                                        }}
+
+                                    </span>
+
+                                </div>
+
+                            @endif
+
+
+                            @if(
+                                $capacitacion->no_horas_real
+                                !== null
+                            )
+
+                                <small class="text-muted">
+
+                                    <i class="fa-regular fa-clock me-1"></i>
+
+                                    {{
+                                        $capacitacion->no_horas_real
+                                    }}
+
+                                    horas
+
+                                </small>
+
+                            @endif
+
+                        </div>
+
+                    </td>
+
+
+                    {{-- =========================================
+                        EVALUACIÓN
+                    ========================================== --}}
+
+                    <td style="min-width: 180px;">
+
+                        @if(
+                            $capacitacion->promedio_encuesta
+                            !== null
                         )
 
-                            <tr>
+                            <div class="d-flex align-items-center gap-2">
 
-                                <td>
+                                <span
+                                    class="
+                                        badge
+                                        badge-success-soft
+                                        px-3
+                                        py-2
+                                    "
+                                >
 
-                                    <strong>
-                                        {{ $capacitacion->nombre_evento }}
-                                    </strong>
+                                    <i class="fa-solid fa-star me-1"></i>
 
-                                    @if($capacitacion->codigo_evento_externo)
-                                        <small class="d-block text-muted">
-                                            Código:
-                                            {{ $capacitacion->codigo_evento_externo }}
-                                        </small>
-                                    @endif
-
-                                    @if($capacitacion->tema)
-                                        <small class="d-block text-muted mt-1">
-                                            {{ $capacitacion->tema }}
-                                        </small>
-                                    @endif
-
-                                </td>
-
-
-                                <td>
-                                    {{ $capacitacion->institucion ?: '—' }}
-                                </td>
-
-
-                                <td>
-
-                                    @if($capacitacion->fecha_inicio)
-
-                                        <strong>
-                                            {{
-                                                \Illuminate\Support\Carbon::parse(
-                                                    $capacitacion->fecha_inicio
-                                                )->format('d/m/Y')
-                                            }}
-                                        </strong>
-
-                                        @if(
-                                            $capacitacion->fecha_fin
-                                            && $capacitacion->fecha_fin != $capacitacion->fecha_inicio
+                                    {{
+                                        number_format(
+                                            $capacitacion
+                                                ->promedio_encuesta,
+                                            2
                                         )
-                                            <small class="d-block text-muted">
-                                                al
-                                                {{
-                                                    \Illuminate\Support\Carbon::parse(
-                                                        $capacitacion->fecha_fin
-                                                    )->format('d/m/Y')
-                                                }}
-                                            </small>
-                                        @endif
+                                    }}
 
-                                    @else
+                                </span>
 
-                                        <span class="text-muted">
-                                            —
-                                        </span>
-
-                                    @endif
-
-                                </td>
+                            </div>
 
 
-                                <td>
-                                    {{ $capacitacion->modalidad ?: '—' }}
-                                </td>
+                            @if(
+                                $capacitacion
+                                    ->encuesta_nombre
+                            )
+
+                                <small
+                                    class="
+                                        text-muted
+                                        d-block
+                                        mt-1
+                                    "
+                                >
+
+                                    {{
+                                        $capacitacion
+                                            ->encuesta_nombre
+                                    }}
+
+                                </small>
+
+                            @endif
+
+                        @else
+
+                            <span class="badge badge-warning-soft">
+
+                                <i class="fa-regular fa-clock me-1"></i>
+                                Evaluación pendiente
+
+                            </span>
+
+                        @endif
+
+                    </td>
 
 
-                                <td>
+                    {{-- =========================================
+                        ACCIONES
+                    ========================================== --}}
 
-                                    @if($capacitacion->horas !== null)
+                    <td class="text-end">
 
-                                        {{ $capacitacion->horas }} h
+                        <x-ui.action-buttons
 
-                                    @else
+                            :show-url="route(
+                                'fac.mis-capacitaciones.show',
+                                $capacitacion
+                                    ->id_capacitacion_fepade
+                            )"
 
-                                        —
+                        />
 
-                                    @endif
+                    </td>
 
-                                </td>
+                </tr>
 
+            @endforeach
 
-                                <td>
+        </tbody>
 
-                                    @if($capacitacion->fuente)
+    </table>
 
-                                        <span class="badge badge-primary-soft">
-                                            {{ $capacitacion->fuente }}
-                                        </span>
+</x-ui.table-card>
 
-                                    @else
-
-                                        <span class="badge badge-muted-soft">
-                                            FEPADE
-                                        </span>
-
-                                    @endif
-
-                                </td>
-
-                            </tr>
-
-                        @endforeach
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        @else
-
-            <div class="consultor-portal-empty">
-
-                <div class="consultor-portal-empty-icon">
-                    <i class="fa-solid fa-chalkboard-user"></i>
-                </div>
-
-                <h5>
-                    Aún no tienes capacitaciones registradas
-                </h5>
-
-                <p>
-                    Cuando FEPADE registre capacitaciones vinculadas
-                    a tu perfil, aparecerán automáticamente aquí.
-                </p>
-
-            </div>
-
-        @endif
-
-    </section>
-
-</div>
 
 @endsection

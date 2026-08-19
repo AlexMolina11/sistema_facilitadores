@@ -554,79 +554,181 @@
             </section>
 
             <section class="expediente-panel expediente-ux-panel">
+
                 <div class="expediente-panel-header">
+
                     <div>
-                        <span class="expediente-ux-section-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
-                        <h4>Capacitaciones FEPADE</h4>
-                        <p>Capacitaciones impartidas o registradas desde FEPADE.</p>
+
+                        <span class="expediente-ux-section-icon">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </span>
+
+                        <h4>
+                            Capacitaciones FEPADE
+                        </h4>
+
+                        <p>
+                            Historial institucional de capacitaciones
+                            vinculadas al consultor.
+                        </p>
+
                     </div>
 
-                    @if($rutasEdicion['formacion'])
-                        <a href="{{ $rutasEdicion['formacion'] }}" class="btn btn-sm btn-outline-secondary">Editar capacitaciones</a>
+
+                    @if(
+                        $esMiPerfil
+                        && Route::has('fac.mis-capacitaciones')
+                    )
+
+                        <a
+                            href="{{ route('fac.mis-capacitaciones') }}"
+                            class="btn btn-sm btn-outline-secondary"
+                        >
+                            <i class="fa-solid fa-eye me-1"></i>
+                            Ver mi historial
+                        </a>
+
                     @endif
+
                 </div>
 
-                <div class="expediente-ux-timeline">
-                    @forelse($capacitacionesFepade as $capacitacion)
-                        <article class="expediente-timeline-card">
 
-                            <h5>
-                                {{ $capacitacion->curso_nombre
-                                    ?? 'Capacitación no registrada' }}
-                            </h5>
+                @if($capacitacionesFepade->isNotEmpty())
 
-                            <p>
-                                @if($capacitacion->cliente)
-                                    {{ $capacitacion->cliente }}
-                                @else
-                                    Cliente no registrado
+                    <div class="expediente-ux-timeline">
+
+                        @foreach(
+                            $capacitacionesFepade
+                            as $capacitacion
+                        )
+
+                            <article class="expediente-timeline-card">
+
+                                {{-- TÍTULO --}}
+                                <h5>
+                                    {{
+                                        $capacitacion->nombre_evento
+                                        ?: 'Capacitación FEPADE'
+                                    }}
+                                </h5>
+
+
+                                {{-- INSTITUCIÓN --}}
+                                <p>
+                                    {{
+                                        $capacitacion->institucion
+                                        ?: 'Institución no registrada'
+                                    }}
+                                </p>
+
+
+                                {{-- CÓDIGO / TEMA --}}
+                                <div class="expediente-tag-row">
+
+                                    @if($capacitacion->codigo_evento_externo)
+
+                                        <span>
+                                            Código:
+                                            {{ $capacitacion->codigo_evento_externo }}
+                                        </span>
+
+                                    @endif
+
+
+                                    @if($capacitacion->modalidad)
+
+                                        <span>
+                                            {{ $capacitacion->modalidad }}
+                                        </span>
+
+                                    @endif
+
+
+                                    @if($capacitacion->horas !== null)
+
+                                        <span>
+                                            {{ $capacitacion->horas }}
+                                            horas
+                                        </span>
+
+                                    @endif
+
+
+                                    @if($capacitacion->fuente)
+
+                                        <span>
+                                            Fuente:
+                                            {{ $capacitacion->fuente }}
+                                        </span>
+
+                                    @endif
+
+                                </div>
+
+
+                                {{-- FECHAS --}}
+                                <span class="expediente-date">
+
+                                    @if($capacitacion->fecha_inicio)
+
+                                        {{
+                                            \Illuminate\Support\Carbon::parse(
+                                                $capacitacion->fecha_inicio
+                                            )->format('d/m/Y')
+                                        }}
+
+                                    @else
+
+                                        S/F
+
+                                    @endif
+
+
+                                    @if(
+                                        $capacitacion->fecha_fin
+                                        && $capacitacion->fecha_fin
+                                            != $capacitacion->fecha_inicio
+                                    )
+
+                                        -
+
+                                        {{
+                                            \Illuminate\Support\Carbon::parse(
+                                                $capacitacion->fecha_fin
+                                            )->format('d/m/Y')
+                                        }}
+
+                                    @endif
+
+                                </span>
+
+
+                                {{-- TEMA --}}
+                                @if($capacitacion->tema)
+
+                                    <p class="expediente-description">
+                                        {{ $capacitacion->tema }}
+                                    </p>
+
                                 @endif
-                            </p>
 
-                            <div class="expediente-tag-row">
+                            </article>
 
-                                @if($capacitacion->modalidad)
-                                    <span>
-                                        {{ $capacitacion->modalidad }}
-                                    </span>
-                                @endif
+                        @endforeach
 
-                                @if($capacitacion->tipo_evento_nombre)
-                                    <span>
-                                        {{ $capacitacion->tipo_evento_nombre }}
-                                    </span>
-                                @endif
+                    </div>
 
-                                @if($capacitacion->estado_curso_nombre)
-                                    <span>
-                                        {{ $capacitacion->estado_curso_nombre }}
-                                    </span>
-                                @endif
+                @else
 
-                                @if($capacitacion->no_horas_real !== null)
-                                    <span>
-                                        {{ $capacitacion->no_horas_real }}
-                                        horas
-                                    </span>
-                                @endif
+                    <div class="expediente-empty-state">
 
-                                @if($capacitacion->fuente)
-                                    <span>
-                                        {{ $capacitacion->fuente }}
-                                    </span>
-                                @endif
-                            </div>
+                        No hay capacitaciones FEPADE
+                        registradas para este consultor.
 
-                            <span class="expediente-date">
-                                {{ $capacitacion->fecha_inicio ? $capacitacion->fecha_inicio->format('d/m/Y') : 'S/F' }}
-                                -
-                                {{ $capacitacion->fecha_fin ? $capacitacion->fecha_fin->format('d/m/Y') : 'S/F' }}
-                            </span>
-                        </article>
-                    @empty
-                        <div class="expediente-empty-state">No hay capacitaciones FEPADE registradas.</div>
-                    @endforelse
-                </div>
+                    </div>
+
+                @endif
+
             </section>
 
             <section class="expediente-panel expediente-ux-panel">
@@ -812,7 +914,11 @@
                             @if($atestado)
                                 Atestado: {{ $atestado->titulo ?? $atestado->descripcion ?? 'Atestado registrado' }}
                             @elseif($capacitacion)
-                                Capacitación FEPADE: {{ $capacitacion->curso_nombre ?? 'Evento registrado' }}
+                                Capacitación FEPADE:
+                                {{
+                                    $capacitacion->nombre_evento
+                                    ?: 'Evento registrado'
+                                }}
                             @else
                                 Sin evidencia vinculada.
                             @endif
