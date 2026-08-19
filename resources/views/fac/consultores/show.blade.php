@@ -12,34 +12,6 @@
     use Illuminate\Support\Facades\Route;
     use Illuminate\Support\Facades\Storage;
 
-    /*
-    |--------------------------------------------------------------------------
-    | Contexto del usuario autenticado
-    |--------------------------------------------------------------------------
-    */
-
-    $usuarioActual = auth()->user();
-
-    $esMiPerfil =
-        filled($usuarioActual?->id_consultor)
-        && (int) $usuarioActual->id_consultor
-            === (int) $consultor->id_consultor;
-
-    $puedeVerListadoConsultores =
-        (bool) (
-            $usuarioActual?->tienePermiso(
-                'fac.consultores.ver'
-            )
-            || $usuarioActual?->tienePermiso(
-                'fac.consultores.gestionar'
-            )
-        );
-
-    $puedeGestionarConsultores =
-        (bool) $usuarioActual?->tienePermiso(
-            'fac.consultores.gestionar'
-        );
-
     $tiposTelefono = $catalogos['tiposTelefono'] ?? collect();
     $tiposRedSocial = $catalogos['tiposRedSocial'] ?? collect();
     $tiposAtestado = $catalogos['tiposAtestado'] ?? collect();
@@ -265,7 +237,13 @@
             </div>
 
             <div class="expediente-ux-identity">
-                <div class="expediente-ux-kicker">Expediente profesional</div>
+                <div class="expediente-ux-kicker">
+                    {{
+                        $esMiPerfil
+                            ? 'Mi expediente profesional'
+                            : 'Expediente profesional'
+                    }}
+                </div>
                 <h2>{{ $nombreCompleto ?: 'Consultor sin nombre' }}</h2>
 
                 <div class="expediente-ux-meta">
@@ -295,17 +273,37 @@
             </div>
 
             <div class="expediente-ux-hero-actions">
+
                 @if($rutasEdicion['perfil'])
-                    <a href="{{ $rutasEdicion['perfil'] }}" class="btn btn-light">
-                        Editar perfil
+
+                    <a
+                        href="{{ $rutasEdicion['perfil'] }}"
+                        class="btn btn-light"
+                    >
+                        <i class="fa-solid fa-pen-to-square me-1"></i>
+
+                        {{
+                            $esMiPerfil
+                                ? 'Editar mi perfil'
+                                : 'Editar perfil'
+                        }}
                     </a>
+
                 @endif
 
+
                 @if($rutasEdicion['index'])
-                    <a href="{{ $rutasEdicion['index'] }}" class="btn btn-outline-light">
-                        Volver
+
+                    <a
+                        href="{{ $rutasEdicion['index'] }}"
+                        class="btn btn-outline-light"
+                    >
+                        <i class="fa-solid fa-arrow-left me-1"></i>
+                        Volver al listado
                     </a>
+
                 @endif
+
             </div>
         </div>
     </section>

@@ -196,16 +196,28 @@
         </div>
     @endforelse
 
-    <form method="POST" action="{{ route('fac.consultores.habilidades.continuar', $consultor) }}" class="d-flex justify-content-between mt-4">
-        @csrf
-        <a href="{{ route('fac.consultores.formacion.edit', $consultor) }}" class="btn btn-outline-secondary">
-            Anterior: Títulos Académicos
-        </a>
+    @include(
+        'fac.consultores.partials._wizard_actions',
+        [
+            'consultor' =>
+                $consultor,
 
-        <button type="submit" class="btn btn-fepade">
-            Continuar a idiomas
-        </button>
-    </form>
+            'anterior' =>
+                route(
+                    'fac.consultores.formacion.edit',
+                    $consultor
+                ),
+
+            'continuarRoute' =>
+                route(
+                    'fac.consultores.habilidades.continuar',
+                    $consultor
+                ),
+
+            'continuarLabel' =>
+                'Continuar a Idiomas',
+        ]
+    )
 </div>
 @endsection
 
