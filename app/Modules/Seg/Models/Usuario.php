@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Modules\Seg\Notifications\ResetPasswordNotification;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Usuario extends Authenticatable
 {
@@ -126,5 +127,32 @@ class Usuario extends Authenticatable
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function invitacionesCreadas(): HasMany
+    {
+        return $this->hasMany(
+            Invitacion::class,
+            'usuario_crea',
+            'id_usuario'
+        );
+    }
+
+    public function invitacionesModificadas(): HasMany
+    {
+        return $this->hasMany(
+            Invitacion::class,
+            'usuario_mod',
+            'id_usuario'
+        );
+    }
+
+    public function invitacionesEliminadas(): HasMany
+    {
+        return $this->hasMany(
+            Invitacion::class,
+            'usuario_elim',
+            'id_usuario'
+        );
     }
 }

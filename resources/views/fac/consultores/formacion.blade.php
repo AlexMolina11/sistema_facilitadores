@@ -181,19 +181,28 @@
     </div>
 @endforeach
 
-<form method="POST" action="{{ route('fac.consultores.formacion.continuar', $consultor) }}" class="mt-4">
-    @csrf
+@include(
+    'fac.consultores.partials._wizard_actions',
+    [
+        'consultor' =>
+            $consultor,
 
-    <div class="d-flex justify-content-between">
-        <a href="{{ route('fac.consultores.experiencia.edit', $consultor) }}" class="btn btn-outline-secondary">
-            Anterior: Experiencia
-        </a>
+        'anterior' =>
+            route(
+                'fac.consultores.experiencia.edit',
+                $consultor
+            ),
 
-        <button type="submit" class="btn btn-fepade">
-            Guardar y continuar
-        </button>
-    </div>
-</form>
+        'continuarRoute' =>
+            route(
+                'fac.consultores.formacion.continuar',
+                $consultor
+            ),
+
+        'continuarLabel' =>
+            'Continuar a Especialización',
+    ]
+)
 
 <script>
     function cerrarFormularios() {

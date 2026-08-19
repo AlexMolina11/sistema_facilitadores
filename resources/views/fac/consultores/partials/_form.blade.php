@@ -545,12 +545,26 @@
     </div>
 
     <div class="col-12">
+
         <hr>
-        <h5 class="mb-1">Foto y estado</h5>
-        <p class="text-muted mb-0">Foto del consultor y estado del perfil.</p>
+
+        <h5 class="mb-1">
+            Fotografía del perfil
+        </h5>
+
+        <p class="text-muted mb-0">
+
+            {{
+                $esMiPerfil
+                    ? 'Actualiza la fotografía utilizada en tu expediente profesional.'
+                    : 'Actualiza la fotografía utilizada en el expediente profesional del consultor.'
+            }}
+
+        </p>
+
     </div>
 
-    <div class="col-md-6">
+    <div class="{{ $puedeGestionarConsultores ? 'col-md-6' : 'col-12' }}">
         <label class="form-label">Foto del consultor</label>
         <input 
             type="file" 
@@ -573,35 +587,107 @@
         @endif
     </div>
 
-    <div class="col-md-3">
-        <label class="form-label d-block">Vigencia</label>
-        <div class="form-check form-switch mt-2">
-            <input 
-                class="form-check-input" 
-                type="checkbox" 
-                name="vigente" 
-                value="1" 
-                id="vigente"
-                {{ old('vigente', $consultor->vigente ?? true) ? 'checked' : '' }}
-            >
-            <label class="form-check-label" for="vigente">Consultor vigente</label>
-        </div>
-    </div>
+    @if($puedeGestionarConsultores)
 
-    <div class="col-md-3">
-        <label class="form-label d-block">Estado</label>
-        <div class="form-check form-switch mt-2">
-            <input 
-                class="form-check-input" 
-                type="checkbox" 
-                name="activo" 
-                value="1" 
-                id="activo"
-                {{ old('activo', $consultor->activo ?? true) ? 'checked' : '' }}
-            >
-            <label class="form-check-label" for="activo">Activo</label>
+        <div class="col-md-6">
+
+            <div class="fepade-card h-100">
+
+                <div class="mb-3">
+
+                    <h6 class="mb-1">
+                        Estado administrativo
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        Estos controles son de uso administrativo
+                        y determinan la disponibilidad del consultor
+                        dentro del sistema.
+                    </p>
+
+                </div>
+
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+
+                        <label class="form-label d-block">
+                            Vigencia
+                        </label>
+
+                        <div class="form-check form-switch mt-2">
+
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="vigente"
+                                value="1"
+                                id="vigente"
+                                {{
+                                    old(
+                                        'vigente',
+                                        $consultor->vigente ?? true
+                                    )
+                                        ? 'checked'
+                                        : ''
+                                }}
+                            >
+
+                            <label
+                                class="form-check-label"
+                                for="vigente"
+                            >
+                                Consultor vigente
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label class="form-label d-block">
+                            Estado
+                        </label>
+
+                        <div class="form-check form-switch mt-2">
+
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="activo"
+                                value="1"
+                                id="activo"
+                                {{
+                                    old(
+                                        'activo',
+                                        $consultor->activo ?? true
+                                    )
+                                        ? 'checked'
+                                        : ''
+                                }}
+                            >
+
+                            <label
+                                class="form-check-label"
+                                for="activo"
+                            >
+                                Perfil activo
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
-    </div>
+
+    @endif
 </div>
 
 <script>

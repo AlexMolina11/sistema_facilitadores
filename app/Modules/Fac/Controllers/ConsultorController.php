@@ -34,6 +34,10 @@ class ConsultorController extends Controller
                     $query
                         ->where('activo', true)
                         ->orderByDesc('principal'),
+
+                'usuario',
+
+                'invitacionActiva',
             ])
 
             ->when(
@@ -140,7 +144,7 @@ class ConsultorController extends Controller
             compact(
                 'consultores',
                 'buscar',
-                'estado'
+                'estado',
             )
         );
     }
@@ -193,39 +197,63 @@ class ConsultorController extends Controller
         $consultor->load([
             'sexoCatalogo',
 
-            'emails' => fn ($query) => $query->where('activo', true)->orderByDesc('principal'),
+            'emails' => fn ($query) =>
+                $query
+                    ->where('activo', true)
+                    ->orderByDesc('principal'),
 
-            'telefonos' => fn ($query) => $query->where('activo', true),
+            'telefonos' => fn ($query) =>
+                $query->where('activo', true),
 
-            'redesSociales' => fn ($query) => $query->where('activo', true),
+            'redesSociales' => fn ($query) =>
+                $query->where('activo', true),
 
-            'emergencias' => fn ($query) => $query->where('activo', true),
+            'emergencias' => fn ($query) =>
+                $query->where('activo', true),
 
-            'documentos' => fn ($query) => $query->where('activo', true),
+            'documentos' => fn ($query) =>
+                $query->where('activo', true),
 
-            'atestados' => fn ($query) => $query
-                ->where('activo', true)
-                ->with(['tipoFormacion', 'tipoAtestado', 'nivelAcademico', 'pais'])
-                ->orderByDesc('fecha_fin'),
+            'atestados' => fn ($query) =>
+                $query
+                    ->where('activo', true)
+                    ->with([
+                        'tipoFormacion',
+                        'tipoAtestado',
+                        'nivelAcademico',
+                        'pais',
+                    ])
+                    ->orderByDesc('fecha_fin'),
 
-            'capacitacionesFepade' => fn ($query) => $query
-                ->where('activo', true)
-                ->orderByDesc('fecha_fin'),
+            'capacitacionesFepade' => fn ($query) =>
+                $query
+                    ->where('activo', true)
+                    ->orderByDesc('fecha_fin'),
 
-            'experienciasLaborales' => fn ($query) => $query
-                ->where('activo', true)
-                ->orderByDesc('trabajo_actual')
-                ->orderByDesc('desde'),
+            'experienciasLaborales' => fn ($query) =>
+                $query
+                    ->where('activo', true)
+                    ->orderByDesc('trabajo_actual')
+                    ->orderByDesc('desde'),
 
-            'disponibilidades' => fn ($query) => $query->where('activo', true),
+            'disponibilidades' => fn ($query) =>
+                $query->where('activo', true),
 
-            'areasEspecializacion' => fn ($query) => $query
-                ->where('activo', true)
-                ->with(['areaEspecializacion', 'atestado', 'capacitacionFepade', 'habilidades.habilidadTecnica']),
+            'areasEspecializacion' => fn ($query) =>
+                $query
+                    ->where('activo', true)
+                    ->with([
+                        'areaEspecializacion',
+                        'atestado',
+                        'capacitacionFepade',
+                        'habilidades.habilidadTecnica',
+                    ]),
 
-            'idiomas' => fn ($query) => $query->where('activo', true),
+            'idiomas' => fn ($query) =>
+                $query->where('activo', true),
 
-            'referencias' => fn ($query) => $query->where('activo', true),
+            'referencias' => fn ($query) =>
+                $query->where('activo', true),
         ]);
 
         $catalogos = [
@@ -256,6 +284,7 @@ class ConsultorController extends Controller
             'tiposDocumento' => DB::table('tbl_tipo_documento')
                 ->get()
                 ->keyBy('id_tipo_documento'),
+
             'tiposDisponibilidad' => DB::table('tbl_tipo_disponibilidad')
                 ->get()
                 ->keyBy('id_tipo_disponibilidad'),
@@ -289,53 +318,170 @@ class ConsultorController extends Controller
 
         $avancePerfil = $consultor->avancePerfil();
 
-        return view('fac.consultores.show', compact('consultor', 'catalogos', 'avancePerfil'));
+        $contextoPerfil = $this->contextoPerfil(
+            $consultor
+        );
+
+        return view(
+            'fac.consultores.show',
+            array_merge(
+                compact(
+                    'consultor',
+                    'catalogos',
+                    'avancePerfil'
+                ),
+                $contextoPerfil
+            )
+        );
     }
 
     public function edit(Consultor $consultor)
     {
         $consultor->load([
-            'documentos' => fn ($query) => $query->where('activo', true),
+            'documentos' => fn ($query) =>
+                $query->where('activo', true),
         ]);
 
         $catalogos = $this->catalogosFormulario();
 
-        return view('fac.consultores.edit', compact('consultor', 'catalogos'));
+        $contextoPerfil = $this->contextoPerfil(
+            $consultor
+        );
+
+        return view(
+            'fac.consultores.edit',
+            array_merge(
+                compact(
+                    'consultor',
+                    'catalogos'
+                ),
+                $contextoPerfil
+            )
+        );
     }
 
-    public function update(UpdateConsultorRequest $request, Consultor $consultor)
-    {
-        $data = Arr::except($request->validated(), [
-            'id_departamento',
-            'id_municipio_mh',
-            'foto',
-            'documento_identificacion',
-            'documento_nit',
-            'documento_nrc',
-            'actividad_giro',
-        ]);
+    public function update(
+        UpdateConsultorRequest $request,
+        Consultor $consultor
+    ) {
+        $usuario = auth()->user();
+
+        $puedeGestionarConsultores =
+            (bool) $usuario?->tienePermiso(
+                'fac.consultores.gestionar'
+            );
+
+        $data = Arr::except(
+            $request->validated(),
+            [
+                'id_departamento',
+                'id_municipio_mh',
+                'foto',
+                'documento_identificacion',
+                'documento_nit',
+                'documento_nrc',
+                'actividad_giro',
+
+                /*
+                |--------------------------------------------------------------------------
+                | Campos administrativos
+                |--------------------------------------------------------------------------
+                |
+                | Nunca permitimos que entren automáticamente desde validated().
+                | Se procesan aparte únicamente si el usuario tiene permiso
+                | administrativo para gestionar consultores.
+                |
+                */
+                'vigente',
+                'activo',
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Fotografía
+        |--------------------------------------------------------------------------
+        */
 
         if ($request->hasFile('foto')) {
-            if ($consultor->ruta_foto && Storage::disk('public')->exists($consultor->ruta_foto)) {
-                Storage::disk('public')->delete($consultor->ruta_foto);
+
+            if (
+                $consultor->ruta_foto
+                && Storage::disk('public')
+                    ->exists($consultor->ruta_foto)
+            ) {
+                Storage::disk('public')
+                    ->delete($consultor->ruta_foto);
             }
 
-            $data['ruta_foto'] = $request->file('foto')
-                ->store("consultores/{$consultor->id_consultor}/foto", 'public');
+            $data['ruta_foto'] =
+                $request
+                    ->file('foto')
+                    ->store(
+                        "consultores/{$consultor->id_consultor}/foto",
+                        'public'
+                    );
         }
 
-        $consultor->update([
-            ...$data,
-            'vigente' => $request->boolean('vigente'),
-            'activo' => $request->boolean('activo'),
-            'usuario_mod' => auth()->id(),
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Datos generales
+        |--------------------------------------------------------------------------
+        */
 
-        $this->guardarDocumentosIdentificacion($request, $consultor);
+        $datosActualizacion = [
+            ...$data,
+
+            'usuario_mod' =>
+                auth()->id(),
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Estado y vigencia
+        |--------------------------------------------------------------------------
+        |
+        | Solamente usuarios con fac.consultores.gestionar pueden modificar
+        | estas propiedades.
+        |
+        | Si el usuario es propietario pero NO tiene permiso administrativo,
+        | conservamos exactamente los valores actuales.
+        |
+        */
+
+        if ($puedeGestionarConsultores) {
+
+            $datosActualizacion['vigente'] =
+                $request->boolean('vigente');
+
+            $datosActualizacion['activo'] =
+                $request->boolean('activo');
+        }
+
+        $consultor->update(
+            $datosActualizacion
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Documentos
+        |--------------------------------------------------------------------------
+        */
+
+        $this->guardarDocumentosIdentificacion(
+            $request,
+            $consultor
+        );
 
         return redirect()
-            ->route('fac.consultores.contacto.edit', $consultor)
-            ->with('success', 'Datos personales actualizados correctamente. Continúa con la información de contacto.');
+            ->route(
+                'fac.consultores.contacto.edit',
+                $consultor
+            )
+            ->with(
+                'success',
+                'Datos personales actualizados correctamente. Continúa con la información de contacto.'
+            );
     }
 
     public function destroy(Consultor $consultor)
@@ -350,6 +496,59 @@ class ConsultorController extends Controller
         return redirect()
             ->route('fac.consultores.index')
             ->with('success', 'Consultor eliminado correctamente.');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Contexto del expediente
+    |--------------------------------------------------------------------------
+    |
+    | Diferencia entre:
+    |
+    | - El usuario trabajando sobre su propio perfil.
+    | - Un usuario autorizado administrando el expediente de otra persona.
+    |
+    | Tener permisos administrativos no impide que el usuario también tenga
+    | una experiencia personal cuando abre su propio id_consultor.
+    |
+    */
+
+    private function contextoPerfil(
+        Consultor $consultor
+    ): array {
+        $usuario = auth()->user();
+
+        $esMiPerfil =
+            $usuario
+            && filled($usuario->id_consultor)
+            && (int) $usuario->id_consultor
+                === (int) $consultor->id_consultor;
+
+        $puedeVerListadoConsultores =
+            (bool) (
+                $usuario?->tienePermiso(
+                    'fac.consultores.ver'
+                )
+                || $usuario?->tienePermiso(
+                    'fac.consultores.gestionar'
+                )
+            );
+
+        $puedeGestionarConsultores =
+            (bool) $usuario?->tienePermiso(
+                'fac.consultores.gestionar'
+            );
+
+        return [
+            'esMiPerfil' =>
+                $esMiPerfil,
+
+            'puedeVerListadoConsultores' =>
+                $puedeVerListadoConsultores,
+
+            'puedeGestionarConsultores' =>
+                $puedeGestionarConsultores,
+        ];
     }
 
     private function catalogosFormulario(): array

@@ -153,13 +153,28 @@
     @endforelse
 </div>
 
-<form method="POST" action="{{ route('fac.consultores.contacto.continuar', $consultor) }}" class="mb-5">
-    @csrf
-    <div class="d-flex justify-content-between">
-        <a href="{{ route('fac.consultores.edit', $consultor) }}" class="btn btn-outline-secondary">Anterior: Perfil Personal</a>
-        <button type="submit" class="btn btn-fepade">Guardar y continuar</button>
-    </div>
-</form>
+@include(
+    'fac.consultores.partials._wizard_actions',
+    [
+        'consultor' =>
+            $consultor,
+
+        'anterior' =>
+            route(
+                'fac.consultores.edit',
+                $consultor
+            ),
+
+        'continuarRoute' =>
+            route(
+                'fac.consultores.contacto.continuar',
+                $consultor
+            ),
+
+        'continuarLabel' =>
+            'Continuar a Experiencia',
+    ]
+)
 @endsection
 
 @push('scripts')

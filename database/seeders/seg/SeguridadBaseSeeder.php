@@ -24,6 +24,7 @@ class SeguridadBaseSeeder extends Seeder
             ['codigo' => 'seg.bitacora-saf.ver', 'nombre' => 'Ver bitácora de sincronizaciones SAF', 'modulo' => 'SEG'],
             ['codigo' => 'seg.invitaciones.gestionar', 'nombre' => 'Gestionar invitaciones', 'modulo' => 'SEG'],
             ['codigo' => 'fac.busqueda.ver', 'nombre' => 'Ver búsqueda avanzada', 'modulo' => 'FAC'],
+            ['codigo' => 'seg.bitacora_terminos.ver', 'nombre' => 'Ver bitácora de aceptación de términos', 'modulo' => 'Seguridad'],
         ];
 
         foreach ($permisos as $permiso) {
@@ -50,17 +51,29 @@ class SeguridadBaseSeeder extends Seeder
 
         $admin->permisos()->sync(Permiso::pluck('id_permiso')->toArray());
 
-        $consultor->permisos()->sync(
-            Permiso::whereIn('codigo', [
-                'fac.dashboard.ver',
-                'fac.consultores.ver',
-            ])->pluck('id_permiso')->toArray()
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | Permisos del rol Consultor
+        |--------------------------------------------------------------------------
+        |
+        | El Consultor no recibe permisos administrativos globales.
+        |
+        | El acceso a su expediente se controla mediante:
+        |
+        | consultor.owner
+        |
+        | que permite trabajar únicamente sobre el id_consultor asociado
+        | al usuario autenticado.
+        |
+        */
+
+        $consultor->permisos()->sync([]);
 
         $gestor->permisos()->sync(
             Permiso::whereIn('codigo', [
                 'fac.dashboard.ver',
                 'fac.consultores.ver',
+                'seg.invitaciones.gestionar',
             ])->pluck('id_permiso')->toArray()
         );
 

@@ -8,6 +8,9 @@ use App\Modules\Seg\Controllers\PermisoController;
 use App\Modules\Seg\Controllers\BitacoraAccesoController;
 use App\Modules\Seg\Controllers\BitacoraSafController;
 use App\Modules\Seg\Controllers\PasswordResetController;
+use App\Modules\Seg\Controllers\InvitacionController;
+use App\Modules\Seg\Controllers\RegistroInvitacionController;
+use App\Modules\Seg\Controllers\BitacoraAceptacionTerminosController;
 
 Route::middleware('guest')->group(function () {
 
@@ -22,6 +25,22 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/login', [AuthController::class, 'login'])
         ->name('login.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registro de invitación
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        'registro/{token}',
+        [RegistroInvitacionController::class, 'show']
+    )->name('registro.invitacion.show');
+
+    Route::post(
+        'registro/{token}',
+        [RegistroInvitacionController::class, 'store']
+    )->name('registro.invitacion.store');
 
 
     /*
@@ -115,4 +134,44 @@ Route::prefix('seg')
         )
             ->middleware('permission:seg.bitacora-saf.ver')
             ->name('bitacora-saf.errores.reabrir');
-    });
+
+        Route::middleware('permission:seg.invitaciones.gestionar')
+        ->group(function () {
+
+            Route::get(
+                'invitaciones',
+                [InvitacionController::class, 'index']
+            )->name('invitaciones.index');
+
+            Route::post(
+                'invitaciones/consultores/{consultor}',
+                [InvitacionController::class, 'store']
+            )->name('invitaciones.store');
+
+            Route::get(
+                'invitaciones/{invitacion}',
+                [InvitacionController::class, 'show']
+            )->name('invitaciones.show');
+
+            Route::patch(
+                'invitaciones/{invitacion}/revocar',
+                [InvitacionController::class, 'revoke']
+            )->name('invitaciones.revoke');
+
+             Route::get(
+                'invitaciones/{invitacion}/qr/descargar',
+                [InvitacionController::class, 'downloadQr']
+            )->name('invitaciones.qr.download');
+
+            Route::post(
+                'invitaciones/{invitacion}/correo',
+                [InvitacionController::class, 'sendEmail']
+            )->name('invitaciones.email.send');
+        });
+
+        Route::get(
+                'bitacoras/aceptacion-terminos',
+                [BitacoraAceptacionTerminosController::class, 'index']
+             )->middleware('permission:seg.bitacora_terminos.ver')
+                ->name('bitacora-terminos.index');
+});

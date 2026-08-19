@@ -64,11 +64,27 @@
     </div>
 @endforeach
 
-<form method="POST" action="{{ route('fac.consultores.referencias.continuar', $consultor) }}" class="mb-5">@csrf
-    <div class="d-flex justify-content-between">
-        <a href="{{ route('fac.consultores.idiomas.edit', $consultor) }}" class="btn btn-outline-secondary">Anterior: Idiomas</a>
-        <button type="submit" class="btn btn-fepade">Guardar y continuar</button>
-    </div>
-</form>
+@include(
+    'fac.consultores.partials._wizard_actions',
+    [
+        'consultor' =>
+            $consultor,
+
+        'anterior' =>
+            route(
+                'fac.consultores.idiomas.edit',
+                $consultor
+            ),
+
+        'continuarRoute' =>
+            route(
+                'fac.consultores.referencias.continuar',
+                $consultor
+            ),
+
+        'continuarLabel' =>
+            'Continuar a Disponibilidad',
+    ]
+)
 @endsection
 @push('scripts')<script>function mostrarFormularioPerfil(id){document.querySelectorAll('.perfil-form-wrapper').forEach(el=>el.classList.add('d-none'));const t=document.getElementById(id);if(t)t.classList.remove('d-none');}function cerrarFormulariosPerfil(){document.querySelectorAll('.perfil-form-wrapper').forEach(el=>el.classList.add('d-none'));}</script>@endpush

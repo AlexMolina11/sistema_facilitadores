@@ -5,6 +5,10 @@ namespace App\Modules\Fac\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Modules\Fac\Models\TipoReferencia;
+use App\Modules\Seg\Models\Usuario;
+use App\Modules\Seg\Models\Invitacion;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Consultor extends Model
 {
@@ -59,6 +63,44 @@ class Consultor extends Model
     public function getNombreCompletoAttribute(): string
     {
         return trim($this->nombres . ' ' . $this->apellidos);
+    }
+
+    public function usuario(): HasOne
+    {
+        return $this->hasOne(
+            Usuario::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function invitaciones(): HasMany
+    {
+        return $this->hasMany(
+            Invitacion::class,
+            'id_consultor',
+            'id_consultor'
+        );
+    }
+
+    public function invitacionActiva(): HasOne
+    {
+        return $this->hasOne(
+            Invitacion::class,
+            'id_consultor',
+            'id_consultor'
+        )
+            ->where('activa', true)
+            ->where('revocada', false)
+            ->where(function ($query) {
+                $query->whereNull('fecha_expiracion')
+                    ->orWhere('fecha_expiracion', '>', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('max_usos')
+                    ->orWhereColumn('usos_actuales', '<', 'max_usos');
+            })
+            ->latest('id_invitacion');
     }
 
     public function emails()
@@ -373,5 +415,14 @@ class Consultor extends Model
     {
         return filled($this->id_instructor);
     }
+
+    public function correoPrincipal()
+    {
+        return $this->emails()
+            ->where('activo', true)
+            ->orderByDesc('principal')
+            ->first();
+    }
+
 
 }

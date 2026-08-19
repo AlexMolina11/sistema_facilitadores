@@ -148,6 +148,44 @@
                         </td>
 
                         <td class="text-end">
+                            @if(!$consultor->usuario)
+
+                                @if($consultor->invitacionActiva)
+
+                                    <a
+                                        href="{{ route('seg.invitaciones.show', $consultor->invitacionActiva) }}"
+                                        class="btn btn-sm btn-outline-success"
+                                        title="Ver invitación activa"
+                                    >
+                                        <i class="fa-solid fa-link me-1"></i>
+                                        Invitación activa
+                                    </a>
+
+                                @else
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalInvitacion{{ $consultor->id_consultor }}"
+                                    >
+                                        <i class="fa-solid fa-envelope me-1"></i>
+                                        Generar invitación
+                                    </button>
+
+                                @endif
+
+                            @else
+
+                                <span
+                                    class="badge text-bg-success"
+                                    title="Este consultor ya posee acceso al sistema"
+                                >
+                                    <i class="fa-solid fa-user-check me-1"></i>
+                                    Con usuario
+                                </span>
+
+                            @endif
                             <a href="{{ route('fac.consultores.show', $consultor) }}" class="btn btn-sm btn-outline-primary">
                                 Ver
                             </a>
@@ -171,6 +209,163 @@
                             </form>
                         </td>
                     </tr>
+                    @if(!$consultor->usuario && !$consultor->invitacionActiva)
+
+                        <div
+                            class="modal fade"
+                            id="modalInvitacion{{ $consultor->id_consultor }}"
+                            tabindex="-1"
+                            aria-labelledby="modalInvitacionLabel{{ $consultor->id_consultor }}"
+                            aria-hidden="true"
+                        >
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+
+                                    <form
+                                        method="POST"
+                                        action="{{ route('seg.invitaciones.store', $consultor) }}"
+                                    >
+                                        @csrf
+
+                                        <div class="modal-header">
+                                            <div>
+                                                <h5
+                                                    class="modal-title"
+                                                    id="modalInvitacionLabel{{ $consultor->id_consultor }}"
+                                                >
+                                                    Generar invitación
+                                                </h5>
+
+                                                <small class="text-muted">
+                                                    {{ $consultor->nombre_completo }}
+                                                </small>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                class="btn-close"
+                                                data-bs-dismiss="modal"
+                                                aria-label="Cerrar"
+                                            ></button>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            <div class="mb-4">
+                                                <label
+                                                    for="duracion_horas_{{ $consultor->id_consultor }}"
+                                                    class="form-label fw-semibold"
+                                                >
+                                                    Duración de la invitación
+                                                </label>
+
+                                                <div class="input-group">
+                                                    <input
+                                                        type="number"
+                                                        class="form-control"
+                                                        id="duracion_horas_{{ $consultor->id_consultor }}"
+                                                        name="duracion_horas"
+                                                        value="24"
+                                                        min="1"
+                                                        max="8760"
+                                                    >
+
+                                                    <span class="input-group-text">
+                                                        horas
+                                                    </span>
+                                                </div>
+
+                                                <div class="form-check mt-2">
+                                                    <input
+                                                        class="form-check-input js-duracion-ilimitada"
+                                                        type="checkbox"
+                                                        value="1"
+                                                        name="duracion_ilimitada"
+                                                        id="duracion_ilimitada_{{ $consultor->id_consultor }}"
+                                                        data-target="duracion_horas_{{ $consultor->id_consultor }}"
+                                                    >
+
+                                                    <label
+                                                        class="form-check-label"
+                                                        for="duracion_ilimitada_{{ $consultor->id_consultor }}"
+                                                    >
+                                                        Sin límite de tiempo
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label
+                                                    for="max_usos_{{ $consultor->id_consultor }}"
+                                                    class="form-label fw-semibold"
+                                                >
+                                                    Máximo de usos
+                                                </label>
+
+                                                <input
+                                                    type="number"
+                                                    class="form-control"
+                                                    id="max_usos_{{ $consultor->id_consultor }}"
+                                                    name="max_usos"
+                                                    value="1"
+                                                    min="1"
+                                                    max="1000"
+                                                >
+
+                                                <div class="form-check mt-2">
+                                                    <input
+                                                        class="form-check-input js-usos-ilimitados"
+                                                        type="checkbox"
+                                                        value="1"
+                                                        name="usos_ilimitados"
+                                                        id="usos_ilimitados_{{ $consultor->id_consultor }}"
+                                                        data-target="max_usos_{{ $consultor->id_consultor }}"
+                                                    >
+
+                                                    <label
+                                                        class="form-check-label"
+                                                        for="usos_ilimitados_{{ $consultor->id_consultor }}"
+                                                    >
+                                                        Usos ilimitados
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div class="alert alert-light border mb-0">
+                                                <i class="fa-solid fa-circle-info me-1"></i>
+
+                                                La invitación quedará asociada únicamente a este consultor
+                                                y asignará automáticamente el rol
+                                                <strong>Consultor</strong>.
+                                            </div>
+
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-secondary"
+                                                data-bs-dismiss="modal"
+                                            >
+                                                Cancelar
+                                            </button>
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-fepade"
+                                            >
+                                                <i class="fa-solid fa-link me-1"></i>
+                                                Crear invitación
+                                            </button>
+                                        </div>
+
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    @endif
                 @empty
                     <tr>
                         <td colspan="5" class="text-center text-muted py-4">
@@ -188,3 +383,55 @@
 </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        document.querySelectorAll('.js-duracion-ilimitada')
+            .forEach(function (checkbox) {
+
+                checkbox.addEventListener('change', function () {
+                    const input = document.getElementById(
+                        this.dataset.target
+                    );
+
+                    if (!input) {
+                        return;
+                    }
+
+                    input.disabled = this.checked;
+
+                    if (this.checked) {
+                        input.value = '';
+                    } else if (!input.value) {
+                        input.value = 24;
+                    }
+                });
+            });
+
+        document.querySelectorAll('.js-usos-ilimitados')
+            .forEach(function (checkbox) {
+
+                checkbox.addEventListener('change', function () {
+                    const input = document.getElementById(
+                        this.dataset.target
+                    );
+
+                    if (!input) {
+                        return;
+                    }
+
+                    input.disabled = this.checked;
+
+                    if (this.checked) {
+                        input.value = '';
+                    } else if (!input.value) {
+                        input.value = 1;
+                    }
+                });
+            });
+
+    });
+    </script>
+@endpush
