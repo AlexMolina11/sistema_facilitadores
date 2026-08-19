@@ -12,6 +12,34 @@
     use Illuminate\Support\Facades\Route;
     use Illuminate\Support\Facades\Storage;
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contexto del usuario autenticado
+    |--------------------------------------------------------------------------
+    */
+
+    $usuarioActual = auth()->user();
+
+    $esMiPerfil =
+        filled($usuarioActual?->id_consultor)
+        && (int) $usuarioActual->id_consultor
+            === (int) $consultor->id_consultor;
+
+    $puedeVerListadoConsultores =
+        (bool) (
+            $usuarioActual?->tienePermiso(
+                'fac.consultores.ver'
+            )
+            || $usuarioActual?->tienePermiso(
+                'fac.consultores.gestionar'
+            )
+        );
+
+    $puedeGestionarConsultores =
+        (bool) $usuarioActual?->tienePermiso(
+            'fac.consultores.gestionar'
+        );
+
     $tiposTelefono = $catalogos['tiposTelefono'] ?? collect();
     $tiposRedSocial = $catalogos['tiposRedSocial'] ?? collect();
     $tiposAtestado = $catalogos['tiposAtestado'] ?? collect();
@@ -134,7 +162,9 @@
                     $consultor
                 ) . '#documentos-identificacion'
                 : null,
-        'index' => $routeIfExists('fac.consultores.index'),
+        'index' => $puedeVerListadoConsultores
+            ? $routeIfExists('fac.consultores.index')
+            : null,
     ];
 
     $habilidadesTotal = $areasPerfil->sum(function ($registroArea) {
@@ -161,20 +191,65 @@
     $ultimaActualizacion = $consultor->updated_at ? $consultor->updated_at->format('d/m/Y') : 'No registrada';
 @endphp
 
-<x-ui.page-header title="Expediente del consultor" subtitle="Vista integral del perfil profesional registrado.">
+<x-ui.page-header
+    :title="$esMiPerfil
+        ? 'Mi perfil profesional'
+        : 'Expediente del consultor'"
+    :subtitle="$esMiPerfil
+        ? 'Consulta y mantén actualizada tu información profesional.'
+        : 'Vista integral del perfil profesional registrado.'"
+>
+
     <div class="d-flex gap-2 flex-wrap">
+
         @if($rutasEdicion['perfil'])
-            <a href="{{ $rutasEdicion['perfil'] }}" class="btn btn-fepade">
-                Editar perfil
+
+            <a
+                href="{{ $rutasEdicion['perfil'] }}"
+                class="btn btn-fepade"
+            >
+                <i class="fa-solid fa-pen-to-square me-1"></i>
+
+                {{
+                    $esMiPerfil
+                        ? 'Editar mi perfil'
+                        : 'Editar perfil'
+                }}
             </a>
+
         @endif
 
-        @if($rutasEdicion['index'])
-            <a href="{{ $rutasEdicion['index'] }}" class="btn btn-outline-secondary">
-                Volver
+
+        @if(
+            $esMiPerfil
+            && Route::has('fac.mis-capacitaciones')
+        )
+
+            <a
+                href="{{ route('fac.mis-capacitaciones') }}"
+                class="btn btn-outline-primary"
+            >
+                <i class="fa-solid fa-chalkboard-user me-1"></i>
+                Mis capacitaciones
             </a>
+
         @endif
+
+
+        @if($rutasEdicion['index'])
+
+            <a
+                href="{{ $rutasEdicion['index'] }}"
+                class="btn btn-outline-secondary"
+            >
+                <i class="fa-solid fa-arrow-left me-1"></i>
+                Volver al listado
+            </a>
+
+        @endif
+
     </div>
+
 </x-ui.page-header>
 
 <div class="expediente-page expediente-ux">
