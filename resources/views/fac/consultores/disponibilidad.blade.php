@@ -33,14 +33,14 @@
 @section('content')
 
 
-<x-ui.page-header
+<!--<x-ui.page-header
     :title="$esMiPerfil
         ? 'Mi disponibilidad'
         : 'Disponibilidad'"
     :subtitle="$esMiPerfil
         ? 'Selecciona la opción que mejor representa tu disponibilidad actual.'
         : 'Selecciona la opción que representa la disponibilidad actual del consultor.'"
-/>
+/>--> 
 
 
 @include(

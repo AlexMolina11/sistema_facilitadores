@@ -1,15 +1,43 @@
 @extends('layouts.app')
 
-@section('title', 'Experiencia | Facilitadores FEPADE')
-@section('page-title', 'Editar perfil')
-@section('page-subtitle', 'Completa y actualiza tu experiencia laboral.')
+@php
+    $esMiPerfil =
+        filled(auth()->user()?->id_consultor)
+        && (int) auth()->user()->id_consultor
+            === (int) $consultor->id_consultor;
+@endphp
+
+@section(
+    'title',
+    $esMiPerfil
+        ? 'Mi experiencia | Facilitadores FEPADE'
+        : 'Experiencia laboral | Facilitadores FEPADE'
+)
+
+@section(
+    'page-title',
+    $esMiPerfil
+        ? 'Mi experiencia laboral'
+        : 'Experiencia laboral'
+)
+
+@section(
+    'page-subtitle',
+    $esMiPerfil
+        ? 'Registra y mantén actualizada tu trayectoria profesional.'
+        : 'Gestiona la trayectoria profesional del consultor.'
+)
 
 @section('content')
 
-<x-ui.page-header
-    title="Experiencia"
-    subtitle="Registra toda tu experiencia laboral."
-/>
+<!--<x-ui.page-header
+    :title="$esMiPerfil
+        ? 'Mi experiencia laboral'
+        : 'Experiencia laboral'"
+    :subtitle="$esMiPerfil
+        ? 'Registra tus cargos, empresas, períodos laborales y evidencias.'
+        : 'Registra cargos, empresas, períodos laborales y evidencias del consultor.'"
+/>-->
 
 @include('fac.consultores.partials._wizard', ['step' => 3, 'consultor' => $consultor])
 

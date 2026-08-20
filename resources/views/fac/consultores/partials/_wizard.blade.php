@@ -14,6 +14,7 @@
         && (int) $usuarioActual->id_consultor
             === (int) $consultor->id_consultor;
 
+
     /*
     |--------------------------------------------------------------------------
     | Paso actual
@@ -34,6 +35,7 @@
     $step = $stepMap[$step ?? 1]
         ?? $step
         ?? 'perfil';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -68,17 +70,41 @@
     $porcentaje =
         $avancePerfil['porcentaje'] ?? 0;
 
+
     /*
     |--------------------------------------------------------------------------
-    | Secciones del wizard
+    | Secciones del expediente
     |--------------------------------------------------------------------------
+    |
+    | label:
+    | Texto corto utilizado en las pestañas del wizard.
+    |
+    | title_self / title_admin:
+    | Título principal mostrado según el contexto.
+    |
+    | description_self / description_admin:
+    | Explicación específica del paso.
+    |
     */
 
     $secciones = [
 
         'perfil' => [
+
             'label' => 'Perfil',
             'icon' => 'fa-user',
+
+            'title_self' =>
+                'Mi información personal',
+
+            'title_admin' =>
+                'Perfil personal',
+
+            'description_self' =>
+                'Mantén actualizados tus datos personales, residencia, documentos de identificación y fotografía.',
+
+            'description_admin' =>
+                'Actualiza los datos personales, residencia, documentos de identificación y fotografía del consultor.',
 
             'url' => route(
                 'fac.consultores.edit',
@@ -92,9 +118,23 @@
             ],
         ],
 
+
         'contacto' => [
+
             'label' => 'Contacto',
             'icon' => 'fa-phone',
+
+            'title_self' =>
+                'Mi información de contacto',
+
+            'title_admin' =>
+                'Información de contacto',
+
+            'description_self' =>
+                'Mantén actualizados tus correos, teléfonos, redes sociales y contactos de emergencia.',
+
+            'description_admin' =>
+                'Mantén actualizados los medios de contacto y la información de emergencia del consultor.',
 
             'url' => route(
                 'fac.consultores.contacto.edit',
@@ -108,9 +148,23 @@
             ],
         ],
 
+
         'experiencia' => [
+
             'label' => 'Experiencia',
             'icon' => 'fa-briefcase',
+
+            'title_self' =>
+                'Mi experiencia laboral',
+
+            'title_admin' =>
+                'Experiencia laboral',
+
+            'description_self' =>
+                'Registra y mantén actualizados tus cargos, empresas, períodos laborales y evidencias.',
+
+            'description_admin' =>
+                'Gestiona los cargos, empresas, períodos laborales y evidencias de la trayectoria profesional del consultor.',
 
             'url' => route(
                 'fac.consultores.experiencia.edit',
@@ -122,9 +176,23 @@
             ],
         ],
 
+
         'formacion' => [
+
             'label' => 'Formación',
             'icon' => 'fa-graduation-cap',
+
+            'title_self' =>
+                'Mi trayectoria educativa',
+
+            'title_admin' =>
+                'Trayectoria educativa',
+
+            'description_self' =>
+                'Registra tus estudios, acreditaciones, educación continua y documentos de respaldo.',
+
+            'description_admin' =>
+                'Gestiona los estudios, acreditaciones, educación continua y documentos de respaldo del consultor.',
 
             'url' => route(
                 'fac.consultores.formacion.edit',
@@ -137,9 +205,23 @@
             ],
         ],
 
+
         'habilidades' => [
+
             'label' => 'Especialización',
             'icon' => 'fa-star',
+
+            'title_self' =>
+                'Mis áreas de especialización',
+
+            'title_admin' =>
+                'Áreas de especialización',
+
+            'description_self' =>
+                'Relaciona tu experiencia y formación con las áreas y habilidades que respaldan tu perfil profesional.',
+
+            'description_admin' =>
+                'Relaciona las evidencias del consultor con sus áreas de especialización y habilidades técnicas.',
 
             'url' => route(
                 'fac.consultores.habilidades.edit',
@@ -156,9 +238,23 @@
             ],
         ],
 
+
         'idiomas' => [
+
             'label' => 'Idiomas',
             'icon' => 'fa-language',
+
+            'title_self' =>
+                'Mis idiomas',
+
+            'title_admin' =>
+                'Idiomas del consultor',
+
+            'description_self' =>
+                'Mantén actualizados los idiomas que dominas, sus niveles y los certificados disponibles.',
+
+            'description_admin' =>
+                'Gestiona los idiomas, niveles de dominio y certificados registrados para el consultor.',
 
             'url' => route(
                 'fac.consultores.idiomas.edit',
@@ -170,9 +266,23 @@
             ],
         ],
 
+
         'referencias' => [
+
             'label' => 'Referencias',
             'icon' => 'fa-handshake',
+
+            'title_self' =>
+                'Mis referencias',
+
+            'title_admin' =>
+                'Referencias del consultor',
+
+            'description_self' =>
+                'Registra contactos que puedan respaldar tu trayectoria personal o profesional.',
+
+            'description_admin' =>
+                'Gestiona los contactos de referencia asociados al expediente del consultor.',
 
             'url' => route(
                 'fac.consultores.referencias.edit',
@@ -184,9 +294,23 @@
             ],
         ],
 
+
         'disponibilidad' => [
+
             'label' => 'Disponibilidad',
             'icon' => 'fa-calendar-check',
+
+            'title_self' =>
+                'Mi disponibilidad',
+
+            'title_admin' =>
+                'Disponibilidad del consultor',
+
+            'description_self' =>
+                'Selecciona la opción que mejor representa tu disponibilidad actual para participar en actividades de FEPADE.',
+
+            'description_admin' =>
+                'Selecciona la opción que representa la disponibilidad actual del consultor.',
 
             'url' => route(
                 'fac.consultores.disponibilidad.edit',
@@ -198,6 +322,28 @@
             ],
         ],
     ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Información del paso activo
+    |--------------------------------------------------------------------------
+    */
+
+    $seccionActual =
+        $secciones[$step]
+        ?? $secciones['perfil'];
+
+    $tituloActual =
+        $esMiPerfil
+            ? $seccionActual['title_self']
+            : $seccionActual['title_admin'];
+
+    $descripcionActual =
+        $esMiPerfil
+            ? $seccionActual['description_self']
+            : $seccionActual['description_admin'];
+
 
     /*
     |--------------------------------------------------------------------------
@@ -221,6 +367,7 @@
             $todosLosCriterios
         );
 
+
     $steps = $consultor
         ? collect($secciones)
             ->map(
@@ -236,12 +383,14 @@
                     $criteriosPorPrefijo =
                         collect();
 
+
                     foreach (
                         (
                             $seccion['criterios_prefixes']
                             ?? []
                         ) as $prefix
                     ) {
+
                         $criteriosPorPrefijo =
                             $criteriosPorPrefijo
                                 ->merge(
@@ -257,12 +406,14 @@
                                 );
                     }
 
+
                     foreach (
                         (
                             $seccion['dynamic_prefixes']
                             ?? []
                         ) as $prefix
                     ) {
+
                         $criteriosPorPrefijo =
                             $criteriosPorPrefijo
                                 ->merge(
@@ -277,6 +428,7 @@
                                         )
                                 );
                     }
+
 
                     $criteriosSeccion =
                         $criteriosDirectos
@@ -285,6 +437,7 @@
                             )
                             ->unique()
                             ->values();
+
 
                     $completed =
                         $criteriosSeccion->isNotEmpty()
@@ -299,7 +452,9 @@
                                     )
                             );
 
+
                     return [
+
                         'label' =>
                             $seccion['label'],
 
@@ -317,6 +472,7 @@
             ->toArray()
         : [];
 
+
     $missing =
         collect($steps)
             ->filter(
@@ -328,18 +484,15 @@
             ->pluck('label')
             ->values()
             ->toArray();
+
 @endphp
 
 
 <x-ui.wizard-progress
 
-    :title="$esMiPerfil
-        ? 'Mi perfil profesional'
-        : 'Perfil del consultor'"
+    :title="$tituloActual"
 
-    :description="$esMiPerfil
-        ? 'Completa y mantén actualizada la información de tu expediente profesional.'
-        : 'Completa los criterios requeridos para alcanzar el 100% del expediente profesional.'"
+    :description="$descripcionActual"
 
     :steps="$steps"
 

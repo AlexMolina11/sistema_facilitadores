@@ -1,15 +1,43 @@
 @extends('layouts.app')
 
-@section('title', 'Áreas de especialización | Facilitadores FEPADE')
-@section('page-title', 'Editar perfil')
-@section('page-subtitle', 'Selecciona áreas de especialización, evidencia y habilidades técnicas aprendidas.')
+@php
+    $esMiPerfil =
+        filled(auth()->user()?->id_consultor)
+        && (int) auth()->user()->id_consultor
+            === (int) $consultor->id_consultor;
+@endphp
+
+@section(
+    'title',
+    $esMiPerfil
+        ? 'Mi especialización | Facilitadores FEPADE'
+        : 'Especialización | Facilitadores FEPADE'
+)
+
+@section(
+    'page-title',
+    $esMiPerfil
+        ? 'Mi especialización'
+        : 'Especialización del consultor'
+)
+
+@section(
+    'page-subtitle',
+    $esMiPerfil
+        ? 'Administra tus áreas de especialización y habilidades técnicas.'
+        : 'Administra las áreas de especialización y habilidades técnicas del consultor.'
+)
 
 @section('content')
 
-<x-ui.page-header
-    title="Especialización y habilidades"
-    subtitle="Selecciona tus áreas de especialización y las habilidades técnicas aprendidas."
-/>
+<!--<x-ui.page-header
+    :title="$esMiPerfil
+        ? 'Mis áreas de especialización'
+        : 'Áreas de especialización'"
+    :subtitle="$esMiPerfil
+        ? 'Relaciona tu experiencia y formación con las áreas y habilidades que respaldan tu perfil profesional.'
+        : 'Relaciona las evidencias del consultor con sus áreas y habilidades profesionales.'"
+/>-->
 
 @include('fac.consultores.partials._wizard', ['step' => 5, 'consultor' => $consultor])
 

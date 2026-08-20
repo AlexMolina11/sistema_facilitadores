@@ -1,15 +1,43 @@
 @extends('layouts.app')
 
-@section('title', 'Trayectoria consultor | Facilitadores FEPADE')
-@section('page-title', 'Trayectoria Académica y Profesional')
-@section('page-subtitle', 'Registra educación formal, educación continua, acreditaciones, capacitaciones y consultorías realizadas')
+@php
+    $esMiPerfil =
+        filled(auth()->user()?->id_consultor)
+        && (int) auth()->user()->id_consultor
+            === (int) $consultor->id_consultor;
+@endphp
+
+@section(
+    'title',
+    $esMiPerfil
+        ? 'Mi formación | Facilitadores FEPADE'
+        : 'Formación | Facilitadores FEPADE'
+)
+
+@section(
+    'page-title',
+    $esMiPerfil
+        ? 'Mi formación'
+        : 'Formación del consultor'
+)
+
+@section(
+    'page-subtitle',
+    $esMiPerfil
+        ? 'Administra tu formación académica, educación continua y acreditaciones.'
+        : 'Administra la trayectoria académica y profesional del consultor.'
+)
 
 @section('content')
 
-<x-ui.page-header
-    title="Tayectoria"
-    subtitle="Actualiza los atestados que respalden tus conocimientos."
-/>
+<!--<x-ui.page-header
+    :title="$esMiPerfil
+        ? 'Mi trayectoria educativa'
+        : 'Trayectoria educativa'"
+    :subtitle="$esMiPerfil
+        ? 'Registra tus estudios, acreditaciones, educación continua y documentos de respaldo.'
+        : 'Registra estudios, acreditaciones, educación continua y documentos de respaldo del consultor.'"
+/>-->
 
 @include('fac.consultores.partials._wizard', ['step' => 4, 'consultor' => $consultor])
 

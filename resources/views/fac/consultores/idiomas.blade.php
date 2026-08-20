@@ -1,15 +1,43 @@
 @extends('layouts.app')
 
-@section('title', 'Idiomas | Facilitadores FEPADE')
-@section('page-title', 'Editar perfil')
-@section('page-subtitle', 'Registra los idiomas que domina el consultor.')
+@php
+    $esMiPerfil =
+        filled(auth()->user()?->id_consultor)
+        && (int) auth()->user()->id_consultor
+            === (int) $consultor->id_consultor;
+@endphp
+
+@section(
+    'title',
+    $esMiPerfil
+        ? 'Mis idiomas | Facilitadores FEPADE'
+        : 'Idiomas | Facilitadores FEPADE'
+)
+
+@section(
+    'page-title',
+    $esMiPerfil
+        ? 'Mis idiomas'
+        : 'Idiomas del consultor'
+)
+
+@section(
+    'page-subtitle',
+    $esMiPerfil
+        ? 'Registra los idiomas que dominas y su nivel correspondiente.'
+        : 'Administra los idiomas y niveles registrados para el consultor.'
+)
 
 @section('content')
 
-<x-ui.page-header
-    title="Idiomas"
-    subtitle="Cuentanos sobre los idiomas que manejas."
-/>
+<!--<x-ui.page-header
+    :title="$esMiPerfil
+        ? 'Mis idiomas'
+        : 'Idiomas'"
+    :subtitle="$esMiPerfil
+        ? 'Mantén actualizados tus idiomas, niveles de dominio y certificados.'
+        : 'Mantén actualizados los idiomas, niveles de dominio y certificados del consultor.'"
+/>-->
 
 @include('fac.consultores.partials._wizard', ['step' => 6, 'consultor' => $consultor])
 

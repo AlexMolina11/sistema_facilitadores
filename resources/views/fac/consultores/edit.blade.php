@@ -26,7 +26,7 @@
 @section('content')
 
 
-<x-ui.page-header
+<!--<x-ui.page-header
     :title="$esMiPerfil
         ? 'Mi información personal'
         : 'Perfil personal'"
@@ -64,8 +64,43 @@
 
     </div>
 
-</x-ui.page-header>
+</x-ui.page-header>-->
 
+
+<div
+    class="
+        d-flex
+        justify-content-end
+        mb-3
+    "
+>
+
+    @if($esMiPerfil)
+
+        <a
+            href="{{ route('fac.mi-perfil') }}"
+            class="btn btn-sm btn-outline-secondary"
+        >
+            <i class="fa-solid fa-arrow-left me-1"></i>
+            Volver a mi perfil
+        </a>
+
+    @else
+
+        <a
+            href="{{ route(
+                'fac.consultores.show',
+                $consultor
+            ) }}"
+            class="btn btn-sm btn-outline-secondary"
+        >
+            <i class="fa-solid fa-arrow-left me-1"></i>
+            Volver al expediente
+        </a>
+
+    @endif
+
+</div>
 
 @include(
     'fac.consultores.partials._wizard',
@@ -74,7 +109,6 @@
         'consultor' => $consultor,
     ]
 )
-
 
 <div class="perfil-panel mb-4">
 

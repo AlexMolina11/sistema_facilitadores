@@ -1,14 +1,42 @@
 @extends('layouts.app')
 
-@section('title', 'Referencias | Facilitadores FEPADE')
-@section('page-title', 'Editar perfil')
-@section('page-subtitle', 'Registra referencias personales y profesionales.')
+@php
+    $esMiPerfil =
+        filled(auth()->user()?->id_consultor)
+        && (int) auth()->user()->id_consultor
+            === (int) $consultor->id_consultor;
+@endphp
+
+@section(
+    'title',
+    $esMiPerfil
+        ? 'Mis referencias | Facilitadores FEPADE'
+        : 'Referencias | Facilitadores FEPADE'
+)
+
+@section(
+    'page-title',
+    $esMiPerfil
+        ? 'Mis referencias'
+        : 'Referencias del consultor'
+)
+
+@section(
+    'page-subtitle',
+    $esMiPerfil
+        ? 'Administra las referencias personales y profesionales de tu expediente.'
+        : 'Administra las referencias personales y profesionales del consultor.'
+)
 
 @section('content')
 
 <x-ui.page-header
-    title="Referencias"
-    subtitle="Registra tus referencias profesionales y personales."
+    :title="$esMiPerfil
+        ? 'Mis referencias'
+        : 'Referencias'"
+    :subtitle="$esMiPerfil
+        ? 'Registra contactos que puedan respaldar tu trayectoria personal o profesional.'
+        : 'Registra contactos de referencia asociados al expediente del consultor.'"
 />
 
 @include('fac.consultores.partials._wizard', ['step' => 7, 'consultor' => $consultor])
