@@ -1,4 +1,38 @@
 @php
+    /*
+    |--------------------------------------------------------------------------
+    | Contexto del formulario
+    |--------------------------------------------------------------------------
+    |
+    | Este partial puede utilizarse tanto para creación como para edición.
+    | Las variables pueden venir definidas desde la vista padre.
+    |
+    */
+
+    $esEdicion =
+        isset($consultor)
+        && $consultor !== null
+        && filled($consultor?->id_consultor);
+
+    $esMiPerfil =
+        $esMiPerfil
+        ?? (
+            $esEdicion
+            && filled(auth()->user()?->id_consultor)
+            && (int) auth()->user()->id_consultor
+                === (int) $consultor->id_consultor
+        );
+
+    $puedeGestionarConsultores =
+        $puedeGestionarConsultores
+        ?? (
+            auth()->user()?->tienePermiso(
+                'fac.consultores.gestionar'
+            )
+            ?? false
+        );
+
+
     $municipioActual = null;
     $idDepartamentoActual = old('id_departamento');
     $idMunicipioMhActual = old('id_municipio_mh');
@@ -555,9 +589,13 @@
         <p class="text-muted mb-0">
 
             {{
-                $esMiPerfil
-                    ? 'Actualiza la fotografía utilizada en tu expediente profesional.'
-                    : 'Actualiza la fotografía utilizada en el expediente profesional del consultor.'
+                ! $esEdicion
+                    ? 'Agrega la fotografía que se utilizará en el expediente profesional del consultor.'
+                    : (
+                        $esMiPerfil
+                            ? 'Actualiza la fotografía utilizada en tu expediente profesional.'
+                            : 'Actualiza la fotografía utilizada en el expediente profesional del consultor.'
+                    )
             }}
 
         </p>
