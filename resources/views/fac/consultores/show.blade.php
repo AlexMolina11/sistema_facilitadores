@@ -342,7 +342,9 @@
 
     <x-ui.wizard-progress
         title="Completitud del expediente"
-        description="Estos criterios definen el avance oficial del perfil profesional del consultor."
+        :description="$esMiPerfil
+            ? 'Estos criterios muestran el avance de tu perfil profesional y te ayudan a identificar la información pendiente.'
+            : 'Estos criterios definen el avance oficial del perfil profesional del consultor.'"
         :steps="[]"
         :current="null"
         :completion="$porcentajePerfil"
@@ -426,7 +428,7 @@
                 <div class="expediente-cards-grid">
                     <div class="expediente-mini-card expediente-ux-doc-card">
                         <h5>{{ $tipoIdentificacionMostrado ?? 'Documento de identificación' }}</h5>
-                        <p>Número:{{ $numeroIdentificacionMostrado ?? 'No registrado' }}</p>
+                        <p>Número: {{ $numeroIdentificacionMostrado ?? 'No registrado' }}</p>
                         @if($documentoIdentificacion?->url_archivo)
                             <a href="{{ Storage::url($documentoIdentificacion->url_archivo) }}" target="_blank" class="expediente-file-link">Ver documento</a>
                         @else
@@ -604,32 +606,38 @@
 
                             <article class="expediente-timeline-card">
 
-                                {{-- TÍTULO --}}
                                 <h5>
                                     {{
-                                        $capacitacion->nombre_evento
+                                        $capacitacion->curso_nombre
                                         ?: 'Capacitación FEPADE'
                                     }}
                                 </h5>
 
 
-                                {{-- INSTITUCIÓN --}}
                                 <p>
                                     {{
-                                        $capacitacion->institucion
-                                        ?: 'Institución no registrada'
+                                        $capacitacion->cliente
+                                        ?: 'Cliente no registrado'
                                     }}
                                 </p>
 
 
-                                {{-- CÓDIGO / TEMA --}}
                                 <div class="expediente-tag-row">
 
-                                    @if($capacitacion->codigo_evento_externo)
+                                    @if($capacitacion->codigo_evento)
 
                                         <span>
                                             Código:
-                                            {{ $capacitacion->codigo_evento_externo }}
+                                            {{ $capacitacion->codigo_evento }}
+                                        </span>
+
+                                    @endif
+
+
+                                    @if($capacitacion->tipo_evento_nombre)
+
+                                        <span>
+                                            {{ $capacitacion->tipo_evento_nombre }}
                                         </span>
 
                                     @endif
@@ -644,21 +652,13 @@
                                     @endif
 
 
-                                    @if($capacitacion->horas !== null)
+                                    @if(
+                                        $capacitacion->no_horas_real !== null
+                                    )
 
                                         <span>
-                                            {{ $capacitacion->horas }}
+                                            {{ $capacitacion->no_horas_real }}
                                             horas
-                                        </span>
-
-                                    @endif
-
-
-                                    @if($capacitacion->fuente)
-
-                                        <span>
-                                            Fuente:
-                                            {{ $capacitacion->fuente }}
                                         </span>
 
                                     @endif
@@ -666,7 +666,6 @@
                                 </div>
 
 
-                                {{-- FECHAS --}}
                                 <span class="expediente-date">
 
                                     @if($capacitacion->fecha_inicio)
@@ -703,14 +702,54 @@
                                 </span>
 
 
-                                {{-- TEMA --}}
-                                @if($capacitacion->tema)
+                                <div class="mt-3 d-flex gap-2 flex-wrap">
 
-                                    <p class="expediente-description">
-                                        {{ $capacitacion->tema }}
-                                    </p>
+                                    @if(
+                                        $capacitacion->promedio_encuesta !== null
+                                    )
 
-                                @endif
+                                        <span class="badge badge-success-soft">
+
+                                            <i class="fa-solid fa-star me-1"></i>
+
+                                            Evaluación:
+                                            {{
+                                                number_format(
+                                                    $capacitacion->promedio_encuesta,
+                                                    2
+                                                )
+                                            }}
+
+                                        </span>
+
+                                    @endif
+
+
+                                    @if($capacitacion->estado_curso_nombre)
+
+                                        <span class="badge badge-muted-soft">
+
+                                            {{
+                                                $capacitacion->estado_curso_nombre
+                                            }}
+
+                                        </span>
+
+                                    @endif
+
+
+                                    @if($capacitacion->fuente)
+
+                                        <span class="badge badge-primary-soft">
+
+                                            Fuente:
+                                            {{ $capacitacion->fuente }}
+
+                                        </span>
+
+                                    @endif
+
+                                </div>
 
                             </article>
 
@@ -915,8 +954,9 @@
                                 Atestado: {{ $atestado->titulo ?? $atestado->descripcion ?? 'Atestado registrado' }}
                             @elseif($capacitacion)
                                 Capacitación FEPADE:
+
                                 {{
-                                    $capacitacion->nombre_evento
+                                    $capacitacion->curso_nombre
                                     ?: 'Evento registrado'
                                 }}
                             @else

@@ -1,15 +1,44 @@
 @extends('layouts.app')
 
-@section('title', 'Contacto consultor | Facilitadores FEPADE')
-@section('page-title', 'Editar perfil')
-@section('page-subtitle', 'Completa y actualiza tu información para que las organizaciones puedan encontrarte.')
+
+@php
+    $esMiPerfil =
+        filled(auth()->user()?->id_consultor)
+        && (int) auth()->user()->id_consultor
+            === (int) $consultor->id_consultor;
+@endphp
+
+@section(
+    'title',
+    $esMiPerfil
+        ? 'Mi contacto | Facilitadores FEPADE'
+        : 'Contacto | Facilitadores FEPADE'
+)
+
+@section(
+    'page-title',
+    $esMiPerfil
+        ? 'Mi información de contacto'
+        : 'Contacto del consultor'
+)
+
+@section(
+    'page-subtitle',
+    $esMiPerfil
+        ? 'Administra tus correos, teléfonos, redes sociales y contactos de emergencia.'
+        : 'Administra los medios de contacto del consultor.'
+)
 
 @section('content')
 
-<x-ui.page-header
-    title="Contacto"
-    subtitle="Actualiza los datos de contacto, correos, teléfonos, contacto de emergencia."
-/>
+<!--<x-ui.page-header
+    :title="$esMiPerfil
+        ? 'Mi información de contacto' 
+        : 'Información de contacto'"
+    :subtitle="$esMiPerfil
+        ? 'Mantén actualizados tus medios de contacto y la información para emergencias.'
+        : 'Mantén actualizados los medios de contacto y la información de emergencia del consultor.'"
+/>-->
 
 @include('fac.consultores.partials._wizard', ['step' => 2, 'consultor' => $consultor])
 
