@@ -38,7 +38,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('fac.dashboard');
 
     Route::get('/dashboard/exportar-csv', [DashboardController::class, 'exportarCsv'])
-        ->middleware('permission:fac.dashboard.ver')
+        ->middleware('permission:fac.reportes.exportar')
         ->name('fac.dashboard.exportar-csv');
 
 
@@ -76,41 +76,114 @@ Route::middleware(['auth'])->group(function () {
     )->name('fac.mis-capacitaciones.show');
 
 
-    Route::get('consultores', [ConsultorController::class, 'index'])
-        ->middleware('permission:fac.consultores.ver,fac.consultores.gestionar')
+    /*
+    |--------------------------------------------------------------------------
+    | Consultores
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        'consultores',
+        [ConsultorController::class, 'index']
+    )
+        ->middleware('permission:fac.consultores.ver')
         ->name('fac.consultores.index');
 
-    Route::get('consultores/create', [ConsultorController::class, 'create'])
-        ->middleware('permission:fac.consultores.gestionar')
+
+    /*
+    |--------------------------------------------------------------------------
+    | Crear consultor
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        'consultores/create',
+        [ConsultorController::class, 'create']
+    )
+        ->middleware('permission:fac.consultores.crear')
         ->name('fac.consultores.create');
 
-    Route::post('consultores', [ConsultorController::class, 'store'])
-        ->middleware('permission:fac.consultores.gestionar')
+
+    Route::post(
+        'consultores',
+        [ConsultorController::class, 'store']
+    )
+        ->middleware('permission:fac.consultores.crear')
         ->name('fac.consultores.store');
 
-    Route::get('consultores/{consultor}', [ConsultorController::class, 'show'])
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ver consultor
+    |--------------------------------------------------------------------------
+    |
+    | Un usuario administrativo necesita fac.consultores.ver.
+    |
+    | Un Consultor puede entrar únicamente a su propio expediente mediante
+    | consultor.owner.
+    |
+    */
+
+    Route::get(
+        'consultores/{consultor}',
+        [ConsultorController::class, 'show']
+    )
         ->middleware('consultor.owner:fac.consultores.ver')
         ->name('fac.consultores.show');
 
-    Route::get('consultores/{consultor}/edit', [ConsultorController::class, 'edit'])
-        ->middleware('consultor.owner:fac.consultores.gestionar')
+
+    /*
+    |--------------------------------------------------------------------------
+    | Editar consultor
+    |--------------------------------------------------------------------------
+    |
+    | Administradores y Gestores utilizan fac.consultores.editar.
+    |
+    | Los Consultores pueden editar únicamente su propio expediente gracias
+    | al middleware consultor.owner.
+    |
+    */
+
+    Route::get(
+        'consultores/{consultor}/edit',
+        [ConsultorController::class, 'edit']
+    )
+        ->middleware('consultor.owner:fac.consultores.editar')
         ->name('fac.consultores.edit');
 
-    Route::put('consultores/{consultor}', [ConsultorController::class, 'update'])
-        ->middleware('consultor.owner:fac.consultores.gestionar')
+
+    Route::put(
+        'consultores/{consultor}',
+        [ConsultorController::class, 'update']
+    )
+        ->middleware('consultor.owner:fac.consultores.editar')
         ->name('fac.consultores.update');
 
-    Route::patch('consultores/{consultor}', [ConsultorController::class, 'update'])
-        ->middleware('consultor.owner:fac.consultores.gestionar')
+
+    Route::patch(
+        'consultores/{consultor}',
+        [ConsultorController::class, 'update']
+    )
+        ->middleware('consultor.owner:fac.consultores.editar')
         ->name('fac.consultores.patch');
 
-    Route::delete('consultores/{consultor}', [ConsultorController::class, 'destroy'])
-        ->middleware('permission:fac.consultores.gestionar')
+
+    /*
+    |--------------------------------------------------------------------------
+    | Eliminar consultor
+    |--------------------------------------------------------------------------
+    */
+
+    Route::delete(
+        'consultores/{consultor}',
+        [ConsultorController::class, 'destroy']
+    )
+        ->middleware('permission:fac.consultores.eliminar')
         ->name('fac.consultores.destroy');
 
     Route::prefix('consultores/{consultor}')
         ->name('fac.consultores.')
-        ->middleware('consultor.owner:fac.consultores.gestionar')
+        ->middleware('consultor.owner:fac.consultores.editar')
         ->group(function () {
 
             Route::get('contacto', [ConsultorContactoController::class, 'edit'])
@@ -176,36 +249,55 @@ Route::middleware(['auth'])->group(function () {
 
         });
 
-    Route::get('busqueda-avanzada', [BusquedaAvanzadaController::class, 'index'])
-        ->middleware('permission:fac.consultores.ver')
+    Route::get(
+        'busqueda-avanzada',
+        [BusquedaAvanzadaController::class, 'index']
+    )
+        ->middleware('permission:fac.busqueda.ver')
         ->name('fac.busqueda.index');
 
     Route::prefix('ajax')
         ->name('fac.ajax.')
-        ->middleware('permission:fac.consultores.ver')
+        ->middleware('permission:fac.busqueda.ver')
         ->group(function () {
-            Route::get('departamentos-por-pais', [BusquedaAvanzadaController::class, 'departamentosPorPais'])
-                ->name('departamentos');
 
-            Route::get('municipios-por-departamento', [BusquedaAvanzadaController::class, 'municipiosPorDepartamento'])
-                ->name('municipios');
+            Route::get(
+                'departamentos-por-pais',
+                [BusquedaAvanzadaController::class, 'departamentosPorPais']
+            )->name('departamentos');
 
-            Route::get('distritos-por-municipio', [BusquedaAvanzadaController::class, 'distritosPorMunicipio'])
-                ->name('distritos');
+            Route::get(
+                'municipios-por-departamento',
+                [BusquedaAvanzadaController::class, 'municipiosPorDepartamento']
+            )->name('municipios');
 
-            Route::get('ubicacion-por-distrito', [BusquedaAvanzadaController::class, 'ubicacionPorDistrito'])
-                ->name('ubicacion.distrito');
+            Route::get(
+                'distritos-por-municipio',
+                [BusquedaAvanzadaController::class, 'distritosPorMunicipio']
+            )->name('distritos');
+
+            Route::get(
+                'ubicacion-por-distrito',
+                [BusquedaAvanzadaController::class, 'ubicacionPorDistrito']
+            )->name('ubicacion.distrito');
+
         });
     
     Route::prefix('consultores/{consultor}/cv')
         ->name('fac.cv.')
-        ->middleware('consultor.owner:fac.consultores.ver')
+        ->middleware('permission:fac.cv.generar')
         ->group(function () {
-            Route::get('configurar', [ExportacionCvController::class, 'configurar'])
-                ->name('configurar');
 
-            Route::post('pdf', [ExportacionCvController::class, 'pdf'])
-                ->name('pdf');
+            Route::get(
+                'configurar',
+                [ExportacionCvController::class, 'configurar']
+            )->name('configurar');
+
+            Route::post(
+                'pdf',
+                [ExportacionCvController::class, 'pdf']
+            )->name('pdf');
+
         });
         
     Route::prefix('catalogos')

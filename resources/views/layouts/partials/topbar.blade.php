@@ -60,11 +60,6 @@
             'permission' => 'seg.permisos.gestionar',
         ],
         [
-            'label' => 'Invitaciones',
-            'route' => 'seg.invitaciones.index',
-            'permission' => 'seg.invitaciones.gestionar',
-        ],
-        [
             'label' => 'Bitácora de acceso',
             'route' => 'seg.bitacora.index',
             'permission' => 'seg.bitacora.ver',

@@ -115,17 +115,70 @@
         return $parameter ? route($name, $parameter) : route($name);
     };
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Capacidades visuales del expediente
+    |--------------------------------------------------------------------------
+    */
+
+    $usuarioActual = auth()->user();
+
+    $puedeEditarConsultor =
+        $esMiPerfil
+        || (
+            $usuarioActual
+            && $usuarioActual->tienePermiso('fac.consultores.editar')
+        );
+
+    $puedeGenerarCv =
+        ! $esMiPerfil
+        && $usuarioActual
+        && $usuarioActual->tienePermiso('fac.cv.generar');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rutas disponibles según permisos
+    |--------------------------------------------------------------------------
+    */
+
     $rutasEdicion = [
-        'perfil' => $routeIfExists('fac.consultores.edit', $consultor),
-        'contacto' => $routeIfExists('fac.consultores.contacto.edit', $consultor),
-        'experiencia' => $routeIfExists('fac.consultores.experiencia.edit', $consultor),
-        'formacion' => $routeIfExists('fac.consultores.formacion.edit', $consultor),
-        'habilidades' => $routeIfExists('fac.consultores.habilidades.edit', $consultor),
-        'idiomas' => $routeIfExists('fac.consultores.idiomas.edit', $consultor),
-        'referencias' => $routeIfExists('fac.consultores.referencias.edit', $consultor),
-        'disponibilidad' => $routeIfExists('fac.consultores.disponibilidad.edit', $consultor),
+        'perfil' => $puedeEditarConsultor
+            ? $routeIfExists('fac.consultores.edit', $consultor)
+            : null,
+
+        'contacto' => $puedeEditarConsultor
+            ? $routeIfExists('fac.consultores.contacto.edit', $consultor)
+            : null,
+
+        'experiencia' => $puedeEditarConsultor
+            ? $routeIfExists('fac.consultores.experiencia.edit', $consultor)
+            : null,
+
+        'formacion' => $puedeEditarConsultor
+            ? $routeIfExists('fac.consultores.formacion.edit', $consultor)
+            : null,
+
+        'habilidades' => $puedeEditarConsultor
+            ? $routeIfExists('fac.consultores.habilidades.edit', $consultor)
+            : null,
+
+        'idiomas' => $puedeEditarConsultor
+            ? $routeIfExists('fac.consultores.idiomas.edit', $consultor)
+            : null,
+
+        'referencias' => $puedeEditarConsultor
+            ? $routeIfExists('fac.consultores.referencias.edit', $consultor)
+            : null,
+
+        'disponibilidad' => $puedeEditarConsultor
+            ? $routeIfExists('fac.consultores.disponibilidad.edit', $consultor)
+            : null,
+
         'documentos' =>
-            $routeIfExists(
+            $puedeEditarConsultor
+            && $routeIfExists(
                 'fac.consultores.edit',
                 $consultor
             )
@@ -134,10 +187,15 @@
                     $consultor
                 ) . '#documentos-identificacion'
                 : null,
+
         'index' => $puedeVerListadoConsultores
             ? $routeIfExists('fac.consultores.index')
             : null,
     ];
+
+    $rutaCv = $puedeGenerarCv
+        ? $routeIfExists('fac.cv.configurar', $consultor)
+        : null;
 
     $habilidadesTotal = $areasPerfil->sum(function ($registroArea) {
         return $registroArea->habilidades?->count() ?? 0;
@@ -187,6 +245,20 @@
                         ? 'Editar mi perfil'
                         : 'Editar perfil'
                 }}
+            </a>
+
+        @endif
+
+        
+
+        @if($rutaCv)
+
+            <a
+                href="{{ $rutaCv }}"
+                class="btn btn-outline-primary"
+            >
+                <i class="fa-solid fa-file-pdf me-1"></i>
+                Generar CV
             </a>
 
         @endif
@@ -292,6 +364,19 @@
                 @endif
 
 
+                @if($rutaCv)
+
+                    <a
+                        href="{{ $rutaCv }}"
+                        class="btn btn-outline-light"
+                    >
+                        <i class="fa-solid fa-file-pdf me-1"></i>
+                        Generar CV
+                    </a>
+
+                @endif
+
+
                 @if($rutasEdicion['index'])
 
                     <a
@@ -305,6 +390,7 @@
                 @endif
 
             </div>
+
         </div>
     </section>
 

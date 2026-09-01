@@ -95,14 +95,20 @@
         [
             'label' => 'Crear consultor',
             'route' => 'fac.consultores.create',
-            'permission' => 'fac.consultores.gestionar',
+            'permission' => 'fac.consultores.crear',
             'active' => 'fac.consultores.create',
         ],
         [
             'label' => 'Búsqueda avanzada',
             'route' => 'fac.busqueda.index',
-            'permission' => 'fac.consultores.ver',
+            'permission' => 'fac.busqueda.ver',
             'active' => 'fac.busqueda.*',
+        ],
+        [
+            'label' => 'Invitaciones',
+            'route' => 'seg.invitaciones.index',
+            'permission' => 'seg.invitaciones.gestionar',
+            'active' => 'seg.invitaciones.*',
         ],
         [
             'label' => 'Revisión de perfiles',
@@ -117,6 +123,7 @@
                 && $routeAvailable($item['route'])
         )
         ->values();
+
 
     /*
     |--------------------------------------------------------------------------
@@ -377,7 +384,8 @@
                     'fac.consultores.*',
                     'fac.busqueda.*',
                     'fac.revision.*',
-                    'fac.cv.*'
+                    'fac.cv.*',
+                    'seg.invitaciones.*'
                 )
                     ? 'open'
                     : ''
@@ -394,7 +402,8 @@
                         'fac.consultores.*',
                         'fac.busqueda.*',
                         'fac.revision.*',
-                        'fac.cv.*'
+                        'fac.cv.*',
+                        'seg.invitaciones.*'
                     )
                         ? 'true'
                         : 'false'
@@ -421,7 +430,8 @@
                         'fac.consultores.*',
                         'fac.busqueda.*',
                         'fac.revision.*',
-                        'fac.cv.*'
+                        'fac.cv.*',
+                        'seg.invitaciones.*'
                     )
                         ? 'show'
                         : ''

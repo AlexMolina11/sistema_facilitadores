@@ -14,49 +14,97 @@
 
         <div>
             <h2>Listado de consultores FEPADE</h2>
-            <p>Registra, edita y gestiona los datos de los consultores.</p>
+            <p>Consulta, edita y gestiona los datos de los consultores.</p>
         </div>
     </div>
 
     <div class="busqueda-hero-actions">
-        <a href="{{ route('fac.consultores.create') }}" class="btn btn-outline-light">
-            <i class="fas fa-plus me-1"></i> Nuevo consultor
-        </a>
+
+        @permiso('fac.consultores.crear')
+            <a
+                href="{{ route('fac.consultores.create') }}"
+                class="btn btn-outline-light"
+            >
+                <i class="fas fa-plus me-1"></i>
+                Nuevo consultor
+            </a>
+        @endpermiso
+
     </div>
 </section>
 
 <div class="fepade-card mb-4">
-    <form method="GET" action="{{ route('fac.consultores.index') }}" class="row g-3 align-items-end">
+    <form
+        method="GET"
+        action="{{ route('fac.consultores.index') }}"
+        class="row g-3 align-items-end"
+    >
         <div class="col-md-6">
-            <label class="form-label">Buscar</label>
-            <input 
-                type="text" 
-                name="buscar" 
-                value="{{ $buscar }}" 
-                class="form-control" 
+            <label class="form-label">
+                Buscar
+            </label>
+
+            <input
+                type="text"
+                name="buscar"
+                value="{{ $buscar }}"
+                class="form-control"
                 placeholder="Nombre, apellido, DUI, NIT"
             >
         </div>
 
         <div class="col-md-3">
-            <label class="form-label">Estado</label>
-            <select name="estado" class="form-select">
-                <option value="">Todos</option>
-                <option value="1" {{ $estado === '1' ? 'selected' : '' }}>Activos</option>
-                <option value="0" {{ $estado === '0' ? 'selected' : '' }}>Inactivos</option>
+            <label class="form-label">
+                Estado
+            </label>
+
+            <select
+                name="estado"
+                class="form-select"
+            >
+                <option value="">
+                    Todos
+                </option>
+
+                <option
+                    value="1"
+                    {{ $estado === '1' ? 'selected' : '' }}
+                >
+                    Activos
+                </option>
+
+                <option
+                    value="0"
+                    {{ $estado === '0' ? 'selected' : '' }}
+                >
+                    Inactivos
+                </option>
             </select>
         </div>
 
         <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-navy w-100">Buscar</button>
-            <a href="{{ route('fac.consultores.index') }}" class="btn btn-outline-secondary w-100">Limpiar</a>
+            <button
+                type="submit"
+                class="btn btn-navy w-100"
+            >
+                Buscar
+            </button>
+
+            <a
+                href="{{ route('fac.consultores.index') }}"
+                class="btn btn-outline-secondary w-100"
+            >
+                Limpiar
+            </a>
         </div>
     </form>
 </div>
 
 <div class="fepade-card">
+
     <div class="table-responsive">
         <table class="table align-middle">
+
             <thead>
                 <tr>
                     <th>Consultor</th>
@@ -69,44 +117,55 @@
             </thead>
 
             <tbody>
+
                 @forelse($consultores as $consultor)
+
                     @php
                         $avancePerfil = $consultor->avancePerfil();
-                        $porcentajePerfil = $avancePerfil['porcentaje'] ?? 0;
+
+                        $porcentajePerfil =
+                            $avancePerfil['porcentaje'] ?? 0;
 
                         $claseAvance = match (true) {
                             $porcentajePerfil >= 85 => 'bg-success',
                             $porcentajePerfil >= 60 => 'bg-warning',
                             default => 'bg-danger',
                         };
+
+                        $documentoPrincipal =
+                            $consultor->documentos->first();
+
+                        $tipoDocumento =
+                            $documentoPrincipal
+                                ?->tipoDocumento
+                                ?->nombre;
+
+                        $tipoIdentificacion =
+                            $tipoDocumento
+                            ?? $consultor->tipo_identificacion
+                            ?? 'Documento';
+
+                        $numeroIdentificacion =
+                            $documentoPrincipal?->numero
+                            ?? $consultor->numero_identificacion
+                            ?? null;
                     @endphp
+
                     <tr>
+
+                        {{-- Consultor --}}
                         <td>
-                            <div class="fw-semibold">{{ $consultor->nombre_completo }}</div>
-                            <div class="text-muted small">{{ $consultor->direccion_residencia ?? 'Sin dirección registrada' }}</div>
+                            <div class="fw-semibold">
+                                {{ $consultor->nombre_completo }}
+                            </div>
+
+                            <div class="text-muted small">
+                                {{ $consultor->direccion_residencia ?? 'Sin dirección registrada' }}
+                            </div>
                         </td>
 
-                        @php
-                            $documentoPrincipal =
-                                $consultor->documentos
-                                    ->first();
 
-                            $tipoDocumento =
-                                $documentoPrincipal
-                                    ?->tipoDocumento
-                                    ?->nombre;
-
-                            $tipoIdentificacion =
-                                $tipoDocumento
-                                ?? $consultor->tipo_identificacion
-                                ?? 'Documento';
-
-                            $numeroIdentificacion =
-                                $documentoPrincipal?->numero
-                                ?? $consultor->numero_identificacion
-                                ?? null;
-                        @endphp
-
+                        {{-- Identificación --}}
                         <td>
                             <div>
                                 {{ $tipoIdentificacion }}
@@ -117,24 +176,53 @@
                             </div>
                         </td>
 
-                        <td>{{ $consultor->nacionalidad ?? 'No registrada' }}</td>
 
+                        {{-- Nacionalidad --}}
+                        <td>
+                            {{ $consultor->nacionalidad ?? 'No registrada' }}
+                        </td>
+
+
+                        {{-- Estado --}}
                         <td>
                             @if($consultor->activo)
-                                <span class="badge badge-success-soft">Activo</span>
+
+                                <span class="badge badge-success-soft">
+                                    Activo
+                                </span>
+
                             @else
-                                <span class="badge badge-warning-soft">Inactivo</span>
+
+                                <span class="badge badge-warning-soft">
+                                    Inactivo
+                                </span>
+
                             @endif
                         </td>
 
+
+                        {{-- Perfil completado --}}
                         <td>
-                            <div class="mt-2" style="max-width: 260px;">
-                                <div class="d-flex justify-content-between align-items-center small mb-1">
-                                    <span class="text-muted">Perfil completado</span>
-                                    <strong>{{ $porcentajePerfil }}%</strong>
+                            <div
+                                class="mt-2"
+                                style="max-width: 260px;"
+                            >
+                                <div
+                                    class="d-flex justify-content-between align-items-center small mb-1"
+                                >
+                                    <span class="text-muted">
+                                        Perfil completado
+                                    </span>
+
+                                    <strong>
+                                        {{ $porcentajePerfil }}%
+                                    </strong>
                                 </div>
 
-                                <div class="progress" style="height: 8px;">
+                                <div
+                                    class="progress"
+                                    style="height: 8px;"
+                                >
                                     <div
                                         class="progress-bar {{ $claseAvance }}"
                                         role="progressbar"
@@ -147,291 +235,397 @@
                             </div>
                         </td>
 
+
+                        {{-- Acciones --}}
                         <td class="text-end">
-                            @if(!$consultor->usuario)
 
-                                @if($consultor->invitacionActiva)
+                            {{-- Invitaciones --}}
+                            @permiso('seg.invitaciones.gestionar')
 
-                                    <a
-                                        href="{{ route('seg.invitaciones.show', $consultor->invitacionActiva) }}"
-                                        class="btn btn-sm btn-outline-success"
-                                        title="Ver invitación activa"
-                                    >
-                                        <i class="fa-solid fa-link me-1"></i>
-                                        Invitación activa
-                                    </a>
+                                @if(!$consultor->usuario)
+
+                                    @if($consultor->invitacionActiva)
+
+                                        <a
+                                            href="{{ route('seg.invitaciones.show', $consultor->invitacionActiva) }}"
+                                            class="btn btn-sm btn-outline-success"
+                                            title="Ver invitación activa"
+                                        >
+                                            <i class="fa-solid fa-link me-1"></i>
+                                            Invitación activa
+                                        </a>
+
+                                    @else
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalInvitacion{{ $consultor->id_consultor }}"
+                                        >
+                                            <i class="fa-solid fa-envelope me-1"></i>
+                                            Generar invitación
+                                        </button>
+
+                                    @endif
 
                                 @else
 
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-primary"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalInvitacion{{ $consultor->id_consultor }}"
+                                    <span
+                                        class="badge text-bg-success"
+                                        title="Este consultor ya posee acceso al sistema"
                                     >
-                                        <i class="fa-solid fa-envelope me-1"></i>
-                                        Generar invitación
-                                    </button>
+                                        <i class="fa-solid fa-user-check me-1"></i>
+                                        Con usuario
+                                    </span>
 
                                 @endif
 
-                            @else
+                            @endpermiso
 
-                                <span
-                                    class="badge text-bg-success"
-                                    title="Este consultor ya posee acceso al sistema"
+
+                            {{-- Ver --}}
+                            @permiso('fac.consultores.ver')
+
+                                <a
+                                    href="{{ route('fac.consultores.show', $consultor) }}"
+                                    class="btn btn-sm btn-outline-primary"
                                 >
-                                    <i class="fa-solid fa-user-check me-1"></i>
-                                    Con usuario
-                                </span>
+                                    Ver
+                                </a>
 
-                            @endif
-                            <a href="{{ route('fac.consultores.show', $consultor) }}" class="btn btn-sm btn-outline-primary">
-                                Ver
-                            </a>
+                            @endpermiso
 
-                            <a href="{{ route('fac.consultores.edit', $consultor) }}" class="btn btn-sm btn-outline-secondary">
-                                Editar
-                            </a>
 
-                            <form 
-                                action="{{ route('fac.consultores.destroy', $consultor) }}" 
-                                method="POST" 
-                                class="d-inline"
-                                onsubmit="return confirm('¿Deseas eliminar este consultor?')"
-                            >
-                                @csrf
-                                @method('DELETE')
+                            {{-- Editar --}}
+                            @permiso('fac.consultores.editar')
 
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    Eliminar
-                                </button>
-                            </form>
+                                <a
+                                    href="{{ route('fac.consultores.edit', $consultor) }}"
+                                    class="btn btn-sm btn-outline-secondary"
+                                >
+                                    Editar
+                                </a>
+
+                            @endpermiso
+
+
+                            {{-- Eliminar --}}
+                            @permiso('fac.consultores.eliminar')
+
+                                <form
+                                    action="{{ route('fac.consultores.destroy', $consultor) }}"
+                                    method="POST"
+                                    class="d-inline"
+                                    onsubmit="return confirm('¿Deseas eliminar este consultor?')"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </form>
+
+                            @endpermiso
+
                         </td>
                     </tr>
-                    @if(!$consultor->usuario && !$consultor->invitacionActiva)
 
-                        <div
-                            class="modal fade"
-                            id="modalInvitacion{{ $consultor->id_consultor }}"
-                            tabindex="-1"
-                            aria-labelledby="modalInvitacionLabel{{ $consultor->id_consultor }}"
-                            aria-hidden="true"
-                        >
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
 
-                                    <form
-                                        method="POST"
-                                        action="{{ route('seg.invitaciones.store', $consultor) }}"
+                    {{-- Modal de invitación --}}
+                    @permiso('seg.invitaciones.gestionar')
+
+                        @if(!$consultor->usuario && !$consultor->invitacionActiva)
+
+                            <tr class="d-none">
+                                <td colspan="6">
+
+                                    <div
+                                        class="modal fade"
+                                        id="modalInvitacion{{ $consultor->id_consultor }}"
+                                        tabindex="-1"
+                                        aria-labelledby="modalInvitacionLabel{{ $consultor->id_consultor }}"
+                                        aria-hidden="true"
                                     >
-                                        @csrf
+                                        <div class="modal-dialog modal-dialog-centered">
 
-                                        <div class="modal-header">
-                                            <div>
-                                                <h5
-                                                    class="modal-title"
-                                                    id="modalInvitacionLabel{{ $consultor->id_consultor }}"
+                                            <div class="modal-content">
+
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('seg.invitaciones.store', $consultor) }}"
                                                 >
-                                                    Generar invitación
-                                                </h5>
+                                                    @csrf
 
-                                                <small class="text-muted">
-                                                    {{ $consultor->nombre_completo }}
-                                                </small>
+                                                    <div class="modal-header">
+
+                                                        <div>
+                                                            <h5
+                                                                class="modal-title"
+                                                                id="modalInvitacionLabel{{ $consultor->id_consultor }}"
+                                                            >
+                                                                Generar invitación
+                                                            </h5>
+
+                                                            <small class="text-muted">
+                                                                {{ $consultor->nombre_completo }}
+                                                            </small>
+                                                        </div>
+
+                                                        <button
+                                                            type="button"
+                                                            class="btn-close"
+                                                            data-bs-dismiss="modal"
+                                                            aria-label="Cerrar"
+                                                        ></button>
+
+                                                    </div>
+
+
+                                                    <div class="modal-body">
+
+                                                        {{-- Duración --}}
+                                                        <div class="mb-4">
+
+                                                            <label
+                                                                for="duracion_horas_{{ $consultor->id_consultor }}"
+                                                                class="form-label fw-semibold"
+                                                            >
+                                                                Duración de la invitación
+                                                            </label>
+
+                                                            <div class="input-group">
+
+                                                                <input
+                                                                    type="number"
+                                                                    class="form-control"
+                                                                    id="duracion_horas_{{ $consultor->id_consultor }}"
+                                                                    name="duracion_horas"
+                                                                    value="24"
+                                                                    min="1"
+                                                                    max="8760"
+                                                                >
+
+                                                                <span class="input-group-text">
+                                                                    horas
+                                                                </span>
+
+                                                            </div>
+
+                                                            <div class="form-check mt-2">
+
+                                                                <input
+                                                                    class="form-check-input js-duracion-ilimitada"
+                                                                    type="checkbox"
+                                                                    value="1"
+                                                                    name="duracion_ilimitada"
+                                                                    id="duracion_ilimitada_{{ $consultor->id_consultor }}"
+                                                                    data-target="duracion_horas_{{ $consultor->id_consultor }}"
+                                                                >
+
+                                                                <label
+                                                                    class="form-check-label"
+                                                                    for="duracion_ilimitada_{{ $consultor->id_consultor }}"
+                                                                >
+                                                                    Sin límite de tiempo
+                                                                </label>
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        {{-- Máximo de usos --}}
+                                                        <div class="mb-3">
+
+                                                            <label
+                                                                for="max_usos_{{ $consultor->id_consultor }}"
+                                                                class="form-label fw-semibold"
+                                                            >
+                                                                Máximo de usos
+                                                            </label>
+
+                                                            <input
+                                                                type="number"
+                                                                class="form-control"
+                                                                id="max_usos_{{ $consultor->id_consultor }}"
+                                                                name="max_usos"
+                                                                value="1"
+                                                                min="1"
+                                                                max="1000"
+                                                            >
+
+                                                            <div class="form-check mt-2">
+
+                                                                <input
+                                                                    class="form-check-input js-usos-ilimitados"
+                                                                    type="checkbox"
+                                                                    value="1"
+                                                                    name="usos_ilimitados"
+                                                                    id="usos_ilimitados_{{ $consultor->id_consultor }}"
+                                                                    data-target="max_usos_{{ $consultor->id_consultor }}"
+                                                                >
+
+                                                                <label
+                                                                    class="form-check-label"
+                                                                    for="usos_ilimitados_{{ $consultor->id_consultor }}"
+                                                                >
+                                                                    Usos ilimitados
+                                                                </label>
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        <div class="alert alert-light border mb-0">
+
+                                                            <i class="fa-solid fa-circle-info me-1"></i>
+
+                                                            La invitación quedará asociada únicamente a este consultor
+                                                            y asignará automáticamente el rol
+                                                            <strong>Consultor</strong>.
+
+                                                        </div>
+
+                                                    </div>
+
+
+                                                    <div class="modal-footer">
+
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-outline-secondary"
+                                                            data-bs-dismiss="modal"
+                                                        >
+                                                            Cancelar
+                                                        </button>
+
+                                                        <button
+                                                            type="submit"
+                                                            class="btn btn-fepade"
+                                                        >
+                                                            <i class="fa-solid fa-link me-1"></i>
+                                                            Crear invitación
+                                                        </button>
+
+                                                    </div>
+
+                                                </form>
+
                                             </div>
 
-                                            <button
-                                                type="button"
-                                                class="btn-close"
-                                                data-bs-dismiss="modal"
-                                                aria-label="Cerrar"
-                                            ></button>
                                         </div>
+                                    </div>
 
-                                        <div class="modal-body">
+                                </td>
+                            </tr>
 
-                                            <div class="mb-4">
-                                                <label
-                                                    for="duracion_horas_{{ $consultor->id_consultor }}"
-                                                    class="form-label fw-semibold"
-                                                >
-                                                    Duración de la invitación
-                                                </label>
+                        @endif
 
-                                                <div class="input-group">
-                                                    <input
-                                                        type="number"
-                                                        class="form-control"
-                                                        id="duracion_horas_{{ $consultor->id_consultor }}"
-                                                        name="duracion_horas"
-                                                        value="24"
-                                                        min="1"
-                                                        max="8760"
-                                                    >
+                    @endpermiso
 
-                                                    <span class="input-group-text">
-                                                        horas
-                                                    </span>
-                                                </div>
-
-                                                <div class="form-check mt-2">
-                                                    <input
-                                                        class="form-check-input js-duracion-ilimitada"
-                                                        type="checkbox"
-                                                        value="1"
-                                                        name="duracion_ilimitada"
-                                                        id="duracion_ilimitada_{{ $consultor->id_consultor }}"
-                                                        data-target="duracion_horas_{{ $consultor->id_consultor }}"
-                                                    >
-
-                                                    <label
-                                                        class="form-check-label"
-                                                        for="duracion_ilimitada_{{ $consultor->id_consultor }}"
-                                                    >
-                                                        Sin límite de tiempo
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label
-                                                    for="max_usos_{{ $consultor->id_consultor }}"
-                                                    class="form-label fw-semibold"
-                                                >
-                                                    Máximo de usos
-                                                </label>
-
-                                                <input
-                                                    type="number"
-                                                    class="form-control"
-                                                    id="max_usos_{{ $consultor->id_consultor }}"
-                                                    name="max_usos"
-                                                    value="1"
-                                                    min="1"
-                                                    max="1000"
-                                                >
-
-                                                <div class="form-check mt-2">
-                                                    <input
-                                                        class="form-check-input js-usos-ilimitados"
-                                                        type="checkbox"
-                                                        value="1"
-                                                        name="usos_ilimitados"
-                                                        id="usos_ilimitados_{{ $consultor->id_consultor }}"
-                                                        data-target="max_usos_{{ $consultor->id_consultor }}"
-                                                    >
-
-                                                    <label
-                                                        class="form-check-label"
-                                                        for="usos_ilimitados_{{ $consultor->id_consultor }}"
-                                                    >
-                                                        Usos ilimitados
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <div class="alert alert-light border mb-0">
-                                                <i class="fa-solid fa-circle-info me-1"></i>
-
-                                                La invitación quedará asociada únicamente a este consultor
-                                                y asignará automáticamente el rol
-                                                <strong>Consultor</strong>.
-                                            </div>
-
-                                        </div>
-
-                                        <div class="modal-footer">
-                                            <button
-                                                type="button"
-                                                class="btn btn-outline-secondary"
-                                                data-bs-dismiss="modal"
-                                            >
-                                                Cancelar
-                                            </button>
-
-                                            <button
-                                                type="submit"
-                                                class="btn btn-fepade"
-                                            >
-                                                <i class="fa-solid fa-link me-1"></i>
-                                                Crear invitación
-                                            </button>
-                                        </div>
-
-                                    </form>
-
-                                </div>
-                            </div>
-                        </div>
-
-                    @endif
                 @empty
+
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
+                        <td
+                            colspan="6"
+                            class="text-center text-muted py-4"
+                        >
                             No hay consultores registrados.
                         </td>
                     </tr>
+
                 @endforelse
+
             </tbody>
+
         </table>
     </div>
+
 
     <div class="mt-4 pagination-wrapper">
         {{ $consultores->links('pagination::bootstrap-5') }}
     </div>
+
 </div>
 
 @endsection
 
+
 @push('scripts')
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
 
-        document.querySelectorAll('.js-duracion-ilimitada')
-            .forEach(function (checkbox) {
+<script>
+document.addEventListener('DOMContentLoaded', function () {
 
-                checkbox.addEventListener('change', function () {
-                    const input = document.getElementById(
-                        this.dataset.target
-                    );
+    /*
+    |--------------------------------------------------------------------------
+    | Invitación sin límite de tiempo
+    |--------------------------------------------------------------------------
+    */
 
-                    if (!input) {
-                        return;
-                    }
+    document.querySelectorAll('.js-duracion-ilimitada')
+        .forEach(function (checkbox) {
 
-                    input.disabled = this.checked;
+            checkbox.addEventListener('change', function () {
 
-                    if (this.checked) {
-                        input.value = '';
-                    } else if (!input.value) {
-                        input.value = 24;
-                    }
-                });
+                const input = document.getElementById(
+                    this.dataset.target
+                );
+
+                if (!input) {
+                    return;
+                }
+
+                input.disabled = this.checked;
+
+                if (this.checked) {
+                    input.value = '';
+                } else if (!input.value) {
+                    input.value = 24;
+                }
+
             });
 
-        document.querySelectorAll('.js-usos-ilimitados')
-            .forEach(function (checkbox) {
+        });
 
-                checkbox.addEventListener('change', function () {
-                    const input = document.getElementById(
-                        this.dataset.target
-                    );
 
-                    if (!input) {
-                        return;
-                    }
+    /*
+    |--------------------------------------------------------------------------
+    | Invitación con usos ilimitados
+    |--------------------------------------------------------------------------
+    */
 
-                    input.disabled = this.checked;
+    document.querySelectorAll('.js-usos-ilimitados')
+        .forEach(function (checkbox) {
 
-                    if (this.checked) {
-                        input.value = '';
-                    } else if (!input.value) {
-                        input.value = 1;
-                    }
-                });
+            checkbox.addEventListener('change', function () {
+
+                const input = document.getElementById(
+                    this.dataset.target
+                );
+
+                if (!input) {
+                    return;
+                }
+
+                input.disabled = this.checked;
+
+                if (this.checked) {
+                    input.value = '';
+                } else if (!input.value) {
+                    input.value = 1;
+                }
+
             });
 
-    });
-    </script>
+        });
+
+});
+</script>
+
 @endpush

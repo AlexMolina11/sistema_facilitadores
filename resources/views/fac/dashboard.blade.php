@@ -6,20 +6,6 @@
 
 @section('content')
 
-<!--<x-ui.page-header
-    title="Dashboard funcional avanzado"
-    subtitle="Indicadores consolidados para seguimiento administrativo, análisis de perfiles y reportería."
->
-    <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ route('fac.dashboard.exportar-csv', request()->query()) }}" class="btn btn-outline-primary">
-            <i class="fa-solid fa-file-csv me-1"></i> Exportar CSV
-        </a>
-        <button type="button" class="btn btn-navy" onclick="window.print()">
-            <i class="fa-solid fa-print me-1"></i> Imprimir
-        </button>
-    </div>
-</x-ui.page-header>-->
-
 <div class="dashboard-advanced-hero mb-4">
     <div>
         <span class="dashboard-kicker">Dashboard funcional avanzado</span>
@@ -34,12 +20,26 @@
         <strong>{{ $totalConsultores }}</strong>
         <span>consultores filtrados</span>
         <div class="d-flex gap-2 flex-wrap mt-3">
-            <a href="{{ route('fac.dashboard.exportar-csv', request()->query()) }}" class="btn btn-success">
-                <i class="fa-solid fa-file-csv me-1"></i> Exportar CSV
-            </a>
-            <button type="button" class="btn btn-navy" onclick="window.print()">
-                <i class="fa-solid fa-print me-1"></i> Imprimir
+
+            @permiso('fac.reportes.exportar')
+                <a
+                    href="{{ route('fac.dashboard.exportar-csv', request()->query()) }}"
+                    class="btn btn-success"
+                >
+                    <i class="fa-solid fa-file-csv me-1"></i>
+                    Exportar CSV
+                </a>
+            @endpermiso
+
+            <button
+                type="button"
+                class="btn btn-navy"
+                onclick="window.print()"
+            >
+                <i class="fa-solid fa-print me-1"></i>
+                Imprimir
             </button>
+
         </div>
     </div>
 </div>
@@ -265,6 +265,643 @@
 </x-ui.table-card>
 
 @endsection
+
+@push('styles')
+<style>
+@media print {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Documento
+    |--------------------------------------------------------------------------
+    */
+
+    @page {
+        size: A4 landscape;
+        margin: 7mm;
+    }
+
+    html,
+    body {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #111 !important;
+        font-size: 11px !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ocultar elementos no imprimibles
+    |--------------------------------------------------------------------------
+    */
+
+    .app-sidebar,
+    .app-topbar,
+    .dashboard-print-hide,
+    button,
+    .btn,
+    nav,
+    footer {
+        display: none !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Aprovechar todo el ancho
+    |--------------------------------------------------------------------------
+    */
+
+    .app-main,
+    .app-content,
+    main,
+    .container,
+    .container-fluid {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Espaciado general
+    |--------------------------------------------------------------------------
+    */
+
+    .mb-4 {
+        margin-bottom: 10px !important;
+    }
+
+    .mt-3 {
+        margin-top: 6px !important;
+    }
+
+    .g-4,
+    .gx-4 {
+        --bs-gutter-x: 10px !important;
+    }
+
+    .g-4,
+    .gy-4 {
+        --bs-gutter-y: 10px !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Encabezado ejecutivo
+    |--------------------------------------------------------------------------
+    */
+
+    .dashboard-advanced-hero {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 180px !important;
+        column-gap: 22px !important;
+        align-items: center !important;
+
+        width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+
+        padding: 14px 18px !important;
+        margin: 0 0 10px 0 !important;
+
+        border: 1px solid #bbb !important;
+        border-radius: 7px !important;
+
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #111 !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .dashboard-advanced-hero > div:first-child {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        padding: 0 !important;
+    }
+
+    .dashboard-kicker {
+        display: block !important;
+
+        margin: 0 0 4px 0 !important;
+
+        font-size: 9px !important;
+        line-height: 1.2 !important;
+
+        font-weight: 700 !important;
+        letter-spacing: .5px !important;
+        text-transform: uppercase !important;
+
+        color: #555 !important;
+    }
+
+    .dashboard-advanced-hero h2 {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: none !important;
+
+        margin: 0 0 6px 0 !important;
+
+        font-size: 21px !important;
+        line-height: 1.15 !important;
+        font-weight: 700 !important;
+
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+
+        color: #111 !important;
+    }
+
+    .dashboard-advanced-hero p {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 800px !important;
+
+        margin: 0 !important;
+
+        font-size: 10px !important;
+        line-height: 1.4 !important;
+
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+
+        color: #444 !important;
+    }
+
+    .dashboard-hero-metric {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+
+        width: 180px !important;
+        min-width: 180px !important;
+
+        padding: 12px 14px !important;
+
+        border-left: 1px solid #ddd !important;
+
+        text-align: center !important;
+    }
+
+    .dashboard-hero-metric strong {
+        display: block !important;
+
+        margin: 0 !important;
+
+        font-size: 30px !important;
+        line-height: 1 !important;
+        font-weight: 700 !important;
+
+        color: #111 !important;
+    }
+
+    .dashboard-hero-metric span {
+        display: block !important;
+
+        margin-top: 5px !important;
+
+        font-size: 10px !important;
+        line-height: 1.25 !important;
+
+        white-space: normal !important;
+
+        color: #555 !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mantener columnas Bootstrap en impresión
+    |--------------------------------------------------------------------------
+    */
+
+    .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+
+        margin-left: -5px !important;
+        margin-right: -5px !important;
+    }
+
+    .row > * {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+
+    .row > .col {
+        flex: 0 0 25% !important;
+        width: 25% !important;
+        max-width: 25% !important;
+    }
+
+    .row > .col-xl-8 {
+        flex: 0 0 66.666667% !important;
+        width: 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+
+    .row > .col-xl-4 {
+        flex: 0 0 33.333333% !important;
+        width: 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+
+    .row > .col-lg-6 {
+        flex: 0 0 50% !important;
+        width: 50% !important;
+        max-width: 50% !important;
+    }
+
+    .row > .col-lg-4 {
+        flex: 0 0 33.333333% !important;
+        width: 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Grids KPI
+    |--------------------------------------------------------------------------
+    */
+
+    .dashboard-grid,
+    .dashboard-kpi-grid {
+        width: 100% !important;
+
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+
+        gap: 8px !important;
+
+        margin-bottom: 10px !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .dashboard-grid > *,
+    .dashboard-kpi-grid > * {
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tarjetas KPI
+    |--------------------------------------------------------------------------
+    */
+
+    .dashboard-kpi-card,
+    .stat-card,
+    .dashboard-stat-card {
+        min-height: 0 !important;
+        height: auto !important;
+
+        padding: 10px 11px !important;
+
+        border: 1px solid #ccc !important;
+        border-radius: 6px !important;
+
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #111 !important;
+
+        overflow: visible !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .dashboard-kpi-card .d-flex {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+    }
+
+    .dashboard-kpi-card span {
+        display: block !important;
+
+        font-size: 9px !important;
+        line-height: 1.25 !important;
+
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+    }
+
+    .dashboard-kpi-card strong {
+        display: block !important;
+
+        margin-top: 3px !important;
+
+        font-size: 17px !important;
+        line-height: 1.1 !important;
+        font-weight: 700 !important;
+
+        color: #111 !important;
+    }
+
+    .dashboard-kpi-percent {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+
+        white-space: nowrap !important;
+    }
+
+    .dashboard-progress-track {
+        height: 4px !important;
+
+        margin-top: 5px !important;
+
+        border: 0 !important;
+        background: #ddd !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Stat cards del dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    .stat-card,
+    .dashboard-stat-card {
+        padding: 10px 12px !important;
+    }
+
+    .stat-card *,
+    .dashboard-stat-card * {
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+    }
+
+    .stat-card span,
+    .dashboard-stat-card span {
+        font-size: 10px !important;
+        line-height: 1.25 !important;
+    }
+
+    .stat-card strong,
+    .dashboard-stat-card strong {
+        font-size: 19px !important;
+        line-height: 1.1 !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tarjetas generales
+    |--------------------------------------------------------------------------
+    */
+
+    .card {
+        min-height: 0 !important;
+
+        border: 1px solid #ccc !important;
+        border-radius: 6px !important;
+
+        box-shadow: none !important;
+        background: #fff !important;
+    }
+
+    .card-body {
+        padding: 10px !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gráficos
+    |--------------------------------------------------------------------------
+    */
+
+    .chart-card,
+    .dashboard-chart-card {
+        min-height: 0 !important;
+        height: auto !important;
+
+        padding: 9px !important;
+
+        border: 1px solid #ccc !important;
+        border-radius: 6px !important;
+
+        box-shadow: none !important;
+        background: #fff !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .chart-card h3,
+    .chart-card h4,
+    .dashboard-chart-card h3,
+    .dashboard-chart-card h4 {
+        margin-bottom: 3px !important;
+
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        font-weight: 700 !important;
+    }
+
+    .chart-card p,
+    .dashboard-chart-card p {
+        margin-bottom: 5px !important;
+
+        font-size: 9px !important;
+        line-height: 1.25 !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Canvas
+    |--------------------------------------------------------------------------
+    */
+
+    canvas {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        height: 155px !important;
+        max-height: 155px !important;
+    }
+
+    #chartRegistrosMes {
+        height: 165px !important;
+        max-height: 165px !important;
+    }
+
+    #chartHabilidades {
+        height: 170px !important;
+        max-height: 170px !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Evitar cortes
+    |--------------------------------------------------------------------------
+    */
+
+    .row > div {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tablas
+    |--------------------------------------------------------------------------
+    */
+
+    table {
+        width: 100% !important;
+
+        margin-bottom: 0 !important;
+
+        border-collapse: collapse !important;
+
+        font-size: 9px !important;
+        line-height: 1.25 !important;
+    }
+
+    table thead {
+        display: table-header-group !important;
+    }
+
+    table tr {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    table th,
+    table td {
+        padding: 4px 6px !important;
+
+        border: 1px solid #bbb !important;
+
+        background: #fff !important;
+        color: #111 !important;
+
+        vertical-align: middle !important;
+
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+    }
+
+    table th {
+        font-size: 9px !important;
+        font-weight: 700 !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Table Cards
+    |--------------------------------------------------------------------------
+    */
+
+    .table-card,
+    .dashboard-table-card {
+        padding: 9px !important;
+
+        border: 1px solid #ccc !important;
+        border-radius: 6px !important;
+
+        box-shadow: none !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .table-card h3,
+    .table-card h4,
+    .dashboard-table-card h3,
+    .dashboard-table-card h4 {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        font-weight: 700 !important;
+    }
+
+    .table-card p,
+    .dashboard-table-card p {
+        font-size: 9px !important;
+        line-height: 1.25 !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Badges
+    |--------------------------------------------------------------------------
+    */
+
+    .badge {
+        padding: 2px 5px !important;
+
+        border: 1px solid #777 !important;
+
+        font-size: 8px !important;
+        line-height: 1.1 !important;
+
+        background: #fff !important;
+        color: #111 !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tipografía general
+    |--------------------------------------------------------------------------
+    */
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: #111 !important;
+
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+    }
+
+    p,
+    span,
+    strong,
+    td,
+    th {
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+    }
+
+    p {
+        orphans: 2;
+        widows: 2;
+    }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
