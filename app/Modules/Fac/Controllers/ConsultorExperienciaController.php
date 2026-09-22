@@ -36,6 +36,11 @@ class ConsultorExperienciaController extends Controller
         $consultor->load([
             'atestados' => fn ($query) => $query
                 ->where('activo', true)
+                ->with([
+                    'tipoFormacion',
+                    'tipoAtestado',
+                    'pais',
+                ])
                 ->orderByDesc('fecha_fin')
                 ->orderByDesc('created_at'),
 
@@ -50,14 +55,114 @@ class ConsultorExperienciaController extends Controller
                     'areaEspecializacion',
                     'atestado',
                     'capacitacionFepade',
-                    'habilidades.habilidadTecnica.areaEspecializacion',
+                    'habilidades' => fn ($query) => $query
+                        ->where('activo', true)
+                        ->with('habilidadTecnica.areaEspecializacion'),
                 ])
                 ->orderByDesc('created_at'),
         ]);
 
         $catalogos = $this->catalogos();
 
-        return view('fac.consultores.habilidades', compact('consultor', 'catalogos'));
+        /*
+        |--------------------------------------------------------------------------
+        | Clasificaciones existentes por evidencia
+        |--------------------------------------------------------------------------
+        |
+        | Una misma evidencia puede respaldar una o más áreas de especialización.
+        | Por ello agrupamos las clasificaciones por atestado y por capacitación
+        | FEPADE, en lugar de asumir una sola clasificación por evidencia.
+        |
+        */
+        $clasificacionesPorAtestado = $consultor->areasEspecializacion
+            ->whereNotNull('id_atestado')
+            ->groupBy('id_atestado');
+
+        $clasificacionesPorCapacitacion = $consultor->areasEspecializacion
+            ->whereNotNull('id_capacitacion_fepade')
+            ->groupBy('id_capacitacion_fepade');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Estado de atestados
+        |--------------------------------------------------------------------------
+        */
+        $atestadosEstado = $consultor->atestados->map(function ($atestado) use ($clasificacionesPorAtestado) {
+            $clasificaciones = $clasificacionesPorAtestado
+                ->get($atestado->id_atestado, collect())
+                ->values();
+
+            $atestado->setAttribute('clasificaciones', $clasificaciones);
+            $atestado->setAttribute('esta_clasificado', $clasificaciones->isNotEmpty());
+
+            return $atestado;
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Estado de capacitaciones FEPADE
+        |--------------------------------------------------------------------------
+        */
+        $capacitacionesEstado = $consultor->capacitacionesFepade->map(function ($capacitacion) use ($clasificacionesPorCapacitacion) {
+            $clasificaciones = $clasificacionesPorCapacitacion
+                ->get($capacitacion->id_capacitacion_fepade, collect())
+                ->values();
+
+            $capacitacion->setAttribute('clasificaciones', $clasificaciones);
+            $capacitacion->setAttribute('esta_clasificado', $clasificaciones->isNotEmpty());
+
+            return $capacitacion;
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Progreso general
+        |--------------------------------------------------------------------------
+        */
+        $totalAtestados = $atestadosEstado->count();
+        $atestadosClasificados = $atestadosEstado
+            ->where('esta_clasificado', true)
+            ->count();
+
+        $totalCapacitaciones = $capacitacionesEstado->count();
+        $capacitacionesClasificadas = $capacitacionesEstado
+            ->where('esta_clasificado', true)
+            ->count();
+
+        $totalEvidencias = $totalAtestados + $totalCapacitaciones;
+        $totalClasificadas = $atestadosClasificados + $capacitacionesClasificadas;
+        $totalPendientes = $totalEvidencias - $totalClasificadas;
+
+        $porcentajeClasificacion = $totalEvidencias > 0
+            ? (int) round(($totalClasificadas / $totalEvidencias) * 100)
+            : 0;
+
+        $progresoClasificacion = [
+            'total' => $totalEvidencias,
+            'clasificadas' => $totalClasificadas,
+            'pendientes' => $totalPendientes,
+            'porcentaje' => $porcentajeClasificacion,
+
+            'atestados' => [
+                'total' => $totalAtestados,
+                'clasificados' => $atestadosClasificados,
+                'pendientes' => $totalAtestados - $atestadosClasificados,
+            ],
+
+            'capacitaciones' => [
+                'total' => $totalCapacitaciones,
+                'clasificadas' => $capacitacionesClasificadas,
+                'pendientes' => $totalCapacitaciones - $capacitacionesClasificadas,
+            ],
+        ];
+
+        return view('fac.consultores.habilidades', compact(
+            'consultor',
+            'catalogos',
+            'atestadosEstado',
+            'capacitacionesEstado',
+            'progresoClasificacion'
+        ));
     }
 
     public function editIdiomas(Consultor $consultor)
@@ -173,6 +278,11 @@ class ConsultorExperienciaController extends Controller
     public function storeAreaEspecializacion(Request $request, Consultor $consultor)
     {
         $data = $request->validate([
+            'id_consultor_area' => [
+                'nullable',
+                'integer',
+                'exists:tbl_consultor_area_especializacion,id_consultor_area',
+            ],
             'id_area_especializacion' => [
                 'required',
                 'integer',
@@ -198,22 +308,51 @@ class ConsultorExperienciaController extends Controller
                 'exists:tbl_habilidad_tecnica,id_habilidad_tecnica',
             ],
         ], [
-            'id_area_especializacion.required' => 'Debes seleccionar un área de especialización.',
-            'habilidades_tecnicas.required' => 'Debes seleccionar al menos una habilidad técnica aprendida.',
-            'habilidades_tecnicas.min' => 'Debes seleccionar al menos una habilidad técnica aprendida.',
+            'id_area_especializacion.required' =>
+                'Debes seleccionar un área de especialización.',
+
+            'habilidades_tecnicas.required' =>
+                'Debes seleccionar al menos una habilidad técnica aprendida.',
+
+            'habilidades_tecnicas.min' =>
+                'Debes seleccionar al menos una habilidad técnica aprendida.',
         ]);
 
-        if (empty($data['id_atestado']) && empty($data['id_capacitacion_fepade'])) {
+        /*
+        |--------------------------------------------------------------------------
+        | Validar evidencia
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            empty($data['id_atestado']) &&
+            empty($data['id_capacitacion_fepade'])
+        ) {
             return back()
-                ->withErrors(['id_atestado' => 'Debes seleccionar un atestado o una capacitación FEPADE como evidencia.'])
+                ->withErrors([
+                    'id_atestado' =>
+                        'Debes seleccionar un atestado o una capacitación FEPADE como evidencia.',
+                ])
                 ->withInput();
         }
 
-        if (!empty($data['id_atestado']) && !empty($data['id_capacitacion_fepade'])) {
+        if (
+            !empty($data['id_atestado']) &&
+            !empty($data['id_capacitacion_fepade'])
+        ) {
             return back()
-                ->withErrors(['id_capacitacion_fepade' => 'Selecciona solo una evidencia: atestado o capacitación FEPADE.'])
+                ->withErrors([
+                    'id_capacitacion_fepade' =>
+                        'Selecciona solo una evidencia: atestado o capacitación FEPADE.',
+                ])
                 ->withInput();
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validar pertenencia de la evidencia
+        |--------------------------------------------------------------------------
+        */
 
         if (!empty($data['id_atestado'])) {
             $atestadoPertenece = $consultor->atestados()
@@ -222,81 +361,270 @@ class ConsultorExperienciaController extends Controller
                 ->exists();
 
             if (!$atestadoPertenece) {
-                abort(403, 'El atestado seleccionado no pertenece al consultor.');
+                abort(
+                    403,
+                    'El atestado seleccionado no pertenece al consultor.'
+                );
             }
         }
 
         if (!empty($data['id_capacitacion_fepade'])) {
             $capacitacionPertenece = $consultor->capacitacionesFepade()
-                ->where('id_capacitacion_fepade', $data['id_capacitacion_fepade'])
+                ->where(
+                    'id_capacitacion_fepade',
+                    $data['id_capacitacion_fepade']
+                )
                 ->where('activo', true)
                 ->exists();
 
             if (!$capacitacionPertenece) {
-                abort(403, 'La capacitación FEPADE seleccionada no pertenece al consultor.');
+                abort(
+                    403,
+                    'La capacitación FEPADE seleccionada no pertenece al consultor.'
+                );
             }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Si estamos editando, validar la clasificación original
+        |--------------------------------------------------------------------------
+        */
+
+        $registroEditar = null;
+
+        if (!empty($data['id_consultor_area'])) {
+            $registroEditar = ConsultorAreaEspecializacion::query()
+                ->where(
+                    'id_consultor_area',
+                    $data['id_consultor_area']
+                )
+                ->where(
+                    'id_consultor',
+                    $consultor->id_consultor
+                )
+                ->where('activo', true)
+                ->firstOrFail();
+
+            /*
+            * La clasificación puede cambiar de área y habilidades,
+            * pero no puede cambiar de evidencia.
+            */
+            $mismoAtestado =
+                (int) ($registroEditar->id_atestado ?? 0) ===
+                (int) ($data['id_atestado'] ?? 0);
+
+            $mismaCapacitacion =
+                (int) ($registroEditar->id_capacitacion_fepade ?? 0) ===
+                (int) ($data['id_capacitacion_fepade'] ?? 0);
+
+            if (!$mismoAtestado || !$mismaCapacitacion) {
+                abort(
+                    403,
+                    'La evidencia de una clasificación existente no puede modificarse.'
+                );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validar habilidades del área seleccionada
+        |--------------------------------------------------------------------------
+        */
+
         $habilidadesValidas = DB::table('tbl_habilidad_tecnica')
-            ->where('id_area_especializacion', $data['id_area_especializacion'])
+            ->where(
+                'id_area_especializacion',
+                $data['id_area_especializacion']
+            )
             ->where('activo', true)
             ->whereNull('deleted_at')
-            ->whereIn('id_habilidad_tecnica', $data['habilidades_tecnicas'])
+            ->whereIn(
+                'id_habilidad_tecnica',
+                $data['habilidades_tecnicas']
+            )
             ->pluck('id_habilidad_tecnica')
             ->map(fn ($id) => (int) $id)
             ->values();
 
-        if ($habilidadesValidas->count() !== collect($data['habilidades_tecnicas'])->unique()->count()) {
+        if (
+            $habilidadesValidas->count() !==
+            collect($data['habilidades_tecnicas'])
+                ->unique()
+                ->count()
+        ) {
             return back()
-                ->withErrors(['habilidades_tecnicas' => 'Todas las habilidades técnicas deben pertenecer al área de especialización seleccionada.'])
+                ->withErrors([
+                    'habilidades_tecnicas' =>
+                        'Todas las habilidades técnicas deben pertenecer al área de especialización seleccionada.',
+                ])
                 ->withInput();
         }
 
-        DB::transaction(function () use ($consultor, $data, $habilidadesValidas) {
-            $registro = ConsultorAreaEspecializacion::withTrashed()->updateOrCreate(
-                [
-                    'id_consultor' => $consultor->id_consultor,
-                    'id_area_especializacion' => $data['id_area_especializacion'],
-                    'id_atestado' => $data['id_atestado'] ?? null,
-                    'id_capacitacion_fepade' => $data['id_capacitacion_fepade'] ?? null,
-                ],
-                [
+        /*
+        |--------------------------------------------------------------------------
+        | Evitar duplicar la misma área para la misma evidencia
+        |--------------------------------------------------------------------------
+        */
+
+        $duplicada = ConsultorAreaEspecializacion::query()
+            ->where(
+                'id_consultor',
+                $consultor->id_consultor
+            )
+            ->where(
+                'id_area_especializacion',
+                $data['id_area_especializacion']
+            )
+            ->where('activo', true)
+            ->whereNull('deleted_at');
+
+        if (!empty($data['id_atestado'])) {
+            $duplicada
+                ->where(
+                    'id_atestado',
+                    $data['id_atestado']
+                )
+                ->whereNull('id_capacitacion_fepade');
+        } else {
+            $duplicada
+                ->where(
+                    'id_capacitacion_fepade',
+                    $data['id_capacitacion_fepade']
+                )
+                ->whereNull('id_atestado');
+        }
+
+        if ($registroEditar) {
+            $duplicada->where(
+                'id_consultor_area',
+                '!=',
+                $registroEditar->id_consultor_area
+            );
+        }
+
+        if ($duplicada->exists()) {
+            return back()
+                ->withErrors([
+                    'id_area_especializacion' =>
+                        'Esta evidencia ya tiene registrada el área de especialización seleccionada.',
+                ])
+                ->withInput();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Guardar
+        |--------------------------------------------------------------------------
+        */
+
+        DB::transaction(function () use (
+            $consultor,
+            $data,
+            $habilidadesValidas,
+            $registroEditar
+        ) {
+
+            /*
+            * EDICIÓN
+            */
+            if ($registroEditar) {
+                $registro = $registroEditar;
+
+                $registro->update([
+                    'id_area_especializacion' =>
+                        $data['id_area_especializacion'],
+
                     'activo' => true,
-                    'deleted_at' => null,
-                    'usuario_crea' => auth()->id(),
                     'usuario_mod' => auth()->id(),
                     'usuario_elim' => null,
-                ]
-            );
+                ]);
+            }
 
+            /*
+            * NUEVA CLASIFICACIÓN
+            */
+            else {
+                $registro =
+                    ConsultorAreaEspecializacion::withTrashed()
+                        ->updateOrCreate(
+                            [
+                                'id_consultor' =>
+                                    $consultor->id_consultor,
+
+                                'id_area_especializacion' =>
+                                    $data['id_area_especializacion'],
+
+                                'id_atestado' =>
+                                    $data['id_atestado'] ?? null,
+
+                                'id_capacitacion_fepade' =>
+                                    $data['id_capacitacion_fepade'] ?? null,
+                            ],
+                            [
+                                'activo' => true,
+                                'deleted_at' => null,
+                                'usuario_crea' => auth()->id(),
+                                'usuario_mod' => auth()->id(),
+                                'usuario_elim' => null,
+                            ]
+                        );
+            }
+
+            /*
+            * Desactivar habilidades que ya no están seleccionadas
+            */
             $registro->habilidades()
-                ->whereNotIn('id_habilidad_tecnica', $habilidadesValidas)
+                ->whereNotIn(
+                    'id_habilidad_tecnica',
+                    $habilidadesValidas
+                )
                 ->update([
                     'activo' => false,
                     'usuario_elim' => auth()->id(),
                     'deleted_at' => now(),
                 ]);
 
+            /*
+            * Crear o restaurar habilidades seleccionadas
+            */
             foreach ($habilidadesValidas as $idHabilidadTecnica) {
-                ConsultorAreaHabilidad::withTrashed()->updateOrCreate(
-                    [
-                        'id_consultor_area' => $registro->id_consultor_area,
-                        'id_habilidad_tecnica' => $idHabilidadTecnica,
-                    ],
-                    [
-                        'activo' => true,
-                        'deleted_at' => null,
-                        'usuario_crea' => auth()->id(),
-                        'usuario_mod' => auth()->id(),
-                        'usuario_elim' => null,
-                    ]
-                );
+                ConsultorAreaHabilidad::withTrashed()
+                    ->updateOrCreate(
+                        [
+                            'id_consultor_area' =>
+                                $registro->id_consultor_area,
+
+                            'id_habilidad_tecnica' =>
+                                $idHabilidadTecnica,
+                        ],
+                        [
+                            'activo' => true,
+                            'deleted_at' => null,
+                            'usuario_crea' => auth()->id(),
+                            'usuario_mod' => auth()->id(),
+                            'usuario_elim' => null,
+                        ]
+                    );
             }
         });
 
+        /*
+        |--------------------------------------------------------------------------
+        | Respuesta
+        |--------------------------------------------------------------------------
+        */
+
+        $mensaje = $registroEditar
+            ? 'Clasificación actualizada correctamente.'
+            : 'Área de especialización registrada correctamente.';
+
         return redirect()
-            ->route('fac.consultores.habilidades.edit', $consultor)
-            ->with('success', 'Área de especialización registrada correctamente.');
+            ->route(
+                'fac.consultores.habilidades.edit',
+                $consultor
+            )
+            ->with('success', $mensaje);
     }
 
     public function destroyAreaEspecializacion(Consultor $consultor, ConsultorAreaEspecializacion $consultorArea)
