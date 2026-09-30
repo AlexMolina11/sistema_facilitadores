@@ -958,6 +958,104 @@ document.addEventListener('DOMContentLoaded', function () {
         filtrarTiposAtestado();
     }
 
+    /* =====================================================
+    BUSCADOR DE ÁREAS Y HABILIDADES TÉCNICAS
+    ===================================================== */
+
+    function normalizarTexto(texto) {
+        return (texto ?? '')
+            .toString()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    }
+
+    document.querySelectorAll('.js-filtro-buscable').forEach(function (grupo) {
+        const buscador = grupo.querySelector('.js-buscador-checkbox');
+        const botonLimpiar = grupo.querySelector('.js-limpiar-buscador');
+        const opciones = Array.from(
+            grupo.querySelectorAll('.js-opcion-checkbox')
+        );
+        const sinResultados = grupo.querySelector('.js-sin-resultados');
+        const cantidadVisible = grupo.querySelector('.js-cantidad-visible');
+
+        if (!buscador || !opciones.length) {
+            return;
+        }
+
+        function filtrarOpciones() {
+            const termino = normalizarTexto(buscador.value);
+
+            let visibles = 0;
+
+            opciones.forEach(function (opcion) {
+                const texto = normalizarTexto(
+                    opcion.dataset.search ?? opcion.textContent
+                );
+
+                const checkbox = opcion.querySelector(
+                    'input[type="checkbox"]'
+                );
+
+                /*
+                * Una opción seleccionada permanece visible aunque
+                * no coincida con el término de búsqueda.
+                */
+                const estaSeleccionada = checkbox?.checked ?? false;
+
+                const coincide =
+                    termino === '' ||
+                    texto.includes(termino) ||
+                    estaSeleccionada;
+
+                opcion.classList.toggle('d-none', !coincide);
+
+                if (coincide) {
+                    visibles++;
+                }
+            });
+
+            if (cantidadVisible) {
+                cantidadVisible.textContent = visibles;
+            }
+
+            if (sinResultados) {
+                sinResultados.classList.toggle(
+                    'd-none',
+                    visibles > 0
+                );
+            }
+
+            if (botonLimpiar) {
+                botonLimpiar.classList.toggle(
+                    'd-none',
+                    termino === ''
+                );
+            }
+        }
+
+        buscador.addEventListener('input', filtrarOpciones);
+
+        botonLimpiar?.addEventListener('click', function () {
+            buscador.value = '';
+            filtrarOpciones();
+            buscador.focus();
+        });
+
+        opciones.forEach(function (opcion) {
+            const checkbox = opcion.querySelector(
+                'input[type="checkbox"]'
+            );
+
+            checkbox?.addEventListener('change', function () {
+                filtrarOpciones();
+            });
+        });
+
+        filtrarOpciones();
+    });
+
 });
 </script>
 @endpush
