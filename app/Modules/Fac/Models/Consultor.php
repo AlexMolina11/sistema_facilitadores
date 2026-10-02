@@ -234,25 +234,31 @@ class Consultor extends Model
         return $this->belongsTo(Municipio::class, 'id_municipio', 'id_municipio');
     }
 
-    public function avancePerfil(): array
+    public function avancePerfil($tiposReferencia = null): array
     {
         $puntos = [];
         $puntosDinamicos = [];
 
-        $atestados = $this->atestados()
-            ->where('activo', true)
-            ->whereNull('deleted_at')
-            ->get();
+        $atestados = $this->relationLoaded('atestados')
+            ? $this->atestados
+            : $this->atestados()
+                ->where('activo', true)
+                ->whereNull('deleted_at')
+                ->get();
 
-        $capacitacionesFepade = $this->capacitacionesFepade()
-            ->where('activo', true)
-            ->whereNull('deleted_at')
-            ->get();
+        $capacitacionesFepade = $this->relationLoaded('capacitacionesFepade')
+            ? $this->capacitacionesFepade
+            : $this->capacitacionesFepade()
+                ->where('activo', true)
+                ->whereNull('deleted_at')
+                ->get();
 
-        $areasEspecializacion = $this->areasEspecializacion()
-            ->where('activo', true)
-            ->whereNull('deleted_at')
-            ->get();
+        $areasEspecializacion = $this->relationLoaded('areasEspecializacion')
+            ? $this->areasEspecializacion
+            : $this->areasEspecializacion()
+                ->where('activo', true)
+                ->whereNull('deleted_at')
+                ->get();
 
         $puntos['Datos personales obligatorios'] =
             filled($this->nombres)
@@ -262,12 +268,18 @@ class Consultor extends Model
             && filled($this->nacionalidad);
 
         $puntos['Documento de identidad con archivo'] =
-            $this->documentos()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->whereNotNull('numero')
-                ->whereNotNull('url_archivo')
-                ->exists();
+            $this->relationLoaded('documentos')
+                ? $this->documentos->contains(
+                    fn ($documento) =>
+                        filled($documento->numero)
+                        && filled($documento->url_archivo)
+                )
+                : $this->documentos()
+                    ->where('activo', true)
+                    ->whereNull('deleted_at')
+                    ->whereNotNull('numero')
+                    ->whereNotNull('url_archivo')
+                    ->exists();
 
         $puntos['Residencia completa'] =
             filled($this->id_pais)
@@ -275,57 +287,95 @@ class Consultor extends Model
             && filled($this->direccion_residencia);
 
         $puntos['Correo principal'] =
-            $this->emails()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->where('principal', true)
-                ->exists();
+            $this->relationLoaded('emails')
+                ? $this->emails->contains(
+                    fn ($email) => (bool) $email->principal
+                )
+                : $this->emails()
+                    ->where('activo', true)
+                    ->whereNull('deleted_at')
+                    ->where('principal', true)
+                    ->exists();
 
         $puntos['Teléfono registrado'] =
-            $this->telefonos()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->exists();
+            $this->relationLoaded('telefonos')
+                ? $this->telefonos->isNotEmpty()
+                : $this->telefonos()
+                    ->where('activo', true)
+                    ->whereNull('deleted_at')
+                    ->exists();
 
         $puntos['Contacto de emergencia'] =
-            $this->emergencias()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->exists();
+            $this->relationLoaded('emergencias')
+                ? $this->emergencias->isNotEmpty()
+                : $this->emergencias()
+                    ->where('activo', true)
+                    ->whereNull('deleted_at')
+                    ->exists();
 
         $puntos['Experiencia laboral'] =
-            $this->experienciasLaborales()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->exists();
+            $this->relationLoaded('experienciasLaborales')
+                ? $this->experienciasLaborales->isNotEmpty()
+                : $this->experienciasLaborales()
+                    ->where('activo', true)
+                    ->whereNull('deleted_at')
+                    ->exists();
 
         $puntos['Educación formal'] =
-            $this->atestados()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->whereHas('tipoFormacion', function ($query) {
-                    $query->where('nombre', 'like', '%formal%');
-                })
-                ->exists();
+            $this->relationLoaded('atestados')
+                && $this->atestados->every(
+                    fn ($atestado) => $atestado->relationLoaded('tipoFormacion')
+                )
+                    ? $this->atestados->contains(
+                        fn ($atestado) =>
+                            str_contains(
+                                mb_strtolower($atestado->tipoFormacion?->nombre ?? ''),
+                                'formal'
+                            )
+                    )
+                    : $this->atestados()
+                        ->where('activo', true)
+                        ->whereNull('deleted_at')
+                        ->whereHas('tipoFormacion', function ($query) {
+                            $query->where('nombre', 'like', '%formal%');
+                        })
+                        ->exists();
 
         $puntos['Educación continua'] =
-            $this->atestados()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->whereHas('tipoFormacion', function ($query) {
-                    $query->where('nombre', 'like', '%continua%');
-                })
-                ->exists();
+            $this->relationLoaded('atestados')
+                && $this->atestados->every(
+                    fn ($atestado) => $atestado->relationLoaded('tipoFormacion')
+                )
+                    ? $this->atestados->contains(
+                        fn ($atestado) =>
+                            str_contains(
+                                mb_strtolower($atestado->tipoFormacion?->nombre ?? ''),
+                                'continua'
+                            )
+                    )
+                    : $this->atestados()
+                        ->where('activo', true)
+                        ->whereNull('deleted_at')
+                        ->whereHas('tipoFormacion', function ($query) {
+                            $query->where('nombre', 'like', '%continua%');
+                        })
+                        ->exists();
 
         $puntos['Área de especialización con evidencia'] =
-            $this->areasEspecializacion()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->where(function ($query) {
-                    $query->whereNotNull('id_atestado')
-                        ->orWhereNotNull('id_capacitacion_fepade');
-                })
-                ->exists();
+            $this->relationLoaded('areasEspecializacion')
+                ? $this->areasEspecializacion->contains(
+                    fn ($area) =>
+                        filled($area->id_atestado)
+                        || filled($area->id_capacitacion_fepade)
+                )
+                : $this->areasEspecializacion()
+                    ->where('activo', true)
+                    ->whereNull('deleted_at')
+                    ->where(function ($query) {
+                        $query->whereNotNull('id_atestado')
+                            ->orWhereNotNull('id_capacitacion_fepade');
+                    })
+                    ->exists();
 
         foreach ($atestados as $atestado) {
             $puntosDinamicos["Área vinculada al atestado: {$atestado->titulo}"] =
@@ -351,30 +401,43 @@ class Consultor extends Model
         }
 
         $puntos['Idioma registrado'] =
-            $this->idiomas()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->exists();
+            $this->relationLoaded('idiomas')
+                ? $this->idiomas->isNotEmpty()
+                : $this->idiomas()
+                    ->where('activo', true)
+                    ->whereNull('deleted_at')
+                    ->exists();
 
-        $tiposReferencia = TipoReferencia::query()
+        $tiposReferencia ??= TipoReferencia::query()
             ->where('activo', true)
             ->whereNull('deleted_at')
             ->get();
 
         foreach ($tiposReferencia as $tipoReferencia) {
             $puntos["Referencia {$tipoReferencia->nombre}"] =
-                $this->referencias()
-                    ->where('activo', true)
-                    ->whereNull('deleted_at')
-                    ->where('id_tipo_referencia', $tipoReferencia->id_tipo_referencia)
-                    ->exists();
+                $this->relationLoaded('referencias')
+                    ? $this->referencias->contains(
+                        fn ($referencia) =>
+                            $referencia->id_tipo_referencia
+                            == $tipoReferencia->id_tipo_referencia
+                    )
+                    : $this->referencias()
+                        ->where('activo', true)
+                        ->whereNull('deleted_at')
+                        ->where(
+                            'id_tipo_referencia',
+                            $tipoReferencia->id_tipo_referencia
+                        )
+                        ->exists();
         }
 
         $puntos['Disponibilidad actual'] =
-            $this->disponibilidades()
-                ->where('activo', true)
-                ->whereNull('deleted_at')
-                ->exists();
+            $this->relationLoaded('disponibilidades')
+                ? $this->disponibilidades->isNotEmpty()
+                : $this->disponibilidades()
+                    ->where('activo', true)
+                    ->whereNull('deleted_at')
+                    ->exists();
 
         $todosLosPuntos = array_merge($puntos, $puntosDinamicos);
 

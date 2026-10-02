@@ -230,7 +230,10 @@
                                             data-pais="{{ $distrito->id_pais }}"
                                             data-departamento="{{ $distrito->id_departamento }}"
                                             data-municipio-mh="{{ $distrito->id_municipio_mh }}"
-                                            @selected(($filtros['distrito'] ?? null) == $distrito->id_municipio)
+                                            @selected(
+                                                isset($filtros['distrito']) &&
+                                                (string) $filtros['distrito'] === (string) $distrito->id_municipio
+                                            )
                                         >
                                             {{ $distrito->nombre_distrito }}
                                         </option>

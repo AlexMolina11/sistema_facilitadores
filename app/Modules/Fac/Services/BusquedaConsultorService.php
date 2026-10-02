@@ -3,6 +3,7 @@
 namespace App\Modules\Fac\Services;
 
 use App\Modules\Fac\Models\Consultor;
+use App\Modules\Fac\Models\TipoReferencia;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +19,11 @@ class BusquedaConsultorService
                 'emails' => fn ($q) => $q->where('activo', true)->orderByDesc('principal'),
                 'telefonos' => fn ($q) => $q->where('activo', true),
                 'sexoCatalogo',
+                'municipio',
                 'disponibilidades' => fn ($q) => $q->where('activo', true),
+                'emergencias' => fn ($q) => $q->where('activo', true),
+                'referencias' => fn ($q) => $q->where('activo', true),
+                'capacitacionesFepade' => fn ($q) => $q->where('activo', true),
                 'areasEspecializacion' => fn ($q) => $q
                     ->where('activo', true)
                     ->with([
@@ -48,10 +53,24 @@ class BusquedaConsultorService
         $this->aplicarIdiomas($query, $filtros);
         $this->aplicarExperiencia($query, $filtros);
 
-        return $query
+        $resultados = $query
             ->latest('updated_at')
             ->paginate(12)
             ->withQueryString();
+
+        $tiposReferencia = TipoReferencia::query()
+            ->where('activo', true)
+            ->whereNull('deleted_at')
+            ->get();
+
+        $resultados->getCollection()->each(
+            fn ($consultor) => $consultor->setAttribute(
+                'tipos_referencia_avance',
+                $tiposReferencia
+            )
+        );
+
+        return $resultados;
     }
 
     private function aplicarBusquedaGeneral(Builder $query, array $filtros): void
