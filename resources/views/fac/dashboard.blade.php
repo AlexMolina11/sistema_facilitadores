@@ -754,16 +754,22 @@
         max-height: 170px !important;
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | Evitar cortes
+    | Contenedor de gráficos en impresión
     |--------------------------------------------------------------------------
     */
 
-    .row > div {
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
+    .dashboard-chart-wrap {
+        height: 170px !important;
+        min-height: 0 !important;
+        max-height: 170px !important;
+    }
+
+    #chartRegistrosMes,
+    #chartHabilidades {
+        height: 100% !important;
+        max-height: 100% !important;
     }
 
 
