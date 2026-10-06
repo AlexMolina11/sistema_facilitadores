@@ -298,6 +298,11 @@ Route::middleware(['auth'])->group(function () {
                 [ExportacionCvController::class, 'pdf']
             )->name('pdf');
 
+            Route::post(
+                'word',
+                [ExportacionCvController::class, 'word']
+            )->name('word');
+
         });
         
     Route::prefix('catalogos')

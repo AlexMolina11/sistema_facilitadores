@@ -20,6 +20,11 @@
     <input type="hidden" name="config_json" id="config_json">
 </form>
 
+<form id="cvWordForm" method="POST" action="{{ route('fac.cv.word', $consultor) }}">
+    @csrf
+    <input type="hidden" name="config_json" id="config_json_word">
+</form>
+
 <div class="cv-builder" id="cvBuilder">
     <div class="cv-preview-panel">
         <div class="cv-preview-toolbar">
@@ -28,9 +33,15 @@
                 <span id="previewTemplateName">Formato CV FEPADE</span>
             </div>
 
-            <button type="button" class="btn btn-fepade" id="btnGenerarPdf">
-                <i class="fa-solid fa-file-pdf me-1"></i> Generar PDF
-            </button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-fepade" id="btnGenerarPdf">
+                    <i class="fa-solid fa-file-pdf me-1"></i> Generar PDF
+                </button>
+
+                <button type="button" class="btn btn-outline-primary" id="btnGenerarWord">
+                    <i class="fa-solid fa-file-word me-1"></i> Generar Word
+                </button>
+            </div>
         </div>
 
         <div class="cv-paper-wrap" id="cvPreviewScroll">
@@ -608,6 +619,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const templateName = document.getElementById('previewTemplateName');
     const configInput = document.getElementById('config_json');
     const pdfForm = document.getElementById('cvPdfForm');
+    const configWordInput = document.getElementById('config_json_word');
+    const wordForm = document.getElementById('cvWordForm');
 
     const state = {
         plantilla: plantillaSelect.value,
@@ -2074,6 +2087,11 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnGenerarPdf').addEventListener('click', function () {
         configInput.value = JSON.stringify(state);
         pdfForm.submit();
+    });
+
+    document.getElementById('btnGenerarWord').addEventListener('click', function () {
+        configWordInput.value = JSON.stringify(state);
+        wordForm.submit();
     });
 });
 </script>
