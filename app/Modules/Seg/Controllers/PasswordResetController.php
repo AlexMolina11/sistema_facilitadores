@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class PasswordResetController extends Controller
 {
@@ -127,9 +128,8 @@ class PasswordResetController extends Controller
 
             'password' => [
                 'required',
-                'string',
-                'min:8',
                 'confirmed',
+                PasswordRule::min(8)->mixedCase()->numbers(),
             ],
         ], [
             'token.required' => 'El enlace de recuperación no es válido.',

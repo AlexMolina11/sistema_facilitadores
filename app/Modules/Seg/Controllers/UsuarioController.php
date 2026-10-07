@@ -146,7 +146,7 @@ class UsuarioController extends Controller
             'password' => [
                 $usuario ? 'nullable' : 'required',
                 'confirmed',
-                Password::min(8)->mixedCase()->numbers()->symbols(),
+                Password::min(8)->mixedCase()->numbers(),
             ],
             'id_consultor' => [
                 'nullable', 'integer', 'exists:tbl_consultor,id_consultor',

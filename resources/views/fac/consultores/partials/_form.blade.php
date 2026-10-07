@@ -239,19 +239,6 @@
     }
 @endphp
 
-
-
-@if($errors->any())
-    <div class="alert alert-danger">
-        <strong>Revisa los campos marcados.</strong>
-        <ul class="mb-0 mt-2">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
 <div class="row g-4">
     <div class="col-12">
         <h5 class="mb-1">Datos personales</h5>
@@ -329,6 +316,7 @@
             type="date" 
             name="fecha_nacimiento" 
             value="{{ old('fecha_nacimiento', isset($consultor) && $consultor->fecha_nacimiento ? $consultor->fecha_nacimiento->format('Y-m-d') : '') }}" 
+            max="{{ now()->subDay()->format('Y-m-d') }}"
             class="form-control @error('fecha_nacimiento') is-invalid @enderror"
             required
         >

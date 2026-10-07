@@ -21,9 +21,15 @@ class StoreConsultorRequest extends FormRequest
             'estado_civil' => ['nullable', 'string', 'max:20'],
             'nacionalidad' => ['required', 'string', 'max:50'],
 
-            'tipo_identificacion' => ['nullable', 'string', 'max:30'],
+            'tipo_identificacion' => [
+                'nullable',
+                'required_with:numero_identificacion',
+                'string',
+                'max:30',
+            ],
             'numero_identificacion' => [
                 'nullable',
+                'required_with:tipo_identificacion',
                 'string',
                 'max:30',
                 Rule::unique('tbl_consultor', 'numero_identificacion')->whereNull('deleted_at'),
@@ -120,6 +126,8 @@ class StoreConsultorRequest extends FormRequest
             'id_sexo.required' => 'Debes seleccionar el sexo del consultor.',
             'id_sexo.exists' => 'El sexo seleccionado no es válido.',
             'fecha_nacimiento.required' => 'Debes ingresar la fecha de nacimiento.',
+            'tipo_identificacion.required_with' => 'Debes seleccionar el tipo de identificación cuando ingresas un número de identificación.',
+            'numero_identificacion.required_with' => 'Debes ingresar el número de identificación cuando seleccionas un tipo de identificación.',
         ];
     }
 
