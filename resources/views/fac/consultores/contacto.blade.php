@@ -1,4 +1,3 @@
-```blade
 @extends('layouts.app')
 
 @php
@@ -159,28 +158,40 @@
                         </div>
                     </div>
 
-                    <div class="d-flex gap-2">
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
 
                         <button
-                            class="btn btn-sm btn-link text-secondary"
+                            class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
                             type="button"
+                            title="Editar correo"
+                            aria-label="Editar correo"
                             onclick="mostrarFormularioPerfil('form-email-{{ $email->id_email }}')">
-                            ✎
+
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Editar</span>
+
                         </button>
 
                         <form
                             method="POST"
                             action="{{ route('fac.consultores.contacto.emails.destroy', [$consultor, $email]) }}"
+                            class="m-0"
                             onsubmit="return confirm('¿Deseas eliminar este correo?')">
 
                             @csrf
                             @method('DELETE')
 
                             <button
-                                class="btn btn-sm btn-link text-danger"
-                                type="submit">
-                                🗑
+                                class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1"
+                                type="submit"
+                                title="Eliminar correo"
+                                aria-label="Eliminar correo">
+
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Eliminar</span>
+
                             </button>
+
                         </form>
 
                     </div>
@@ -543,6 +554,10 @@
 
                                 </select>
 
+                                <div class="form-text">
+                                    Selecciona el tipo de teléfono a registrar.
+                                </div>
+
                             </div>
 
 
@@ -765,31 +780,141 @@
 
                         <a
                             href="{{ $red->enlace }}"
-                            target="_blank">
+                            target="_blank"
+                            rel="noopener noreferrer">
                             {{ $red->enlace }}
                         </a>
 
                     </div>
 
-                    <div>
+
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+
+                        <button
+                            class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
+                            type="button"
+                            title="Editar enlace"
+                            aria-label="Editar enlace"
+                            onclick="mostrarFormularioPerfil('form-red-{{ $red->id_consultor_red_social }}')">
+
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Editar</span>
+
+                        </button>
+
 
                         <form
                             method="POST"
                             action="{{ route('fac.consultores.contacto.redes.destroy', [$consultor, $red]) }}"
+                            class="m-0"
                             onsubmit="return confirm('¿Deseas eliminar este enlace?')">
 
                             @csrf
                             @method('DELETE')
 
                             <button
-                                class="btn btn-sm btn-link text-danger"
-                                type="submit">
-                                🗑
+                                class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1"
+                                type="submit"
+                                title="Eliminar enlace"
+                                aria-label="Eliminar enlace">
+
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Eliminar</span>
+
                             </button>
 
                         </form>
 
                     </div>
+
+                </div>
+
+
+                {{-- EDITAR RED SOCIAL / ENLACE --}}
+                <div
+                    id="form-red-{{ $red->id_consultor_red_social }}"
+                    class="perfil-form-wrapper d-none mt-3">
+
+                    <form
+                        method="POST"
+                        action="{{ route('fac.consultores.contacto.redes.update', [$consultor, $red]) }}"
+                        class="border rounded p-3 bg-light">
+
+                        @csrf
+                        @method('PUT')
+
+                        <div class="row g-3 align-items-end">
+
+                            <div class="col-md-4">
+
+                                <label class="form-label">
+                                    Tipo
+                                </label>
+
+                                <select
+                                    name="id_tipo_red_social"
+                                    class="form-select"
+                                    required>
+
+                                    <option value="">
+                                        Seleccione
+                                    </option>
+
+                                    @foreach($catalogos['tiposRedSocial'] as $tipo)
+
+                                        <option
+                                            value="{{ $tipo->id_tipo_red_social }}"
+                                            {{ $red->id_tipo_red_social == $tipo->id_tipo_red_social ? 'selected' : '' }}>
+
+                                            {{ $tipo->nombre }}
+
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Enlace
+                                </label>
+
+                                <input
+                                    type="url"
+                                    name="enlace"
+                                    value="{{ $red->enlace }}"
+                                    class="form-control"
+                                    maxlength="500"
+                                    placeholder="https://..."
+                                    required>
+
+                            </div>
+
+
+                            <div class="col-md-2 d-flex gap-2">
+
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    onclick="cerrarFormulariosPerfil()">
+                                    Cancelar
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-fepade">
+                                    Actualizar
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
 
                 </div>
 
@@ -834,6 +959,7 @@
     </div>
 
 
+    {{-- NUEVO CONTACTO DE EMERGENCIA --}}
     <div
         id="form-emergencia-nueva"
         class="perfil-form-wrapper d-none">
@@ -846,7 +972,6 @@
             @csrf
 
             <div class="row g-3 align-items-end">
-
 
                 <div class="col-md-4">
 
@@ -861,6 +986,10 @@
                         maxlength="150"
                         required>
 
+                    <div class="form-text">
+                        Ingresa el nombre de la persona a contactar.
+                    </div>
+
                 </div>
 
 
@@ -871,14 +1000,17 @@
                     </label>
 
                     <input
-                        type="text"
+                        type="tel"
                         name="telefono"
-                        class="form-control"
+                        class="form-control telefono-internacional"
                         maxlength="20"
-                        pattern="[0-9+\-\s]{7,20}"
                         inputmode="tel"
-                        title="Ingresa entre 7 y 20 caracteres usando números, espacios, + o -."
+                        autocomplete="tel"
                         required>
+
+                    <div class="form-text">
+                        Selecciona el país e ingresa el número telefónico.
+                    </div>
 
                 </div>
 
@@ -897,6 +1029,10 @@
                         pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"
                         title="Ingresa un correo electrónico válido. Ejemplo: nombre@dominio.com"
                         placeholder="nombre@dominio.com">
+
+                    <div class="form-text">
+                        Ingresa el correo de la persona a contactar.
+                    </div>
 
                 </div>
 
@@ -925,6 +1061,7 @@
     </div>
 
 
+    {{-- CONTACTOS DE EMERGENCIA REGISTRADOS --}}
     @forelse($consultor->emergencias as $emergencia)
 
         <article class="perfil-card-item">
@@ -935,7 +1072,7 @@
 
             <div class="perfil-card-body">
 
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between gap-3">
 
                     <div>
 
@@ -956,19 +1093,148 @@
                     </div>
 
 
-                    <form
-                        method="POST"
-                        action="{{ route('fac.consultores.contacto.emergencias.destroy', [$consultor, $emergencia]) }}"
-                        onsubmit="return confirm('¿Deseas eliminar este contacto?')">
-
-                        @csrf
-                        @method('DELETE')
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
 
                         <button
-                            class="btn btn-sm btn-link text-danger"
-                            type="submit">
-                            🗑
+                            class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
+                            type="button"
+                            title="Editar contacto de emergencia"
+                            aria-label="Editar contacto de emergencia"
+                            onclick="mostrarFormularioPerfil('form-emergencia-{{ $emergencia->id_consultor_emergencia }}')">
+
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Editar</span>
+
                         </button>
+
+
+                        <form
+                            method="POST"
+                            action="{{ route('fac.consultores.contacto.emergencias.destroy', [$consultor, $emergencia]) }}"
+                            class="m-0"
+                            onsubmit="return confirm('¿Deseas eliminar este contacto?')">
+
+                            @csrf
+                            @method('DELETE')
+
+                            <button
+                                class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1"
+                                type="submit"
+                                title="Eliminar contacto de emergencia"
+                                aria-label="Eliminar contacto de emergencia">
+
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Eliminar</span>
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+
+                {{-- EDITAR CONTACTO DE EMERGENCIA --}}
+                <div
+                    id="form-emergencia-{{ $emergencia->id_consultor_emergencia }}"
+                    class="perfil-form-wrapper d-none mt-3">
+
+                    <form
+                        method="POST"
+                        action="{{ route('fac.consultores.contacto.emergencias.update', [$consultor, $emergencia]) }}"
+                        class="border rounded p-3 bg-light">
+
+                        @csrf
+                        @method('PUT')
+
+                        <div class="row g-3 align-items-end">
+
+                            <div class="col-md-4">
+
+                                <label class="form-label">
+                                    Nombre
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="nombre"
+                                    value="{{ $emergencia->nombre }}"
+                                    class="form-control"
+                                    maxlength="150"
+                                    required>
+
+                                <div class="form-text">
+                                    Modifica el nombre de la persona a contactar.
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <label class="form-label">
+                                    Teléfono
+                                </label>
+
+                                <input
+                                    type="tel"
+                                    name="telefono"
+                                    value="{{ $emergencia->telefono }}"
+                                    class="form-control telefono-internacional"
+                                    maxlength="20"
+                                    inputmode="tel"
+                                    autocomplete="tel"
+                                    required>
+
+                                <div class="form-text">
+                                    Selecciona el país e ingresa el número telefónico.
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <label class="form-label">
+                                    Correo
+                                </label>
+
+                                <input
+                                    type="email"
+                                    name="correo"
+                                    value="{{ $emergencia->correo }}"
+                                    class="form-control"
+                                    maxlength="120"
+                                    pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"
+                                    title="Ingresa un correo electrónico válido. Ejemplo: nombre@dominio.com"
+                                    placeholder="nombre@dominio.com">
+
+                                <div class="form-text">
+                                    Modifica el correo de la persona a contactar.
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-2 d-flex gap-2">
+
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    onclick="cerrarFormulariosPerfil()">
+                                    Cancelar
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-fepade">
+                                    Actualizar
+                                </button>
+
+                            </div>
+
+                        </div>
 
                     </form>
 
@@ -1184,4 +1450,3 @@
 </script>
 
 @endpush
-```

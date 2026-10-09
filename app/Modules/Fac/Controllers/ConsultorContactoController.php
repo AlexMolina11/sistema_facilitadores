@@ -11,6 +11,7 @@ use App\Modules\Fac\Models\ConsultorTelefono;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Rules\TelefonoInternacional;
 
 class ConsultorContactoController extends Controller
 {
@@ -205,9 +206,22 @@ class ConsultorContactoController extends Controller
     private function validarTelefono(Request $request): array
     {
         return $request->validate([
-            'id_tipo_telefono' => ['required', 'integer', 'exists:tbl_tipo_telefono,id_tipo_telefono'],
-            'numero_telefono' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]{7,20}$/'],
-            'extension' => ['nullable', 'string', 'max:10'],
+            'id_tipo_telefono' => [
+                'required',
+                'integer',
+                'exists:tbl_tipo_telefono,id_tipo_telefono',
+            ],
+            'numero_telefono' => [
+                'required',
+                'string',
+                'max:20',
+                new TelefonoInternacional(),
+            ],
+            'extension' => [
+                'nullable',
+                'string',
+                'max:10',
+            ],
         ]);
     }
 
@@ -222,11 +236,29 @@ class ConsultorContactoController extends Controller
     private function validarEmergencia(Request $request): array
     {
         $data = $request->validate([
-            'nombre' => ['required', 'string', 'max:150'],
-            'telefono' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]{7,20}$/'],
-            'correo' => ['nullable', 'string', 'max:120', 'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/'],
+            'nombre' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+            'telefono' => [
+                'required',
+                'string',
+                'max:20',
+                new TelefonoInternacional(),
+            ],
+            'correo' => [
+                'nullable',
+                'string',
+                'max:120',
+                'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/',
+            ],
         ]);
-        $data['correo'] = !empty($data['correo']) ? strtolower(trim($data['correo'])) : null;
+
+        $data['correo'] = !empty($data['correo'])
+            ? strtolower(trim($data['correo']))
+            : null;
+
         return $data;
     }
 
