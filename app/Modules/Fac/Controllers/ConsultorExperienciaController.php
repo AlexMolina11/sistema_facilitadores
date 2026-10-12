@@ -213,6 +213,8 @@ class ConsultorExperienciaController extends Controller
 
         $data = $this->normalizarExperiencia($data);
 
+        $posibleDuplicado = $this->existeExperienciaSimilar($consultor, $data, null);
+
         if ($request->hasFile('evidencia')) {
             $data['url_evidencia'] = $request->file('evidencia')
                 ->store("consultores/{$consultor->id_consultor}/experiencia", 'public');
@@ -226,7 +228,8 @@ class ConsultorExperienciaController extends Controller
 
         return redirect()
             ->route('fac.consultores.experiencia.edit', $consultor)
-            ->with('success', 'Experiencia laboral registrada correctamente.');
+            ->with('success', 'Experiencia laboral registrada correctamente.')
+            ->with('experiencia_aviso_duplicado', $posibleDuplicado);
     }
 
     public function updateExperiencia(Request $request, Consultor $consultor, ConsultorExperienciaLaboral $experiencia)
@@ -240,6 +243,8 @@ class ConsultorExperienciaController extends Controller
         $this->validarFechasExperiencia($data);
 
         $data = $this->normalizarExperiencia($data);
+
+        $posibleDuplicado = $this->existeExperienciaSimilar($consultor, $data, $experiencia->id_experiencia);
 
         if ($request->hasFile('evidencia')) {
             $this->eliminarArchivoPublico($experiencia->url_evidencia);
@@ -255,7 +260,8 @@ class ConsultorExperienciaController extends Controller
 
         return redirect()
             ->route('fac.consultores.experiencia.edit', $consultor)
-            ->with('success', 'Experiencia laboral actualizada correctamente.');
+            ->with('success', 'Experiencia laboral actualizada correctamente.')
+            ->with('experiencia_aviso_duplicado', $posibleDuplicado);
     }
 
     public function destroyExperiencia(Consultor $consultor, ConsultorExperienciaLaboral $experiencia)
@@ -931,6 +937,32 @@ class ConsultorExperienciaController extends Controller
             'tiposReferencia' => DB::table('tbl_tipo_referencia')->where('activo', true)->orderBy('nombre')->get(),
             'tiposRelacion' => DB::table('tbl_tipo_relacion')->where('activo', true)->orderBy('nombre')->get(),
         ];
+    }
+
+    /**
+     * Identifica coincidencias exactas sin bloquear empleos simultáneos.
+     * La comparación de empresa y cargo ignora espacios exteriores y mayúsculas.
+     */
+    private function existeExperienciaSimilar(Consultor $consultor, array $data, ?int $exceptoId = null): bool
+    {
+        $empresa = mb_strtolower(trim($data['empresa']));
+        $cargo = mb_strtolower(trim($data['cargo']));
+        $actual = (bool) ($data['trabajo_actual'] ?? false);
+        $desde = $data['desde'] ?? null;
+        $hasta = $actual ? null : ($data['hasta'] ?? null);
+
+        return ConsultorExperienciaLaboral::query()
+            ->where('id_consultor', $consultor->id_consultor)
+            ->where('activo', true)
+            ->when($exceptoId !== null, fn ($q) => $q->where('id_experiencia', '!=', $exceptoId))
+            ->get()
+            ->contains(function ($item) use ($empresa, $cargo, $actual, $desde, $hasta) {
+                return mb_strtolower(trim((string) $item->empresa)) === $empresa
+                    && mb_strtolower(trim((string) $item->cargo)) === $cargo
+                    && (bool) $item->trabajo_actual === $actual
+                    && $item->desde?->format('Y-m-d') === $desde
+                    && ($actual || $item->hasta?->format('Y-m-d') === $hasta);
+            });
     }
 
     private function validarExperiencia(Request $request): array

@@ -197,11 +197,34 @@
                     for (let i = 1; i <= 3; i++) {
                         if (!validarPaso(i)) { evento.preventDefault(); paso = i; render(); validarPaso(i); return; }
                     }
+                    const lista = window.experienciasLaboralesComparacion || [];
+                    const normalizar = texto => (texto || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('es');
+                    const empresa = normalizar(form.elements.namedItem('empresa').value);
+                    const cargo = normalizar(form.elements.namedItem('cargo').value);
+                    const desdeValor = desde.value || null;
+                    const hastaValor = actual.checked ? null : (hasta.value || null);
+                    const idActual = form.dataset.formKey === 'nuevo' ? null : Number(form.dataset.formKey);
+                    const coincide = lista.some(item =>
+                        item.id !== idActual &&
+                        normalizar(item.empresa) === empresa &&
+                        normalizar(item.cargo) === cargo &&
+                        (item.desde || null) === desdeValor &&
+                        Boolean(item.trabajo_actual) === actual.checked &&
+                        (actual.checked || (item.hasta || null) === hastaValor)
+                    );
+                    if (coincide && !window.confirm('Ya existe una experiencia con la misma empresa, cargo y período. ¿Deseas guardarla de todos modos? Si son cargos reales simultáneos, puedes continuar.')) {
+                        evento.preventDefault();
+                        return;
+                    }
                     if (telefono.value.trim() && iti) telefono.value = iti.getNumber();
                 });
                 sincronizarActual();
                 hasta.min = desde.value || '';
-                if (form.querySelector('.alert-danger:not(.js-exp-error)')) paso = 1;
+                if (form.querySelector('.alert-danger:not(.js-exp-error)')) {
+                    const campoError = @json($usarOld ? $errors->keys()[0] ?? '' : '');
+                    paso = ['desde', 'hasta', 'trabajo_actual'].includes(campoError) ? 2 :
+                        ['jefe_nombre', 'jefe_email', 'jefe_telefono', 'evidencia'].includes(campoError) ? 3 : 1;
+                }
                 render();
             });
             const viejo = document.querySelector('.js-experiencia-form .alert-danger:not(.js-exp-error)');

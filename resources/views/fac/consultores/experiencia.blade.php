@@ -8,6 +8,14 @@
     })->values();
     $totalExperiencias = $experiencias->count();
     $trabajosActuales = $experiencias->filter(fn ($item) => (bool) $item->trabajo_actual)->count();
+    $experienciasComparacion = $experiencias->map(fn ($item) => [
+        'id' => (int) $item->id_experiencia,
+        'empresa' => (string) $item->empresa,
+        'cargo' => (string) $item->cargo,
+        'desde' => $item->desde?->format('Y-m-d'),
+        'hasta' => $item->hasta?->format('Y-m-d'),
+        'trabajo_actual' => (bool) $item->trabajo_actual,
+    ])->values();
 @endphp
 
 @section('title', $esMiPerfil ? 'Mi experiencia | Facilitadores FEPADE' : 'Experiencia laboral | Facilitadores FEPADE')
@@ -16,10 +24,17 @@
 
 @section('content')
 @include('fac.consultores.partials._wizard', ['step' => 3, 'consultor' => $consultor])
+@if(session('experiencia_aviso_duplicado'))
+    <div class="alert alert-warning" role="status">
+        La experiencia se guardó, pero encontramos otro registro con la misma institución, cargo y período.
+        Revisa la línea del tiempo y elimina alguno si fue agregado por error.
+    </div>
+@endif
 
 <div class="perfil-panel mb-4 experiencia-pagina">
     <div class="experiencia-encabezado">
         <div>
+            <span class="experiencia-eyebrow">PASO 3 · TRAYECTORIA PROFESIONAL</span>
             <h2 class="h4 mb-2">{{ $esMiPerfil ? 'Construye tu historia laboral' : 'Trayectoria laboral del consultor' }}</h2>
             <p class="text-muted mb-0">Agrega tus experiencias una por una. Puedes comenzar por tu trabajo más reciente; las ordenaremos automáticamente por fecha.</p>
         </div>
@@ -139,6 +154,7 @@
 
 @push('scripts')
 <script>
+window.experienciasLaboralesComparacion = @json($experienciasComparacion);
 function mostrarFormularioPerfil(id) {
     document.querySelectorAll('.perfil-form-wrapper').forEach(function (el) { el.classList.add('d-none'); });
     document.querySelectorAll('[aria-controls^="crear-experiencia"], [aria-controls^="editar-experiencia-"]').forEach(function (el) { el.setAttribute('aria-expanded', 'false'); });
