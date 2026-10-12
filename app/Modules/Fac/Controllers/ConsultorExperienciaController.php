@@ -3,6 +3,7 @@
 namespace App\Modules\Fac\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Rules\TelefonoInternacional;
 use App\Modules\Fac\Models\Consultor;
 use App\Modules\Fac\Models\ConsultorDisponibilidad;
 use App\Modules\Fac\Models\ConsultorExperienciaLaboral;
@@ -938,18 +939,20 @@ class ConsultorExperienciaController extends Controller
             'empresa' => ['required', 'string', 'max:150'],
             'cargo' => ['required', 'string', 'max:100'],
             'descripcion' => ['nullable', 'string', 'max:500'],
-            'desde' => ['nullable', 'date'],
-            'hasta' => ['nullable', 'date'],
+            'desde' => ['nullable', 'date', 'before_or_equal:today'],
+            'hasta' => ['nullable', 'date', 'before_or_equal:today'],
             'trabajo_actual' => ['nullable', 'boolean'],
             'jefe_nombre' => ['nullable', 'string', 'max:150'],
             'jefe_email' => ['nullable', 'string', 'max:120', 'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/'],
-            'jefe_telefono' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]{7,20}$/'],
+            'jefe_telefono' => ['nullable', 'string', 'max:20', new TelefonoInternacional()],
             'evidencia' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
         ], [
             'empresa.required' => 'La empresa es obligatoria.',
             'cargo.required' => 'El cargo es obligatorio.',
             'jefe_email.regex' => 'El correo del jefe inmediato debe tener un dominio completo. Ejemplo: nombre@dominio.com',
-            'jefe_telefono.regex' => 'El teléfono del jefe inmediato solo puede contener números, espacios, guiones o +.',
+            'jefe_telefono.max' => 'El teléfono internacional no puede superar los 20 caracteres.',
+            'desde.before_or_equal' => 'La fecha de inicio no puede ser futura.',
+            'hasta.before_or_equal' => 'La fecha de finalización no puede ser futura.',
             'evidencia.mimes' => 'La evidencia laboral debe ser PDF, JPG, JPEG, PNG o WEBP.',
             'evidencia.max' => 'La evidencia laboral no debe superar los 5 MB.',
         ]);
