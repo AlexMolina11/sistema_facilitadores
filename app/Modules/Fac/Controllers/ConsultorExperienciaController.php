@@ -1043,7 +1043,7 @@ class ConsultorExperienciaController extends Controller
         return $request->validate([
             'id_tipo_referencia' => ['required', 'integer', 'exists:tbl_tipo_referencia,id_tipo_referencia'],
             'nombre' => ['required', 'string', 'max:150'],
-            'telefono' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]{7,20}$/'],
+            'telefono' => ['nullable', 'string', 'max:20', new TelefonoInternacional()],
             'correo' => ['nullable', 'string', 'max:120', 'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/'],
             'empresa' => ['nullable', 'string', 'max:150'],
             'cargo' => ['nullable', 'string', 'max:100'],
@@ -1051,7 +1051,7 @@ class ConsultorExperienciaController extends Controller
         ], [
             'id_tipo_referencia.required' => 'El tipo de referencia es obligatorio.',
             'nombre.required' => 'El nombre de la referencia es obligatorio.',
-            'telefono.regex' => 'El teléfono de referencia solo puede contener números, espacios, guiones o +.',
+            'telefono.max' => 'El teléfono internacional no puede superar los 20 caracteres.',
             'correo.regex' => 'El correo de referencia debe tener un dominio completo. Ejemplo: nombre@dominio.com',
         ]);
     }

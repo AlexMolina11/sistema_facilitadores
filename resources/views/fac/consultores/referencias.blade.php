@@ -28,6 +28,14 @@
         : 'Administra las referencias personales y profesionales del consultor.'
 )
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('vendor/intl-tel-input/css/intlTelInput.min.css') }}">
+<style>
+    .referencia-form .iti { width: 100%; }
+    .referencia-form .iti input { width: 100%; }
+</style>
+@endpush
+
 @section('content')
 
 <x-ui.page-header
@@ -115,4 +123,58 @@
     ]
 )
 @endsection
-@push('scripts')<script>function mostrarFormularioPerfil(id){document.querySelectorAll('.perfil-form-wrapper').forEach(el=>el.classList.add('d-none'));const t=document.getElementById(id);if(t)t.classList.remove('d-none');}function cerrarFormulariosPerfil(){document.querySelectorAll('.perfil-form-wrapper').forEach(el=>el.classList.add('d-none'));}</script>@endpush
+@push('scripts')
+<script src="{{ asset('vendor/intl-tel-input/js/intlTelInputWithUtils.min.js') }}"></script>
+<script>
+function mostrarFormularioPerfil(id) {
+    document.querySelectorAll('.perfil-form-wrapper').forEach(el => el.classList.add('d-none'));
+    const target = document.getElementById(id);
+    if (target) {
+        target.classList.remove('d-none');
+        target.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    }
+}
+function cerrarFormulariosPerfil() {
+    document.querySelectorAll('.perfil-form-wrapper').forEach(el => el.classList.add('d-none'));
+}
+document.addEventListener('DOMContentLoaded', function () {
+    const telefonos = new Map();
+    document.querySelectorAll('.referencia-form [data-referencia-telefono]').forEach(input => {
+        if (typeof window.intlTelInput !== 'function') return;
+        const iti = window.intlTelInput(input, {
+            initialCountry: 'sv',
+            countryOrder: ['sv', 'gt', 'hn', 'ni', 'cr', 'pa', 'us', 'mx'],
+            nationalMode: true,
+            autoPlaceholder: 'polite',
+            formatAsYouType: true
+        });
+        telefonos.set(input, iti);
+        if (input.value.trim().startsWith('+')) iti.setNumber(input.value.trim());
+    });
+
+    document.querySelectorAll('.referencia-form').forEach(form => {
+        form.addEventListener('submit', function (event) {
+            const input = form.querySelector('[data-referencia-telefono]');
+            const iti = input && telefonos.get(input);
+            if (!input || !iti || !input.value.trim()) return;
+
+            if (!iti.isValidNumber()) {
+                event.preventDefault();
+                input.setCustomValidity('Ingresa un número telefónico válido para el país seleccionado.');
+                input.reportValidity();
+                input.addEventListener('input', () => input.setCustomValidity(''), {once: true});
+                return;
+            }
+            input.setCustomValidity('');
+            input.value = iti.getNumber();
+        });
+    });
+
+    const formularioConErrores = @json(old('_referencia_form_id', ''));
+    const hayErrores = @json($errors->any());
+    if (hayErrores && formularioConErrores) {
+        mostrarFormularioPerfil(formularioConErrores);
+    }
+});
+</script>
+@endpush

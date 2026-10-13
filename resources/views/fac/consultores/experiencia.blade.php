@@ -34,7 +34,6 @@
 <div class="perfil-panel mb-4 experiencia-pagina">
     <div class="experiencia-encabezado">
         <div>
-            <span class="experiencia-eyebrow">PASO 3 · TRAYECTORIA PROFESIONAL</span>
             <h2 class="h4 mb-2">{{ $esMiPerfil ? 'Construye tu historia laboral' : 'Trayectoria laboral del consultor' }}</h2>
             <p class="text-muted mb-0">Agrega tus experiencias una por una. Puedes comenzar por tu trabajo más reciente; las ordenaremos automáticamente por fecha.</p>
         </div>
