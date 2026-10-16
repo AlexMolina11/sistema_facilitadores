@@ -39,6 +39,10 @@
 
 @section('content')
 
+{{-- Mejora visual compartida: sin cambios en nombres, rutas ni reglas de negocio. --}}
+@include('fac.consultores.partials._fac_input_ux')
+
+
 <!--<x-ui.page-header
     :title="$esMiPerfil
         ? 'Mi información de contacto'
@@ -49,6 +53,18 @@
 />-->
 
 @include('fac.consultores.partials._wizard', ['step' => 2, 'consultor' => $consultor])
+
+@if ($errors->any())
+    <div class="alert alert-danger fac-ux-error-summary" role="alert" aria-live="polite">
+        <div class="fw-semibold mb-2"><i class="fa-solid fa-circle-exclamation me-1"></i> Revisa los datos del formulario.</div>
+        <ul class="mb-0 ps-3">
+            @foreach ($errors->all() as $mensaje)
+                <li>{{ $mensaje }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 
 
 {{-- ============================================================
@@ -78,6 +94,7 @@
     <div id="form-email-nuevo" class="perfil-form-wrapper d-none">
 
         <form
+            data-fac-ux-form
             method="POST"
             action="{{ route('fac.consultores.contacto.emails.store', $consultor) }}"
             class="border rounded p-3 bg-light">
@@ -173,6 +190,7 @@
                         </button>
 
                         <form
+            data-fac-ux-form
                             method="POST"
                             action="{{ route('fac.consultores.contacto.emails.destroy', [$consultor, $email]) }}"
                             class="m-0"
@@ -204,6 +222,7 @@
                     class="perfil-form-wrapper d-none mt-3">
 
                     <form
+            data-fac-ux-form
                         method="POST"
                         action="{{ route('fac.consultores.contacto.emails.update', [$consultor, $email]) }}"
                         class="border rounded p-3 bg-light">
@@ -320,6 +339,7 @@
         class="perfil-form-wrapper d-none">
 
         <form
+            data-fac-ux-form
             method="POST"
             action="{{ route('fac.consultores.contacto.telefonos.store', $consultor) }}"
             class="border rounded p-3 bg-light">
@@ -335,6 +355,7 @@
                     </label>
 
                     <select
+                        data-fac-search-select
                         name="id_tipo_telefono"
                         class="form-select"
                         required>
@@ -483,6 +504,7 @@
                         </button>
 
                         <form
+            data-fac-ux-form
                             method="POST"
                             action="{{ route('fac.consultores.contacto.telefonos.destroy', [$consultor, $telefono]) }}"
                             class="m-0"
@@ -515,6 +537,7 @@
                     class="perfil-form-wrapper d-none mt-3">
 
                     <form
+            data-fac-ux-form
                         method="POST"
                         action="{{ route('fac.consultores.contacto.telefonos.update', [$consultor, $telefono]) }}"
                         class="border rounded p-3 bg-light">
@@ -532,7 +555,8 @@
                                 </label>
 
                                 <select
-                                    name="id_tipo_telefono"
+                                    data-fac-search-select
+                        name="id_tipo_telefono"
                                     class="form-select"
                                     required>
 
@@ -675,6 +699,7 @@
         class="perfil-form-wrapper d-none">
 
         <form
+            data-fac-ux-form
             method="POST"
             action="{{ route('fac.consultores.contacto.redes.store', $consultor) }}"
             class="border rounded p-3 bg-light">
@@ -690,6 +715,7 @@
                     </label>
 
                     <select
+                        data-fac-search-select
                         name="id_tipo_red_social"
                         class="form-select"
                         required>
@@ -804,6 +830,7 @@
 
 
                         <form
+            data-fac-ux-form
                             method="POST"
                             action="{{ route('fac.consultores.contacto.redes.destroy', [$consultor, $red]) }}"
                             class="m-0"
@@ -836,6 +863,7 @@
                     class="perfil-form-wrapper d-none mt-3">
 
                     <form
+            data-fac-ux-form
                         method="POST"
                         action="{{ route('fac.consultores.contacto.redes.update', [$consultor, $red]) }}"
                         class="border rounded p-3 bg-light">
@@ -852,7 +880,8 @@
                                 </label>
 
                                 <select
-                                    name="id_tipo_red_social"
+                                    data-fac-search-select
+                        name="id_tipo_red_social"
                                     class="form-select"
                                     required>
 
@@ -965,6 +994,7 @@
         class="perfil-form-wrapper d-none">
 
         <form
+            data-fac-ux-form
             method="POST"
             action="{{ route('fac.consultores.contacto.emergencias.store', $consultor) }}"
             class="border rounded p-3 bg-light">
@@ -1109,6 +1139,7 @@
 
 
                         <form
+            data-fac-ux-form
                             method="POST"
                             action="{{ route('fac.consultores.contacto.emergencias.destroy', [$consultor, $emergencia]) }}"
                             class="m-0"
@@ -1141,6 +1172,7 @@
                     class="perfil-form-wrapper d-none mt-3">
 
                     <form
+            data-fac-ux-form
                         method="POST"
                         action="{{ route('fac.consultores.contacto.emergencias.update', [$consultor, $emergencia]) }}"
                         class="border rounded p-3 bg-light">
@@ -1277,6 +1309,8 @@
     ]
 )
 
+    {{-- Selectores con búsqueda integrada: tipos de teléfono y redes sociales. --}}
+    @include('fac.consultores.partials._contacto_select_ux')
 @endsection
 
 

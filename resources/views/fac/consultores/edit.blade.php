@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-
 @section(
     'title',
     $esMiPerfil
@@ -22,85 +21,11 @@
         : 'Actualiza la información personal del consultor.'
 )
 
-
 @section('content')
 
-
-<!--<x-ui.page-header
-    :title="$esMiPerfil
-        ? 'Mi información personal'
-        : 'Perfil personal'"
-    :subtitle="$esMiPerfil
-        ? 'Mantén actualizados tus datos personales, residencia, documentos y fotografía.'
-        : 'Actualiza los datos personales, residencia, documentos y fotografía del consultor.'"
->
-
-    <div class="d-flex gap-2 flex-wrap">
-
-        @if($esMiPerfil)
-
-            <a
-                href="{{ route('fac.mi-perfil') }}"
-                class="btn btn-outline-secondary"
-            >
-                <i class="fa-solid fa-arrow-left me-1"></i>
-                Volver a mi perfil
-            </a>
-
-        @else
-
-            <a
-                href="{{ route(
-                    'fac.consultores.show',
-                    $consultor
-                ) }}"
-                class="btn btn-outline-secondary"
-            >
-                <i class="fa-solid fa-arrow-left me-1"></i>
-                Volver al expediente
-            </a>
-
-        @endif
-
-    </div>
-
-</x-ui.page-header>-->
-
-
-<div
-    class="
-        d-flex
-        justify-content-end
-        mb-3
-    "
->
-
-    @if($esMiPerfil)
-
-        <a
-            href="{{ route('fac.mi-perfil') }}"
-            class="btn btn-sm btn-outline-secondary"
-        >
-            <i class="fa-solid fa-arrow-left me-1"></i>
-            Volver a mi perfil
-        </a>
-
-    @else
-
-        <a
-            href="{{ route(
-                'fac.consultores.show',
-                $consultor
-            ) }}"
-            class="btn btn-sm btn-outline-secondary"
-        >
-            <i class="fa-solid fa-arrow-left me-1"></i>
-            Volver al expediente
-        </a>
-
-    @endif
-
-</div>
+{{-- Mejoras visuales compartidas: se mantienen campos, rutas y reglas de negocio. --}}
+@include('fac.consultores.partials._fac_input_ux')
+@include('fac.consultores.partials._perfil_select_file_ux')
 
 @include(
     'fac.consultores.partials._wizard',
@@ -111,19 +36,14 @@
 )
 
 <div class="perfil-panel mb-4">
-
     <form
+        data-fac-ux-form
         method="POST"
-        action="{{ route(
-            'fac.consultores.update',
-            $consultor
-        ) }}"
+        action="{{ route('fac.consultores.update', $consultor) }}"
         enctype="multipart/form-data"
     >
-
         @csrf
         @method('PUT')
-
 
         @include(
             'fac.consultores.partials._form',
@@ -131,60 +51,48 @@
                 'consultor' => $consultor,
                 'catalogos' => $catalogos,
                 'esMiPerfil' => $esMiPerfil,
-                'puedeGestionarConsultores' =>
-                    $puedeGestionarConsultores,
+                'puedeGestionarConsultores' => $puedeGestionarConsultores,
             ]
         )
 
-
         <hr class="my-4">
 
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
 
-        <div
-            class="d-flex
-                   justify-content-between
-                   align-items-center
-                   gap-2
-                   flex-wrap"
-        >
-
-            @if($esMiPerfil)
+            <div class="d-flex align-items-center gap-2 flex-wrap">
 
                 <a
-                    href="{{ route('fac.mi-perfil') }}"
+                    href="{{ $esMiPerfil
+                        ? route('fac.mi-perfil')
+                        : route('fac.consultores.show', $consultor) }}"
                     class="btn btn-outline-secondary"
                 >
                     Cancelar
                 </a>
 
-            @else
-
                 <a
-                    href="{{ route(
-                        'fac.consultores.show',
-                        $consultor
-                    ) }}"
+                    href="{{ $esMiPerfil
+                        ? route('fac.mi-perfil')
+                        : route('fac.consultores.show', $consultor) }}"
                     class="btn btn-outline-secondary"
                 >
-                    Cancelar
+                    <i class="fa-solid fa-arrow-left me-1"></i>
+
+                    {{ $esMiPerfil
+                        ? 'Volver a mi perfil'
+                        : 'Volver al expediente' }}
                 </a>
 
-            @endif
+            </div>
 
-
-            <button
-                type="submit"
-                class="btn btn-fepade"
-            >
+            <button type="submit" class="btn btn-fepade">
                 <i class="fa-solid fa-floppy-disk me-1"></i>
                 Guardar y continuar a Contacto
                 <i class="fa-solid fa-arrow-right ms-1"></i>
             </button>
 
         </div>
-
     </form>
-
 </div>
 
 @endsection

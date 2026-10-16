@@ -31,14 +31,14 @@
                         class="d-flex align-items-center justify-content-center rounded-circle bg-light flex-shrink-0"
                         style="width: 52px; height: 52px;"
                     >
-                        <i class="fa-solid fa-list-check fs-4 text-primary"></i>
+                        <i class="fa-solid fa-list-check text-primary fac-seccion-icono"></i>
                     </div>
 
                     <div class="flex-grow-1">
 
-                        <h5 class="mb-1">
+                        <h4 class="mb-1 fac-seccion-titulo">
                             Progreso de clasificación
-                        </h5>
+                        </h4>
 
                         @if ($progresoClasificacion['total'] > 0)
 
@@ -61,7 +61,7 @@
                                 style="height: 10px;"
                             >
                                 <div
-                                    class="progress-bar"
+                                    class="progress-bar bg-success"
                                     style="width: {{ $progresoClasificacion['porcentaje'] }}%"
                                 ></div>
                             </div>
@@ -135,20 +135,22 @@
 </div>
 
 
+<div class="row g-3 align-items-start fac-evidencias-grid">
+    <div class="col-12 col-xl-6">
 {{-- ============================================================
      ATESTADOS
 ============================================================ --}}
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4 fac-evidencias-panel">
 
-    <div class="card-header bg-white border-bottom p-4">
+    <div class="card-header bg-white border-bottom p-3">
 
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
 
             <div>
-                <h5 class="mb-1">
-                    <i class="fa-solid fa-file-lines me-2 text-primary"></i>
+                <h4 class="mb-1 fac-seccion-titulo">
+                    <i class="fa-solid fa-file-lines me-2 text-primary fac-seccion-icono"></i>
                     Atestados
-                </h5>
+                </h4>
 
                 <div class="text-muted small">
                     Documentos de formación registrados en tu perfil.
@@ -167,7 +169,7 @@
     </div>
 
 
-    <div class="card-body p-4">
+    <div class="card-body p-3">
 
         @forelse ($atestadosEstado as $atestado)
 
@@ -182,7 +184,7 @@
 
                 <div class="row g-3 align-items-start">
 
-                    <div class="col-lg">
+                    <div class="col-12">
 
                         <div class="d-flex gap-3">
 
@@ -376,7 +378,7 @@
                     </div>
 
 
-                    <div class="col-lg-auto">
+                    <div class="col-12 d-flex justify-content-end">
 
                         <button
                             type="button"
@@ -420,22 +422,23 @@
 
     </div>
 </div>
-
+    </div> {{-- Cierre columna Atestados: mantiene ambas listas en la misma fila --}}
 
 {{-- ============================================================
      CAPACITACIONES FEPADE
 ============================================================ --}}
-<div class="card border-0 shadow-sm mb-4">
+    <div class="col-12 col-xl-6">
+<div class="card border-0 shadow-sm mb-4 fac-evidencias-panel">
 
-    <div class="card-header bg-white border-bottom p-4">
+    <div class="card-header bg-white border-bottom p-3">
 
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
 
             <div>
-                <h5 class="mb-1">
-                    <i class="fa-solid fa-chalkboard-user me-2 text-primary"></i>
+                <h4 class="mb-1 fac-seccion-titulo">
+                    <i class="fa-solid fa-chalkboard-user me-2 text-primary fac-seccion-icono"></i>
                     Capacitaciones FEPADE
-                </h5>
+                </h4>
 
                 <div class="text-muted small">
                     Capacitaciones registradas por FEPADE en las que has participado como facilitador.
@@ -454,7 +457,7 @@
     </div>
 
 
-    <div class="card-body p-4">
+    <div class="card-body p-3">
 
         @forelse ($capacitacionesEstado as $capacitacion)
 
@@ -469,7 +472,7 @@
 
                 <div class="row g-3 align-items-start">
 
-                    <div class="col-lg">
+                    <div class="col-12">
 
                         <div class="d-flex gap-3">
 
@@ -662,7 +665,7 @@
                     </div>
 
 
-                    <div class="col-lg-auto">
+                    <div class="col-12 d-flex justify-content-end">
 
                         <button
                             type="button"
@@ -707,6 +710,9 @@
     </div>
 </div>
 
+
+    </div>
+</div>
 
 {{-- ============================================================
      ASISTENTE DE CLASIFICACIÓN
@@ -1737,6 +1743,69 @@
         .asistente-clasificacion-header {
             padding: 1rem;
         }
+    }
+
+    /* Ajustes V2: titulares, iconografía y clasificaciones a ancho completo */
+    .fac-seccion-titulo { font-size: 1.35rem; line-height: 1.35; font-weight: 700; color: #102237; }
+    .fac-seccion-icono { font-size: 1.15rem !important; width: 1.4rem; text-align: center; vertical-align: middle; }
+    .fac-evidencias-grid .evidencia-card > .row > .col-12 { min-width: 0; }
+    .fac-evidencias-grid .evidencia-card .flex-grow-1 { min-width: 0; }
+    .fac-evidencias-grid .clasificacion-resumen { width: 100%; max-width: none; }
+    .fac-evidencias-grid .clasificacion-resumen > .d-flex { flex-wrap: wrap; }
+    .fac-evidencias-grid .clasificacion-resumen .flex-grow-1 { flex-basis: 260px; }
+    .fac-evidencias-grid .clasificacion-resumen .flex-shrink-0 { margin-left: auto; }
+    .fac-evidencias-grid .evidencia-card .btn-editar-clasificacion span,
+    .fac-evidencias-grid .evidencia-card button[title="Eliminar clasificación"] span { display: inline !important; }
+    @media (max-width: 575.98px) {
+        .fac-evidencias-grid .clasificacion-resumen .flex-shrink-0 { margin-left: 0; }
+        .fac-seccion-titulo { font-size: 1.2rem; }
+    }
+
+    /* FAC Especialización: lenguaje visual compartido con Formación y Experiencia */
+    .fac-evidencias-grid .fac-evidencias-panel {
+        border: 1px solid #e1e7ee !important;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .fac-evidencias-grid .fac-evidencias-panel > .card-header {
+        border-bottom-color: #e8edf2 !important;
+    }
+    .fac-evidencias-grid .fac-evidencias-panel > .card-header h5 {
+        font-weight: 700;
+        color: #0f2035;
+    }
+    .fac-evidencias-grid .evidencia-card {
+        border: 1px solid #e2e8ef !important;
+        border-left: 3px solid #e2e8ef !important;
+        border-radius: 12px !important;
+        background: #fff;
+    }
+    .fac-evidencias-grid .evidencia-clasificada { border-left-color: #00bf92 !important; }
+    .fac-evidencias-grid .evidencia-pendiente { border-left-color: #e6a93c !important; }
+    .fac-evidencias-grid .evidencia-icono {
+        background: #e2f7f1;
+        color: #008c71;
+    }
+    .fac-evidencias-grid .clasificacion-resumen { background: #f5f8fa; }
+    .fac-evidencias-grid .btn { border-radius: 7px; }
+    .asistente-clasificacion {
+        border: 1px solid #dce4eb !important;
+        border-radius: 16px;
+        box-shadow: 0 6px 22px rgba(17, 36, 56, .05) !important;
+    }
+    .asistente-clasificacion-header {
+        background: #fff;
+        border-bottom: 1px solid #e4eaf0;
+        padding: 1.25rem 1.5rem;
+    }
+    .asistente-clasificacion-header h4 { color: #102237 !important; }
+    .asistente-header-icono { background: #e2f7f1; color: #008d70; }
+    .asistente-etiqueta { color: #008d70; }
+    .asistente-subtitulo { color: #64748b; }
+    .asistente-clasificacion-header .btn-close { filter: none; }
+    .asistente-contexto { background: #f8fafc; border-color: #e1e7ee; }
+    @media (max-width: 1199.98px) {
+        .fac-evidencias-grid .fac-evidencias-panel { margin-bottom: 0 !important; }
     }
 </style>
 @endpush

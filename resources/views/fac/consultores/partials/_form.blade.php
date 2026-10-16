@@ -284,7 +284,7 @@
 
     <div class="col-md-4">
         <label class="form-label">Estado civil</label>
-        <select name="estado_civil" class="form-select">
+        <select data-fac-search-select name="estado_civil" class="form-select">
             <option value="">Seleccione</option>
             @foreach(['Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'Unión libre'] as $estadoCivil)
                 <option value="{{ $estadoCivil }}" {{ old('estado_civil', $consultor->estado_civil ?? '') === $estadoCivil ? 'selected' : '' }}>
@@ -296,7 +296,7 @@
 
     <div class="col-md-4">
         <label class="form-label">Sexo <span class="text-danger">*</span></label>
-        <select name="id_sexo" class="form-select @error('id_sexo') is-invalid @enderror" required>
+        <select data-fac-search-select name="id_sexo" class="form-select @error('id_sexo') is-invalid @enderror" required>
             <option value="">Seleccione</option>
             @foreach(($catalogos['sexos'] ?? collect()) as $sexo)
                 <option value="{{ $sexo->id_sexo }}"
@@ -351,7 +351,7 @@
             <h6 class="mb-3">Documento de identidad</h6>
 
             <label class="form-label">Tipo de identificación</label>
-            <select name="tipo_identificacion" class="form-select mb-3">
+            <select data-fac-search-select name="tipo_identificacion" class="form-select mb-3">
                 <option value="">Seleccione</option>
                 @foreach([
                         'DUI',
@@ -377,12 +377,18 @@
             @error('numero_identificacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
             <label class="form-label mt-3">Archivo</label>
-            <input 
+            <div class="fac-file-picker" data-fac-file-picker>
+                <label class="fac-file-picker-button">
+                    <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Elegir documento
+                    <input 
                 type="file" 
                 name="documento_identificacion" 
-                class="form-control @error('documento_identificacion') is-invalid @enderror"
+                class="fac-file-native @error('documento_identificacion') is-invalid @enderror"
                 accept=".pdf,.jpg,.jpeg,.png,.webp"
             >
+                </label>
+                <span class="fac-file-picker-name" aria-live="polite">Ningún archivo nuevo seleccionado</span>
+            </div>
             <div class="form-text">PDF, JPG, JPEG, PNG o WEBP. Máximo 5 MB.</div>
             @error('documento_identificacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
             @if($documentoIdentificacion?->url_archivo)
@@ -414,12 +420,18 @@
             @error('nit') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
             <label class="form-label mt-3">Archivo</label>
-            <input 
+            <div class="fac-file-picker" data-fac-file-picker>
+                <label class="fac-file-picker-button">
+                    <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Elegir documento
+                    <input 
                 type="file" 
                 name="documento_nit" 
-                class="form-control @error('documento_nit') is-invalid @enderror"
+                class="fac-file-native @error('documento_nit') is-invalid @enderror"
                 accept=".pdf,.jpg,.jpeg,.png,.webp"
             >
+                </label>
+                <span class="fac-file-picker-name" aria-live="polite">Ningún archivo nuevo seleccionado</span>
+            </div>
             <div class="form-text">PDF, JPG, JPEG, PNG o WEBP. Máximo 5 MB.</div>
             @error('documento_nit') <div class="invalid-feedback">{{ $message }}</div> @enderror
             @if($documentoNit?->url_archivo)
@@ -461,12 +473,18 @@
             @error('actividad_giro') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
             <label class="form-label mt-3">Archivo</label>
-            <input 
+            <div class="fac-file-picker" data-fac-file-picker>
+                <label class="fac-file-picker-button">
+                    <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Elegir documento
+                    <input 
                 type="file" 
                 name="documento_nrc" 
-                class="form-control @error('documento_nrc') is-invalid @enderror"
+                class="fac-file-native @error('documento_nrc') is-invalid @enderror"
                 accept=".pdf,.jpg,.jpeg,.png,.webp"
             >
+                </label>
+                <span class="fac-file-picker-name" aria-live="polite">Ningún archivo nuevo seleccionado</span>
+            </div>
             <div class="form-text">PDF, JPG, JPEG, PNG o WEBP. Máximo 5 MB.</div>
             @error('documento_nrc') <div class="invalid-feedback">{{ $message }}</div> @enderror
             @if($documentoNrc?->url_archivo)
@@ -491,7 +509,7 @@
 
     <div class="col-md-6">
         <label class="form-label">País</label>
-        <select name="id_pais" id="id_pais" class="form-select @error('id_pais') is-invalid @enderror">
+        <select data-fac-search-select name="id_pais" id="id_pais" class="form-select @error('id_pais') is-invalid @enderror">
             <option value="">Seleccione</option>
             @foreach($catalogos['paises'] as $pais)
                 <option value="{{ $pais->id_pais }}" {{ (string) old('id_pais', $consultor->id_pais ?? '') === (string) $pais->id_pais ? 'selected' : '' }}>
@@ -504,7 +522,7 @@
 
     <div class="col-md-6">
         <label class="form-label">Departamento</label>
-        <select name="id_departamento" id="id_departamento" class="form-select @error('id_departamento') is-invalid @enderror">
+        <select data-fac-search-select name="id_departamento" id="id_departamento" class="form-select @error('id_departamento') is-invalid @enderror">
             <option value="">Seleccione</option>
             @foreach($catalogos['departamentos'] as $departamento)
                 <option 
@@ -521,7 +539,7 @@
 
     <div class="col-md-6">
         <label class="form-label">Municipio</label>
-        <select name="id_municipio_mh" id="id_municipio_mh" class="form-select @error('id_municipio_mh') is-invalid @enderror">
+        <select data-fac-search-select name="id_municipio_mh" id="id_municipio_mh" class="form-select @error('id_municipio_mh') is-invalid @enderror">
             <option value="">Seleccione</option>
             @foreach($catalogos['municipiosMh'] as $municipioMh)
                 <option 
@@ -538,7 +556,7 @@
 
     <div class="col-md-6">
         <label class="form-label">Distrito</label>
-        <select name="id_municipio" id="id_municipio" class="form-select @error('id_municipio') is-invalid @enderror">
+        <select data-fac-search-select name="id_municipio" id="id_municipio" class="form-select @error('id_municipio') is-invalid @enderror">
             <option value="">Seleccione</option>
             @foreach($catalogos['municipios'] as $municipio)
                 <option 
@@ -592,12 +610,18 @@
 
     <div class="{{ $puedeGestionarConsultores ? 'col-md-6' : 'col-12' }}">
         <label class="form-label">Foto del consultor</label>
-        <input 
+        <div class="fac-file-picker" data-fac-file-picker>
+                <label class="fac-file-picker-button">
+                    <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Elegir documento
+                    <input 
             type="file" 
             name="foto" 
-            class="form-control @error('foto') is-invalid @enderror"
+            class="fac-file-native @error('foto') is-invalid @enderror"
             accept=".jpg,.jpeg,.png,.webp"
         >
+                </label>
+                <span class="fac-file-picker-name" aria-live="polite">Ningún archivo nuevo seleccionado</span>
+            </div>
         <div class="form-text">Formatos permitidos: JPG, JPEG, PNG, WEBP. Máximo 2 MB.</div>
         @error('foto') <div class="invalid-feedback">{{ $message }}</div> @enderror
 

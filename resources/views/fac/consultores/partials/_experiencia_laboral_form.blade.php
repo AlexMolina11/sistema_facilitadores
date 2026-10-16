@@ -9,8 +9,8 @@
 
 <form method="POST"
       action="{{ $esEdicion ? route('fac.consultores.experiencia.laboral.update', [$consultor, $experiencia]) : route('fac.consultores.experiencia.laboral.store', $consultor) }}"
-      enctype="multipart/form-data" class="js-experiencia-form border rounded-3 p-3 mb-3 bg-white"
-      data-form-key="{{ $clave }}" novalidate>
+      enctype="multipart/form-data" class="js-experiencia-form fac-fase2-form border rounded-3 p-3 mb-3 bg-white"
+      data-form-key="{{ $clave }}" data-error-field="{{ $erroresForm ? ($errors->keys()[0] ?? '') : '' }}" novalidate>
     @csrf
     @if($esEdicion) @method('PUT') @endif
     <input type="hidden" name="_experiencia_form" value="{{ $clave }}">
@@ -24,43 +24,54 @@
         </div>
     @endif
 
-    <p class="text-muted mb-3">Completa tres pasos sencillos. Los campos con <span class="text-danger">*</span> son obligatorios.</p>
-    <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Progreso del formulario">
-        <span class="badge rounded-pill bg-primary js-exp-indicador" data-indicador="1">1. Puesto</span>
-        <span class="badge rounded-pill bg-secondary js-exp-indicador" data-indicador="2">2. Fechas</span>
-        <span class="badge rounded-pill bg-secondary js-exp-indicador" data-indicador="3">3. Contacto y evidencia</span>
+    <div class="fac-guide-heading mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h5 class="mb-1">{{ $esEdicion ? 'Editar experiencia laboral' : 'Nueva experiencia laboral' }}</h5>
+                <p class="text-muted small mb-0">Completa tres pasos sencillos. Los campos con <span class="text-danger">*</span> son obligatorios.</p>
+            </div>
+            <span class="badge text-bg-light border js-exp-contador">Paso 1 de 3</span>
+        </div>
+        <div class="fac-guide-progress mt-3" aria-label="Progreso del registro"><span class="fac-guide-progress-fill js-exp-barra"></span></div>
+        <div class="d-flex justify-content-between text-muted small mt-2"><span>1. Puesto</span><span>2. Fechas</span><span>3. Respaldo</span></div>
     </div>
-
-    <section class="js-exp-paso" data-paso="1" aria-label="Puesto e institución">
-        <h4 class="h6 mb-3">Paso 1 de 3 · ¿Dónde trabajaste?</h4>
+    <section class="js-exp-paso fac-guide-step" data-paso="1" aria-label="Puesto e institución">
+        <h6 class="fw-semibold mb-1">¿Dónde trabajaste?</h6>
+        <p class="text-muted small mb-3">Indica la institución, el cargo y las funciones principales.</p>
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label" for="exp_empresa_{{ $clave }}">Empresa o institución <span class="text-danger">*</span></label>
-                <input id="exp_empresa_{{ $clave }}" type="text" name="empresa" value="{{ $valor('empresa', $experiencia->empresa ?? '') }}" class="form-control" maxlength="150" required autocomplete="organization" placeholder="Ej. FEPADE">
+                <input id="exp_empresa_{{ $clave }}" type="text" name="empresa" value="{{ $valor('empresa', $experiencia->empresa ?? '') }}" class="form-control{{ $erroresForm && $errors->has('empresa') ? ' is-invalid' : '' }}" maxlength="150" required autocomplete="organization" placeholder="Ej. FEPADE">
+                @if($erroresForm) @error('empresa') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="exp_cargo_{{ $clave }}">Cargo desempeñado <span class="text-danger">*</span></label>
-                <input id="exp_cargo_{{ $clave }}" type="text" name="cargo" value="{{ $valor('cargo', $experiencia->cargo ?? '') }}" class="form-control" maxlength="100" required placeholder="Ej. Analista de sistemas">
+                <input id="exp_cargo_{{ $clave }}" type="text" name="cargo" value="{{ $valor('cargo', $experiencia->cargo ?? '') }}" class="form-control{{ $erroresForm && $errors->has('cargo') ? ' is-invalid' : '' }}" maxlength="100" required placeholder="Ej. Analista de sistemas">
+                @if($erroresForm) @error('cargo') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
             </div>
             <div class="col-12">
                 <label class="form-label" for="exp_descripcion_{{ $clave }}">Descripción de funciones o experiencia</label>
-                <textarea id="exp_descripcion_{{ $clave }}" name="descripcion" rows="5" class="form-control" maxlength="500" placeholder="Describe tus responsabilidades principales en frases sencillas.">{{ $valor('descripcion', $experiencia->descripcion ?? '') }}</textarea>
+                <textarea id="exp_descripcion_{{ $clave }}" name="descripcion" rows="5" class="form-control{{ $erroresForm && $errors->has('descripcion') ? ' is-invalid' : '' }}" maxlength="500" placeholder="Describe tus responsabilidades principales en frases sencillas.">{{ $valor('descripcion', $experiencia->descripcion ?? '') }}</textarea>
+                @if($erroresForm) @error('descripcion') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
                 <div class="form-text">Máximo 500 caracteres. Puedes resumir tus principales actividades.</div>
             </div>
         </div>
     </section>
 
-    <section class="js-exp-paso d-none" data-paso="2" aria-label="Período laboral">
-        <h4 class="h6 mb-3">Paso 2 de 3 · ¿Cuándo trabajaste?</h4>
+    <section class="js-exp-paso fac-guide-step d-none" data-paso="2" aria-label="Período laboral">
+        <h6 class="fw-semibold mb-1">¿Cuándo trabajaste?</h6>
+        <p class="text-muted small mb-3">Registra el período y señala si todavía trabajas en esta institución.</p>
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label" for="exp_desde_{{ $clave }}">Fecha de inicio</label>
-                <input id="exp_desde_{{ $clave }}" type="date" name="desde" value="{{ $valor('desde', $experiencia?->desde?->format('Y-m-d') ?? '') }}" max="{{ now()->toDateString() }}" class="form-control js-exp-desde">
+                <input id="exp_desde_{{ $clave }}" type="date" name="desde" value="{{ $valor('desde', $experiencia?->desde?->format('Y-m-d') ?? '') }}" max="{{ now()->toDateString() }}" class="form-control js-exp-desde{{ $erroresForm && $errors->has('desde') ? ' is-invalid' : '' }}">
+                @if($erroresForm) @error('desde') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
                 <div class="form-text">Puedes registrar trabajos anteriores y actuales.</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="exp_hasta_{{ $clave }}">Fecha de finalización</label>
-                <input id="exp_hasta_{{ $clave }}" type="date" name="hasta" value="{{ $valor('hasta', $experiencia?->hasta?->format('Y-m-d') ?? '') }}" max="{{ now()->toDateString() }}" class="form-control js-fecha-hasta">
+                <input id="exp_hasta_{{ $clave }}" type="date" name="hasta" value="{{ $valor('hasta', $experiencia?->hasta?->format('Y-m-d') ?? '') }}" max="{{ now()->toDateString() }}" class="form-control js-fecha-hasta{{ $erroresForm && $errors->has('hasta') ? ' is-invalid' : '' }}">
+                @if($erroresForm) @error('hasta') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
             </div>
             <div class="col-12">
                 <div class="form-check form-switch">
@@ -73,27 +84,35 @@
         </div>
     </section>
 
-    <section class="js-exp-paso d-none" data-paso="3" aria-label="Contacto y evidencia">
-        <h4 class="h6 mb-3">Paso 3 de 3 · Información complementaria</h4>
+    <section class="js-exp-paso fac-guide-step d-none" data-paso="3" aria-label="Contacto y evidencia">
+        <h6 class="fw-semibold mb-1">Contacto y documento de respaldo</h6>
         <p class="text-muted">Estos datos son opcionales. Si ingresas un correo o teléfono, verificaremos que tenga un formato válido.</p>
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label" for="exp_jefe_{{ $clave }}">Nombre del jefe inmediato</label>
-                <input id="exp_jefe_{{ $clave }}" type="text" name="jefe_nombre" value="{{ $valor('jefe_nombre', $experiencia->jefe_nombre ?? '') }}" class="form-control" maxlength="150" autocomplete="off">
+                <input id="exp_jefe_{{ $clave }}" type="text" name="jefe_nombre" value="{{ $valor('jefe_nombre', $experiencia->jefe_nombre ?? '') }}" class="form-control{{ $erroresForm && $errors->has('jefe_nombre') ? ' is-invalid' : '' }}" maxlength="150" autocomplete="off">
+                @if($erroresForm) @error('jefe_nombre') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="exp_email_{{ $clave }}">Correo del jefe inmediato</label>
-                <input id="exp_email_{{ $clave }}" type="email" name="jefe_email" value="{{ $valor('jefe_email', $experiencia->jefe_email ?? '') }}" class="form-control js-exp-email" placeholder="nombre@dominio.com" maxlength="120" autocomplete="off" inputmode="email">
+                <input id="exp_email_{{ $clave }}" type="email" name="jefe_email" value="{{ $valor('jefe_email', $experiencia->jefe_email ?? '') }}" class="form-control js-exp-email{{ $erroresForm && $errors->has('jefe_email') ? ' is-invalid' : '' }}" placeholder="nombre@dominio.com" maxlength="120" autocomplete="off" inputmode="email">
+                @if($erroresForm) @error('jefe_email') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
                 <div class="form-text">Ejemplo: contacto@institucion.org</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="exp_tel_{{ $clave }}">Teléfono del jefe inmediato</label>
-                <input id="exp_tel_{{ $clave }}" type="tel" name="jefe_telefono" value="{{ $valor('jefe_telefono', $experiencia->jefe_telefono ?? '') }}" class="form-control js-exp-telefono" maxlength="20" autocomplete="off" inputmode="tel">
+                <input id="exp_tel_{{ $clave }}" type="tel" name="jefe_telefono" value="{{ $valor('jefe_telefono', $experiencia->jefe_telefono ?? '') }}" class="form-control js-exp-telefono{{ $erroresForm && $errors->has('jefe_telefono') ? ' is-invalid' : '' }}" maxlength="20" autocomplete="off" inputmode="tel">
+                @if($erroresForm) @error('jefe_telefono') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
                 <div class="form-text">Selecciona el país e ingresa el número. Se guardará con el prefijo internacional.</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="exp_evidencia_{{ $clave }}">Evidencia laboral</label>
-                <input id="exp_evidencia_{{ $clave }}" type="file" name="evidencia" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                <div class="fac-upload-box{{ $erroresForm && $errors->has('evidencia') ? ' border-danger' : '' }}">
+                    <label for="exp_evidencia_{{ $clave }}" class="btn btn-outline-secondary fac-upload-button mb-0"><i class="fa-solid fa-cloud-arrow-up me-1" aria-hidden="true"></i> Elegir documento</label>
+                    <span class="fac-upload-filename small text-muted" aria-live="polite">Ningún archivo nuevo seleccionado</span>
+                    <input id="exp_evidencia_{{ $clave }}" type="file" name="evidencia" class="visually-hidden{{ $erroresForm && $errors->has('evidencia') ? ' is-invalid' : '' }}" accept=".pdf,.jpg,.jpeg,.png,.webp">
+                </div>
+                @if($erroresForm) @error('evidencia') <div class="invalid-feedback d-block" role="alert">{{ $message }}</div> @enderror @endif
                 <div class="form-text">PDF, JPG, JPEG, PNG o WEBP. Máximo 5 MB.</div>
                 @if($esEdicion && $experiencia->url_evidencia)
                     <a class="d-inline-block mt-2" href="{{ \Illuminate\Support\Facades\Storage::url($experiencia->url_evidencia) }}" target="_blank" rel="noopener noreferrer">Ver evidencia actual (abre otra pestaña)</a>
@@ -103,12 +122,13 @@
     </section>
 
     <div class="alert alert-danger mt-3 d-none js-exp-error" role="alert" aria-live="polite"></div>
-    <div class="d-flex flex-wrap justify-content-between gap-2 mt-4">
-        <button type="button" class="btn btn-outline-secondary js-exp-atras d-none" style="min-height:44px">← Anterior</button>
-        <div class="d-flex gap-2 ms-auto">
-            <button type="button" class="btn btn-outline-secondary js-exp-cancelar" style="min-height:44px">Cancelar</button>
-            <button type="button" class="btn btn-fepade js-exp-siguiente" style="min-height:44px">Siguiente →</button>
-            <button type="submit" class="btn btn-fepade js-exp-guardar d-none" style="min-height:44px">{{ $esEdicion ? 'Actualizar experiencia' : 'Guardar experiencia' }}</button>
+    <div class="alert alert-light border small mt-3 js-exp-resumen" aria-live="polite" hidden></div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 border-top pt-3">
+        <button type="button" class="btn btn-outline-secondary js-exp-cancelar">Cancelar</button>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary js-exp-atras d-none">Anterior</button>
+            <button type="button" class="btn btn-fepade js-exp-siguiente">Continuar <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></button>
+            <button type="submit" class="btn btn-fepade js-exp-guardar d-none">{{ $esEdicion ? 'Actualizar experiencia' : 'Guardar experiencia' }}</button>
         </div>
     </div>
 </form>
@@ -131,6 +151,11 @@
                 const hasta = form.querySelector('.js-fecha-hasta');
                 const telefono = form.querySelector('.js-exp-telefono');
                 const correo = form.querySelector('.js-exp-email');
+                const archivoInput = form.querySelector('[name="evidencia"]');
+                const archivoNombre = form.querySelector('.fac-upload-filename');
+                archivoInput.addEventListener('change', function () {
+                    archivoNombre.textContent = archivoInput.files.length ? archivoInput.files[0].name : 'Ningún archivo nuevo seleccionado';
+                });
                 const error = form.querySelector('.js-exp-error');
                 const iti = window.intlTelInput ? window.intlTelInput(telefono, {
                     initialCountry: 'sv',
@@ -154,11 +179,15 @@
                     form.querySelectorAll('.js-exp-paso').forEach(function (panel) {
                         panel.classList.toggle('d-none', Number(panel.dataset.paso) !== paso);
                     });
-                    form.querySelectorAll('.js-exp-indicador').forEach(function (badge) {
-                        const activo = Number(badge.dataset.indicador) === paso;
-                        badge.classList.toggle('bg-primary', activo);
-                        badge.classList.toggle('bg-secondary', !activo);
-                    });
+                    form.querySelector('.js-exp-contador').textContent = 'Paso ' + paso + ' de 3';
+                    form.querySelector('.js-exp-barra').style.width = (paso * 100 / 3) + '%';
+                    const resumen = form.querySelector('.js-exp-resumen');
+                    resumen.hidden = paso !== 3;
+                    if (paso === 3) {
+                        const empresa = form.elements.namedItem('empresa').value.trim() || 'Institución pendiente';
+                        const cargo = form.elements.namedItem('cargo').value.trim() || 'Cargo pendiente';
+                        resumen.textContent = 'Resumen: ' + cargo + ' · ' + empresa + '. Comprueba los datos antes de guardar.';
+                    }
                     form.querySelector('.js-exp-atras').classList.toggle('d-none', paso === 1);
                     form.querySelector('.js-exp-siguiente').classList.toggle('d-none', paso === 3);
                     form.querySelector('.js-exp-guardar').classList.toggle('d-none', paso !== 3);
@@ -221,7 +250,7 @@
                 sincronizarActual();
                 hasta.min = desde.value || '';
                 if (form.querySelector('.alert-danger:not(.js-exp-error)')) {
-                    const campoError = @json($usarOld ? $errors->keys()[0] ?? '' : '');
+                    const campoError = form.dataset.errorField || '';
                     paso = ['desde', 'hasta', 'trabajo_actual'].includes(campoError) ? 2 :
                         ['jefe_nombre', 'jefe_email', 'jefe_telefono', 'evidencia'].includes(campoError) ? 3 : 1;
                 }

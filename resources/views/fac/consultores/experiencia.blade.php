@@ -23,6 +23,8 @@
 @section('page-subtitle', $esMiPerfil ? 'Construye tu trayectoria profesional paso a paso.' : 'Gestiona la trayectoria profesional del consultor.')
 
 @section('content')
+@include('fac.consultores.partials._fac_input_ux')
+
 @include('fac.consultores.partials._wizard', ['step' => 3, 'consultor' => $consultor])
 @if(session('experiencia_aviso_duplicado'))
     <div class="alert alert-warning" role="status">
@@ -48,7 +50,6 @@
     </div>
 
     <div id="crear-experiencia" class="perfil-form-wrapper d-none experiencia-editor" tabindex="-1">
-        <div class="experiencia-editor-titulo"><h3 class="h5 mb-1">Agregar experiencia laboral</h3><p class="text-muted mb-3">Completa la información que conozcas. Los campos obligatorios están identificados con un asterisco (*).</p></div>
         @include('fac.consultores.partials._experiencia_laboral_form', ['consultor' => $consultor, 'experiencia' => null])
     </div>
 
@@ -78,11 +79,11 @@
                                 </p>
                             </div>
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-outline-secondary experiencia-btn" onclick="mostrarFormularioPerfil('editar-experiencia-{{ $experiencia->id_experiencia }}')" aria-controls="editar-experiencia-{{ $experiencia->id_experiencia }}" aria-expanded="false">Editar</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 experiencia-btn" onclick="mostrarFormularioPerfil('editar-experiencia-{{ $experiencia->id_experiencia }}')" aria-controls="editar-experiencia-{{ $experiencia->id_experiencia }}" aria-expanded="false"><i class="fa-solid fa-pen" aria-hidden="true"></i><span>Editar</span></button>
                                 <form method="POST" action="{{ route('fac.consultores.experiencia.laboral.destroy', [$consultor, $experiencia]) }}" onsubmit="return confirm('¿Deseas eliminar esta experiencia laboral? Esta acción no se puede deshacer desde esta pantalla.')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger experiencia-btn">Eliminar</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 experiencia-btn"><i class="fa-solid fa-trash" aria-hidden="true"></i><span>Eliminar</span></button>
                                 </form>
                             </div>
                         </div>
@@ -98,7 +99,6 @@
                             </div>
                         @endif
                         <div id="editar-experiencia-{{ $experiencia->id_experiencia }}" class="perfil-form-wrapper d-none experiencia-editor mt-3" tabindex="-1">
-                            <h5>Editar experiencia laboral</h5>
                             @include('fac.consultores.partials._experiencia_laboral_form', ['consultor' => $consultor, 'experiencia' => $experiencia])
                         </div>
                     </div>
@@ -125,6 +125,18 @@
 
 @push('styles')
 <style>
+/* Diseño guiado compartido con Formación V2 */
+.experiencia-pagina .fac-guide-progress{height:7px;background:#e9edf2;border-radius:99px;overflow:hidden}
+.experiencia-pagina .fac-guide-progress-fill{display:block;width:33.333%;height:100%;background:#00bf92;transition:width .2s}
+.experiencia-pagina .fac-guide-step .form-label{font-weight:600}
+.experiencia-pagina .fac-guide-step .form-text{font-size:.82rem}
+.experiencia-pagina .fac-upload-box{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px dashed #cbd5e1;border-radius:10px;padding:14px;background:#f8fafc}
+.experiencia-pagina .fac-upload-button{white-space:nowrap;cursor:pointer}
+.experiencia-pagina .fac-upload-filename{overflow-wrap:anywhere}
+.experiencia-pagina .js-exp-resumen[hidden]{display:none!important}
+.experiencia-pagina .js-experiencia-form{border:0!important;padding:0!important;margin-bottom:0!important;background:transparent!important}
+.experiencia-pagina .experiencia-editor{background:#fff;border:1px solid #d9e1e7}
+
 .experiencia-pagina { color: #0f1a20; }
 .experiencia-encabezado { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem; }
 .experiencia-eyebrow { display:block; color:#467599; font-size:.78rem; font-weight:700; letter-spacing:.05em; margin-bottom:.55rem; }

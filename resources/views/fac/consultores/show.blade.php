@@ -221,80 +221,32 @@
     $ultimaActualizacion = $consultor->updated_at ? $consultor->updated_at->format('d/m/Y') : 'No registrada';
 @endphp
 
-<x-ui.page-header
-    :title="$esMiPerfil
-        ? 'Mi perfil profesional'
-        : 'Expediente del consultor'"
-    :subtitle="$esMiPerfil
-        ? 'Consulta y mantén actualizada tu información profesional.'
-        : 'Vista integral del perfil profesional registrado.'"
->
-
-    <div class="d-flex gap-2 flex-wrap">
-
-        @if($rutasEdicion['perfil'])
-
-            <a
-                href="{{ $rutasEdicion['perfil'] }}"
-                class="btn btn-fepade"
-            >
-                <i class="fa-solid fa-pen-to-square me-1"></i>
-
-                {{
-                    $esMiPerfil
-                        ? 'Editar mi perfil'
-                        : 'Editar perfil'
-                }}
-            </a>
-
-        @endif
-
-        
-
-        @if($rutaCv)
-
-            <a
-                href="{{ $rutaCv }}"
-                class="btn btn-outline-primary"
-            >
-                <i class="fa-solid fa-file-pdf me-1"></i>
-                Generar CV
-            </a>
-
-        @endif
-
-
-        @if(
-            $esMiPerfil
-            && Route::has('fac.mis-capacitaciones')
-        )
-
-            <a
-                href="{{ route('fac.mis-capacitaciones') }}"
-                class="btn btn-outline-primary"
-            >
-                <i class="fa-solid fa-chalkboard-user me-1"></i>
-                Mis capacitaciones
-            </a>
-
-        @endif
-
-
-        @if($rutasEdicion['index'])
-
-            <a
-                href="{{ $rutasEdicion['index'] }}"
-                class="btn btn-outline-secondary"
-            >
-                <i class="fa-solid fa-arrow-left me-1"></i>
-                Volver al listado
-            </a>
-
-        @endif
-
-    </div>
-
-</x-ui.page-header>
+<style>
+/* Ajustes de presentación exclusivos del expediente */
+.expediente-ux .expediente-ux-avatar {
+    width: 126px;
+    height: 164px;
+    min-width: 126px;
+    flex: 0 0 126px;
+    overflow: hidden;
+    border-radius: 18px;
+}
+.expediente-ux .expediente-ux-avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 25%;
+}
+@media (max-width: 575.98px) {
+    .expediente-ux .expediente-ux-avatar {
+        width: 100px;
+        height: 132px;
+        min-width: 100px;
+        flex-basis: 100px;
+    }
+}
+</style>
 
 <div class="expediente-page expediente-ux">
 
@@ -387,6 +339,13 @@
                         Volver al listado
                     </a>
 
+                @endif
+
+                @if($esMiPerfil && Route::has('fac.mis-capacitaciones'))
+                    <a href="{{ route('fac.mis-capacitaciones') }}" class="btn btn-outline-light">
+                        <i class="fa-solid fa-chalkboard-user me-1"></i>
+                        Mis capacitaciones
+                    </a>
                 @endif
 
             </div>
