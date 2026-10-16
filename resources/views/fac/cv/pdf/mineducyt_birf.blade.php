@@ -124,7 +124,7 @@
                             </div>
                         @endif
                     </td>
-                    <td>{{ $item['pais'] ?: 'No registrado' }}</td>
+                    <td>{{ $item['pais'] ?? 'No registrado' }}</td>
                     <td>{{ $cell('experiencias', $item, 'descripcion') }}</td>
                 </tr>
             @empty
